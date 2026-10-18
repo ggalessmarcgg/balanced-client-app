@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Icona } from '@/ui/icone';
+import { Testo } from '@/ui/Testo';
 import {
   colori,
   descrizioniTesti,
@@ -158,7 +159,7 @@ function SezioneTesti() {
         const s = testi[nome];
         return (
           <View key={nome} style={stili.gruppo}>
-            <Text style={[stili.testoBase, s]}>{FRASE}</Text>
+            <Testo stile={nome}>{FRASE}</Testo>
             <Didascalia>{`${d.figma} · ${d.font} · ${s.fontSize} · interlinea ${d.interlinea} · spaziatura ${d.spaziatura}`}</Didascalia>
           </View>
         );
@@ -227,7 +228,6 @@ const stili = StyleSheet.create({
   scatolaRaggio: { height: 56, backgroundColor: colori.sfondo.card, borderWidth: 1, borderColor: colori.bordo.selezione },
   scatolaMisura: { backgroundColor: colori.sfondo.campo, borderWidth: 1, borderColor: colori.linea.guida },
   scatolaTocco: { borderWidth: 1, borderColor: colori.bordo.selezione, borderStyle: 'dashed', borderRadius: raggio.piccolo },
-  testoBase: { color: colori.testo.primario },
   cellaIcona: { width: 104, gap: spazio[4] },
   cellaIconaDisegno: {
     width: tocco.minimoIos,

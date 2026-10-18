@@ -96,7 +96,7 @@ Lasciati scollegati e documentati: veli dei pannelli al 25 % (`474:1533`, `475:1
 | Icona / 20 / Argomento · Sazietà | gauge | Icona / Argomento · Sazietà |
 | Icona / 20 / Argomento · Acqua | glass-water | Icona / Argomento · Acqua |
 | Icona / 20 / Argomento · Movimento | dumbbell | Icona / Argomento · Movimento |
-| Icona / 20 / Argomento · Altro | message-circle-reply (da confermare) | Icona / Argomento · Altro |
+| Icona / 20 / Argomento · Altro | messages-circle (prima message-circle-reply, da confermare) | Icona / Argomento · Altro |
 | Icona / 20 / Certificazione | graduation-cap | Icona 20 / Certificazione |
 | Icona / 20 / Spunta · Più · Calendario · Giù · Su · Matita · Info · Videochiamata · Email · Campanella attiva | check · plus · calendar · chevron-down · chevron-up · pencil · info · picture-in-picture-2 · mail · bell-ring | nuove |
 | Icona / 20 / WhatsApp | — (svgrepo) | nuova |
@@ -158,7 +158,7 @@ Corretti: Account 4 (`499:2721`), Stati 5 e 10 (`552:4376`, `558:4507`). Lasciat
 1. I quattro titoli delle schermate di recupero password (step 3).
 2. Card informativa di Piano 4.3, pillola argomenti di Racconta 5/5.1, righe Certificazione di Menu 3, contenitori Selettore: senza componente corrispondente, da decidere.
 3. ~~`icon/link` e `icon/credit-card` negli Stati sono frame vuoti~~ Risolto la sera del 18/10/2026: non erano vuoti, vedi "Icone link e carta negli Stati".
-4. `Icona / 20 / Argomento · Altro`: nome Lucide da confermare.
+4. ~~`Icona / 20 / Argomento · Altro`: nome Lucide da confermare.~~ Risolto: `messages-circle` (vedi in fondo).
 5. Dentro Pannello scelta orario restano 4 nodi con nomi inglesi non riconosciuti dallo script.
 6. Veli dei pannelli al 25 % sul livello: se servirà una variabile, `velo` = nero 25 %.
 7. Librerie community da rimuovere a mano.
@@ -211,3 +211,12 @@ Sezioni toccate confrontate con lo stato precedente: differenze solo dove previs
 - Componenti nuovi, clonando i vettori di Stati 1: `Icona / 20 / Link` (`657:397`, Lucide link) e `Icona / 20 / Carta` (`657:400`, Lucide credit-card), a x 760 e 800 nella riga delle icone nuove (y 80), descrizione con il nome Lucide. La misura nel nome è 20 e non 24 perché lo schema `Icona / <misura> / <nome>` indica la dimensione reale del tracciato.
 - Sostituzioni: 12 istanze allo stesso indice delle righe auto-layout (7 Link: `657:7372`, `657:7378`, `657:7384`, `657:7387`, `657:7393`, `657:7399`, `657:7405`; 5 Carta: `657:7375`, `657:7381`, `657:7390`, `657:7396`, `657:7402`). Nessun frame "(vuota)" residuo.
 - Verifica: per ognuno dei 12, PNG esportato prima e dopo (icona a 4×, riga genitore a 2×) identico al byte; sezione Stati (`550:3635`, 4096 px) confrontata pixel per pixel prima e dopo: identica. Pagina componenti: 104 componenti di primo livello (61 icone, 43 di interfaccia).
+
+### Icone Lucide attuali e tratto unico a 20 (18/10/2026, notte · approvato da Alessmarc)
+
+- Il confronto a pixel con l'app (lucide-react-native 1.59.0) ha mostrato 12 componenti disegnati con una versione Lucide precedente. Ridisegnati via connettore con i tracciati Lucide 1.59 (importazione SVG, `viewBox` 24 scalato alla misura, tratto = misura/12, estremità e giunzioni arrotondate, vincoli in scala), conservando nome, misura, descrizione e variabile colore del tratto (icona/primaria; icona/secondaria per Piano): `Icona / 24 / Calendario` (calendar-days), `/ 24 / Calendario semplice` (calendar), `/ 24 / Piano` (file), `/ 24 / Energia` (zap), `/ 24 / Menu`, `/ 24 / Grafico` e `/ 16 / Grafico` (chart-line), `/ 16 / Integrando nuove abitudini` (blocks), `/ 20 / Carta` (credit-card), `/ 20 / Matita` e `/ 32 / Matita` (pencil). Le istanze si sono aggiornate da sole.
+- `Icona / 20 / Argomento · Altro`: il disegno (due fumetti tondi sovrapposti) era etichettato `message-circle-reply (da confermare)`; l'icona Lucide attuale corrispondente è **`messages-circle`**, ridisegnata e descritta così.
+- Tratto delle icone a 20: tutte a 1,67 (= 20/12). Portate da 1,5 a 1,67 `Icona / 20 / Email`, `/ 20 / Campanella attiva`, `/ 20 / Link` (Carta è stata ridisegnata già a 1,67); descrizioni aggiornate. In app il tratto è unico per misura (`trattoPerMisura`).
+- Verifica: 61 icone su 61 entro l'antialiasing nel confronto a 3× (pixel diversi ≤ 3,4 % della cella, scarto massimo ≤ 100 solo sui bordi), vedi `~/Desktop/censimenti-app/step2b-confronti/lotto1/README.md`.
+- Voce 4 di "Cosa resta aperto" (nome Lucide di Argomento · Altro): risolta.
+

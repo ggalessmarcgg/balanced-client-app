@@ -1,5 +1,5 @@
 {
-  "_nota": "Fotografia in sola lettura del file Figma (design system dell'app). Generata con apps/app/scripts/figma/01-variabili-stili.js e 02-icone.js tramite il connettore Figma; da qui scripts/tokens/genera-token.mjs produce src/ui/theme/tokens.generated.ts. Non modificare a mano: rileggere da Figma.",
+  "_nota": "Fotografia in sola lettura del file Figma (design system dell'app). Generata con apps/app/scripts/figma/01-variabili-stili.js e 02-icone.js tramite il connettore Figma; da qui scripts/tokens/genera-token.mjs produce src/ui/theme/tokens.generated.ts. Non modificare a mano: rileggere da Figma. Icone rilette il 18/10/2026 sera dopo il ridisegno con Lucide 1.59 e il tratto 1,67 sulle 20.",
   "letturaDel": "2026-10-18",
   "fileKey": "gEx2IMz69sIuUnOYkLBjcf",
   "fileName": "Clients App",
@@ -1113,7 +1113,7 @@
       "id": "467:246",
       "name": "Icona / 20 / Argomento · Altro",
       "size": 20,
-      "description": "Lucide: message-circle-reply (da confermare).",
+      "description": "Lucide: messages-circle. Argomento Altro (due fumetti). Era message-circle-reply (da confermare): ridisegnata con Lucide 1.59 il 18/10/2026.",
       "strokeWeight": 1.67,
       "shapes": 2,
       "stroke": "icona/primaria"
@@ -1168,7 +1168,7 @@
       "name": "Icona / 20 / Campanella attiva",
       "size": 20,
       "description": "Lucide bell-ring · 20 px, tratto 1,67. Passaggi delle conferme (Stati 5 e 10).",
-      "strokeWeight": 1.5,
+      "strokeWeight": 1.67,
       "shapes": 4,
       "stroke": "icona/primaria"
     },
@@ -1176,9 +1176,9 @@
       "id": "657:400",
       "name": "Icona / 20 / Carta",
       "size": 20,
-      "description": "Lucide credit-card · 20 px, tratto 1,5. Riga dettaglio (pagamento) delle schermate Stati; sta sotto la barra dei pulsanti fissa.",
-      "strokeWeight": 1.5,
-      "shapes": 2,
+      "description": "Lucide credit-card · 20 px, tratto 1,67. Riga dettaglio (pagamento) delle schermate Stati; sta sotto la barra dei pulsanti fissa.",
+      "strokeWeight": 1.67,
+      "shapes": 3,
       "stroke": "icona/primaria"
     },
     {
@@ -1195,7 +1195,7 @@
       "name": "Icona / 20 / Email",
       "size": 20,
       "description": "Lucide mail · 20 px, tratto 1,67. Passaggi delle conferme (Stati 5 e 10).",
-      "strokeWeight": 1.5,
+      "strokeWeight": 1.67,
       "shapes": 2,
       "stroke": "icona/primaria"
     },
@@ -1221,8 +1221,8 @@
       "id": "657:397",
       "name": "Icona / 20 / Link",
       "size": 20,
-      "description": "Lucide link · 20 px, tratto 1,5. Riga dettaglio (link della videochiamata) e Riga passaggio delle schermate Stati; sta sotto la barra dei pulsanti fissa.",
-      "strokeWeight": 1.5,
+      "description": "Lucide link · 20 px, tratto 1,67. Riga dettaglio (link della videochiamata) e Riga passaggio delle schermate Stati; sta sotto la barra dei pulsanti fissa.",
+      "strokeWeight": 1.67,
       "shapes": 2,
       "stroke": "icona/primaria"
     },
@@ -1232,7 +1232,7 @@
       "size": 20,
       "description": "Lucide pencil · 20 px, tratto 1,67. Intestazione sezione con azione (Modifica).",
       "strokeWeight": 1.67,
-      "shapes": 1,
+      "shapes": 2,
       "stroke": "icona/primaria"
     },
     {
@@ -1565,7 +1565,7 @@
       "size": 32,
       "description": "Lucide pencil · 32 px, tratto 2,67. Usata nel pulsante tondo Scrivi della Card diario.",
       "strokeWeight": 2.67,
-      "shapes": 1,
+      "shapes": 2,
       "stroke": "icona/primaria"
     },
     {

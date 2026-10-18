@@ -17,6 +17,13 @@ const FONT = {
   'DM Sans|Light Italic': 'DMSans_300Light_Italic',
   'DM Serif Display|Italic': 'DMSerifDisplay_400Regular_Italic',
 };
+// Istanze alla dimensione ottica di Figma (asse opsz di DM Sans = corpo del testo, tra 9 e 40), in assets/font.
+// Figma applica l'asse in automatico; qui si usa l'istanza solo per i corpi che ne hanno una.
+const ISTANZE_OTTICHE = {
+  'DM Sans|SemiBold': { 40: 'DMSans_40pt_600SemiBold', 36: 'DMSans_36pt_600SemiBold' },
+  'DM Sans|Regular': { 32: 'DMSans_32pt_400Regular' },
+};
+const dimensioneOttica = (size) => Math.min(40, Math.max(9, size));
 
 const camel = (s) => s
   .replace(/[·]/g, ' ')
@@ -72,7 +79,9 @@ const ordina = (o) => Object.fromEntries(Object.entries(o).sort((a, b) => Number
 const testi = {};
 const descrizioniTesti = {};
 for (const s of t.textStyles.filter((x) => x.name.startsWith('App/'))) {
-  const font = FONT[`${s.family}|${s.style}`];
+  const chiaveFont = `${s.family}|${s.style}`;
+  const ottica = ISTANZE_OTTICHE[chiaveFont]?.[dimensioneOttica(s.size)];
+  const font = ottica ?? FONT[chiaveFont];
   if (!font) throw new Error(`Font non mappato: ${s.family} ${s.style} (${s.name})`);
   const k = camel(s.name.slice(4));
   const stile = { fontFamily: font, fontSize: s.size };
@@ -82,7 +91,7 @@ for (const s of t.textStyles.filter((x) => x.name.startsWith('App/'))) {
   if (s.letterSpacing.unit === 'PERCENT') stile.letterSpacing = r2((s.size * s.letterSpacing.value) / 100);
   else stile.letterSpacing = r2(s.letterSpacing.value);
   testi[k] = stile;
-  descrizioniTesti[k] = { figma: s.name, font: `${s.family} ${s.style}`, interlinea: s.lineHeight.unit === 'AUTO' ? 'auto' : `${s.lineHeight.value}%`, spaziatura: `${s.letterSpacing.value}%`, descrizione: s.description };
+  descrizioniTesti[k] = { figma: s.name, font: `${s.family} ${s.style}${ottica ? ` · ottica ${dimensioneOttica(s.size)}` : ''}`, interlinea: s.lineHeight.unit === 'AUTO' ? 'auto' : `${s.lineHeight.value}%`, spaziatura: `${s.letterSpacing.value}%`, descrizione: s.description };
 }
 
 // --- Gradienti (da gradientTransform: spazio gradiente → spazio del nodo) -----
@@ -123,7 +132,8 @@ for (const ic of t.icons) {
     resa,
     lucide: resa === 'lucide' ? lucide : null,
     lucideComponente: resa === 'lucide' ? pascal(lucide) : null,
-    tratto: Array.isArray(ic.strokeWeight) ? ic.strokeWeight[0] : ic.strokeWeight,
+    tratto: resa === 'lucide' ? r2(misura / 12) : (Array.isArray(ic.strokeWeight) ? ic.strokeWeight[0] : ic.strokeWeight),
+    trattoFigma: Array.isArray(ic.strokeWeight) ? ic.strokeWeight[0] : ic.strokeWeight,
     coloreVariabile: strokeVar ?? fillVar ?? null,
     colore: perNome[strokeVar ?? fillVar] ?? null,
     ai,
@@ -179,7 +189,8 @@ export const effetti = ${lit(effetti)} as const;
 /** Opacità di livello usate nelle schermate (non variabili in Figma). */
 export const opacita = ${lit(opacita)} as const;
 
-/** Icone del design system: chiave "misura/nome", nome Lucide dalla descrizione del componente Figma. */
+/** Icone del design system: chiave "misura/nome", nome Lucide dalla descrizione del componente Figma.
+ * tratto: unico per misura (misura/12) per le icone Lucide; trattoFigma: valore letto dal componente. */
 export const icone = ${lit(icone)} as const;
 
 export type ChiaveIcona = keyof typeof icone;

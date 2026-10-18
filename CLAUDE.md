@@ -75,6 +75,22 @@ Compatibili sui dati, efficienti nel resto.
   3. Dentro `apps/app`: `npm run tokens`, poi `npm run typecheck` e `npm run lint`.
   4. Un font o uno stile nuovo in Figma richiede di aggiornare la mappa `FONT`
      in `scripts/tokens/genera-token.mjs` e il caricamento in `src/ui/theme/font.ts`.
+- **Font**: DM Sans e DM Serif Display dai pacchetti `@expo-google-fonts` (dimensione
+  ottica predefinita 14) più tre istanze statiche alla dimensione ottica che Figma
+  applica agli stili grandi (`assets/font`: 40pt SemiBold per Display 44, 36pt
+  SemiBold per H1 Accesso, 32pt Regular per H1), ricavate dal font variabile
+  ufficiale con fontTools (procedura e licenza in `assets/font/README.md`). Il
+  generatore sceglie l'istanza con `ISTANZE_OTTICHE`; uno stile nuovo sopra i 24 px
+  richiede una nuova istanza.
+- **Testi sempre con il componente `Testo`** (`src/ui/Testo.tsx`, prop `stile`): applica
+  lo stile e la correzione verticale per stile di `src/ui/theme/testo-correzioni.ts`,
+  misurata con il confronto a pixel (su iOS, con interlinea ≤ altezza naturale del font,
+  i glifi stanno più in alto che in Figma). Da rimisurare se cambiano font,
+  interlinee o versione di React Native.
+- **Icone**: tratto unico per misura (`misura/12`: 16 → 1,33, 20 → 1,67, 24 → 2,
+  32 → 2,67, 36 → 3), lo stesso in Figma. I componenti icona in Figma seguono la
+  versione Lucide installata (`lucide-react-native`): se un aggiornamento cambia un
+  disegno, si riallinea Figma (scrittura approvata caso per caso), non l'app.
 - Conversioni fatte dal generatore: interlinea e spaziatura da percentuale a
   pixel (`fontSize × %`), colori con alfa in `rgba()`, gradienti da
   `gradientTransform` a punti `inizio`/`fine` relativi (0–1), icone con chiave
