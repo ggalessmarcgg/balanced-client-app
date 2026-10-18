@@ -8,6 +8,7 @@ Workspace npm con l'app in `apps/app`.
 - macOS con Xcode 27 (Device Hub al posto di Simulator.app)
 - Node 24.3+ e npm
 - CocoaPods e Watchman (`brew install cocoapods watchman`)
+- Permesso di automazione **System Events** per il terminale (vedi sotto)
 
 ## Installazione
 
@@ -31,6 +32,15 @@ scegliere un simulatore preciso:
 cd apps/app
 npx expo run:ios --device "iPhone 17"
 ```
+
+### Permesso System Events (una tantum)
+
+Per portare in primo piano Device Hub, Expo CLI usa AppleScript tramite
+System Events. Al primo `npm run ios` macOS chiede: «"Terminale" vuole
+accedere e controllare "System Events"». Va concesso, altrimenti il comando
+si ferma alla fase di apertura dell'app sul simulatore. Il permesso vale per
+l'app da cui si lancia il comando (Terminale, iTerm, VS Code…) e si può
+rivedere in Impostazioni di Sistema → Privacy e sicurezza → Automazione.
 
 Dalla seconda volta, se non sono cambiati moduli nativi, basta il dev server:
 

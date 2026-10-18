@@ -108,6 +108,12 @@ npx expo install --fix                   # riallinea versioni alla SDK
   con `open -a DeviceHub`. Expo CLI (SDK 58) lo rileva, avvia i simulatori
   tramite esso e porta in primo piano il dispositivo giusto con il deep link
   `devices://`.
+- **Permesso System Events richiesto.** Per attivare Device Hub Expo CLI
+  usa AppleScript via System Events: l'app terminale da cui si lancia
+  `expo run:ios` deve avere il permesso di automazione su System Events
+  (macOS lo chiede al primo avvio; si rivede in Impostazioni di Sistema →
+  Privacy e sicurezza → Automazione). Senza, il comando si blocca alla fase
+  di apertura dell'app sul simulatore. Concesso al Terminale il 18/10/2026.
 - Elenco e avvio manuale dei simulatori: `xcrun simctl list devices
   available`, `xcrun simctl boot "iPhone 17"`.
 - Screenshot del simulatore: `xcrun simctl io booted screenshot <file.png>`.
