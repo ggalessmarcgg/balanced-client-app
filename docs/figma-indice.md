@@ -1,6 +1,6 @@
 # Indice del file Figma `gEx2IMz69sIuUnOYkLBjcf` (Clients App)
 
-Censimento in sola lettura del 18/10/2026. L'elenco pagine del connettore Figma (`get_metadata` senza nodeId) restituisce solo la prima pagina del file: si parte sempre dagli ID qui sotto.
+Censimento del 18/10/2026, aggiornato dopo la pulizia dello stesso giorno (`docs/figma-pulizia.md`). Le schermate hanno gli stessi node-id; le copie a mano sostituite da istanze hanno ID nuovi (elencati nel documento di pulizia). L'elenco pagine del connettore Figma (`get_metadata` senza nodeId) restituisce solo la prima pagina del file: si parte sempre dagli ID qui sotto.
 
 Link diretto a un nodo: `https://www.figma.com/design/gEx2IMz69sIuUnOYkLBjcf/Clients-App?node-id=<id con il trattino>` (es. `414-39`).
 
@@ -8,8 +8,8 @@ Link diretto a un nodo: `https://www.figma.com/design/gEx2IMz69sIuUnOYkLBjcf/Cli
 
 | Pagina | node-id | Contenuto |
 |---|---|---|
-| 🧱 Foundations · App nativa | `413:2` | frame `413:3` (foundations base), frame `414:2` (adattamenti nativi), componenti Schermo iOS `414:29`, Schermo Android `414:34`, Barra di stato iOS `437:2`, Indicatore home iOS `437:18`, Barra di stato Android `437:20`, Indicatore gesti Android `437:28` |
-| 🧩 Componenti · App nativa | `418:2` | 82 componenti pubblicati (40 icone, 42 di interfaccia); elenco con ID in `~/Desktop/censimenti-app/step2-censimento-figma.md` §4 |
+| 🧱 Foundations · App nativa | `413:2` | frame `413:3` (foundations base, swatch collegati alle variabili), frame `414:2` (adattamenti nativi, con le sezioni aggiunte il 18/10/2026: Titoli di pagina `646:38`, Scala delle opacità `646:41`, Barra di navigazione e barra superiore `646:44`, Pulizia `646:47`), componenti Schermo iOS `414:29`, Schermo Android `414:34`, Barra di stato iOS `437:2`, Indicatore home iOS `437:18`, Barra di stato Android `437:20`, Indicatore gesti Android `437:28` |
+| 🧩 Componenti · App nativa | `418:2` | 102 componenti dopo la pulizia del 18/10/2026 (59 icone con schema `Icona / <misura> / <nome>`, 43 di interfaccia). Nuovi: Logo `625:254`, Barra superiore `625:382`, Separatore `625:383`, Card nutrizionista `638:435`; Intestazione ora set `638:416` (variante App `419:105`), Avviso connessione set `638:410`; eliminati Riga pasto, Riga pasto/Compilato, Giorno prenotazione. Dettagli in `docs/figma-pulizia.md` |
 | 📱 App iOS Android | `414:39` | 13 sezioni, 105 schermate (frame 393 di larghezza) |
 | 🧱 Foundations (funnel web, vecchia) | `5:8` | non usata dall'app |
 
