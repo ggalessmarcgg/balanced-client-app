@@ -162,3 +162,37 @@ Corretti: Account 4 (`499:2721`), Stati 5 e 10 (`552:4376`, `558:4507`). Lasciat
 6. Veli dei pannelli al 25 % sul livello: se servirà una variabile, `velo` = nero 25 %.
 7. Librerie community da rimuovere a mano.
 8. Oggi 2 usava ancora la vecchia struttura "Frame 10/segments" solo per il campo aperto; ora è istanza. Le schermate Oggi non hanno la barra di navigazione (bozza): invariato.
+
+## Correzioni dopo la verifica di Alessmarc (18/10/2026, sera)
+
+### Barra di navigazione (`493:368` e 26 istanze)
+
+- Causa: 22 istanze su 26 avevano un override del fondo a opacità 100 % (già presente prima della pulizia: nei miei screenshot pre-intervento Piano fisso rende il fondo opaco, 250/248/245 su bianco); il componente e le 4 istanze delle schermate Trasversali erano all'80 %. Il connettore azzera l'opacità di un fill con variabile quando lo si assegna via API, quindi l'80 % non poteva essere ripristinato come opacità del fill.
+- Correzione: variabile colore `sfondo/barra` = #FAF8F5 all'80 % (Scuro: #201E1C all'80 %, stesso criterio di `sfondo/card`), collegata al fondo delle 4 varianti e di tutte le 26 istanze, con l'effetto `App/Vetro` verificato su ognuna. Voci inattive: su decisione di Alessmarc restano al 60 % (`icona/secondaria`, `testo/secondario`), come nell'originale: il confronto a pixel tra pre-pulizia e stato attuale del componente e dell'istanza di Piano fisso è identico. Voce selezionata invariata.
+- Effetto visivo: le 22 istanze che erano opache passano all'80 % (differenza massima 29 livelli nei confronti, ad es. Revisioni).
+
+### Inventario della trasparenza (verificato nodo per nodo via API)
+
+| Elemento | Stato |
+|---|---|
+| Veli dei pannelli (21 nodi "Velo") | opacità nel fill: 25 % (17), 40 % nei tutorial (3), 30 % sul livello in Piano 5.2 (1): come nell'originale |
+| Effetto vetro Card settimana | `App/Vetro` sul componente e effetto GLASS su tutte le 21 istanze |
+| Effetto vetro Barra di navigazione | `App/Vetro` sulle 4 varianti e su 25 istanze; 1 effetto in linea nel mockup di Primo accesso 4 |
+| Maniglie | 16 nodi collegati a `maniglia` (15 %) |
+| Linee guida dei grafici | 93 nodi a `linea/guida` (8 %) |
+| Separatori | 186 istanze di Separatore a `linea/separatore` (6 %) |
+| Barre di avanzamento delle revisioni | 5 a `linea/avanzamento` (10 %) |
+| Testi secondari | `testo/secondario` 384, `testo/terziario` 142, `testo/attenuato` 59, `testo/corpo-attenuato` 24, `testo/segnaposto` 6, `testo/futuro` 46, `testo/disabilitato` 4 |
+| Icone inattive | 172 vettori a `icona/secondaria` (60 %) |
+| Opacità di livello rimaste (originali) | pulsante primario disabilitato 40 % (7), frecce e icone copia nelle righe 40 % (51), trattino "oggi" 30 % (21), giorni non condivisi 30 % e "oggi da condividere" 50 % nei grafici (24), pallini 60/30 % (4), hero 40 %, "Quando" 40 % (2), "Scelta" 30 % (2), segnaposto "Salta" 0 % (1) |
+| Nodi con doppia attenuazione (variabile con alfa + opacità di livello) | nessuno |
+
+### Giorni non allineati
+
+- Causa: nel componente `Giorno della settimana` le varianti avevano gap diversi tra cerchio e lettera (6 px in Oggi/Futuro/Non condiviso, 6,26 px nelle tre "Condiviso"), mentre le sette istanze annidate nella Card settimana avevano override a 4 solo per alcune: le lettere risultavano a 36 o 38 px dal cerchio a seconda dello stato. Le copie a mano delle schermate Oggi avevano gap 4 ovunque, quindi il disegno originale era a 4.
+- Correzione nel componente: gap 4 (`spazio/4`) in tutte e sei le varianti; ogni giorno è alto 51 (32 + 4 + 15) e le lettere stanno alla stessa altezza in tutte le 24 Card settimana. Mese storico: le righe erano già allineate (celle 32 × 32, allineamento in alto; il segnaposto "Vuoto" 40 × 40 della quinta riga è invisibile e c'era anche nell'originale): nessuna modifica. Confronto prima/dopo in `~/Desktop/censimenti-app/step2-giorni-allineati.png`.
+- Nota: le colonne della prima settimana di Mese storico partono da sinistra (1–4 di ottobre sotto L–G) sia nel componente sia nell'originale; non è un'altezza ma un allineamento ai giorni della settimana, da decidere a parte.
+
+### Confronti
+
+Sezioni toccate confrontate con lo stato precedente: differenze solo dove previsto (lettere dei giorni nelle Card settimana; fondo della barra all'80 % in Revisioni, Account, Piano; titolo di Account 4). Nella sezione Piano compaiono ora, sovrapposte all'area a destra, le schermate "Menu · 7 · Le tue ricette" e "7.1": non le ho spostate io (posizione invariata nel loro frame di sezione); vanno riposizionate a mano se si vogliono dentro la sezione Menu.
