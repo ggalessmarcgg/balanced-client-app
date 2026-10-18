@@ -2,4 +2,4 @@
 
 export const APP_NAME = 'Balanced';
 
-export const STEP_LABEL = 'Step 1 · app di base';
+export const STEP_LABEL = 'Step 2 · design system';

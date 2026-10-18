@@ -1,0 +1,1610 @@
+{
+  "_nota": "Fotografia in sola lettura del file Figma (design system dell'app). Generata con apps/app/scripts/figma/01-variabili-stili.js e 02-icone.js tramite il connettore Figma; da qui scripts/tokens/genera-token.mjs produce src/ui/theme/tokens.generated.ts. Non modificare a mano: rileggere da Figma.",
+  "letturaDel": "2026-10-18",
+  "fileKey": "gEx2IMz69sIuUnOYkLBjcf",
+  "fileName": "Clients App",
+  "mode": "Chiaro",
+  "collections": [
+    {
+      "name": "App · Primitivi",
+      "modes": [
+        "Valore"
+      ]
+    },
+    {
+      "name": "App · Colori",
+      "modes": [
+        "Chiaro",
+        "Scuro"
+      ]
+    },
+    {
+      "name": "App · Misure",
+      "modes": [
+        "Valore"
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/dark-green",
+      "type": "COLOR",
+      "hex": "#347F75",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/militar",
+      "type": "COLOR",
+      "hex": "#87ADC0",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/cream",
+      "type": "COLOR",
+      "hex": "#FAF8F5",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/white",
+      "type": "COLOR",
+      "hex": "#FFFFFF",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/black",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/terracotta",
+      "type": "COLOR",
+      "hex": "#B4534B",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/light-green",
+      "type": "COLOR",
+      "hex": "#79D4BD",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/crema-scuro",
+      "type": "COLOR",
+      "hex": "#F4F0E8",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/rosso-registrazione",
+      "type": "COLOR",
+      "hex": "#FF3B30",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Colori",
+      "name": "sfondo/pagina",
+      "type": "COLOR",
+      "hex": "#FFFFFF",
+      "alpha": 1,
+      "alias": "colore/white"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "sfondo/card",
+      "type": "COLOR",
+      "hex": "#FAF8F5",
+      "alpha": 1,
+      "alias": "colore/cream"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "sfondo/foto",
+      "type": "COLOR",
+      "hex": "#87ADC0",
+      "alpha": 1,
+      "alias": "colore/militar"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/primario",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 1,
+      "alias": "colore/black"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/su-azione",
+      "type": "COLOR",
+      "hex": "#FFFFFF",
+      "alpha": 1,
+      "alias": "colore/white"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/errore",
+      "type": "COLOR",
+      "hex": "#B4534B",
+      "alpha": 1,
+      "alias": "colore/terracotta"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "azione/primaria",
+      "type": "COLOR",
+      "hex": "#347F75",
+      "alpha": 1,
+      "alias": "colore/dark-green"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "bordo/selezione",
+      "type": "COLOR",
+      "hex": "#347F75",
+      "alpha": 1,
+      "alias": "colore/dark-green"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "stato/errore",
+      "type": "COLOR",
+      "hex": "#B4534B",
+      "alpha": 1,
+      "alias": "colore/terracotta"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "badge/sfondo",
+      "type": "COLOR",
+      "hex": "#79D4BD",
+      "alpha": 1,
+      "alias": "colore/light-green"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "icona/primaria",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 1,
+      "alias": "colore/black"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "sfondo/campo",
+      "type": "COLOR",
+      "hex": "#F4F0E8",
+      "alpha": 1,
+      "alias": "colore/crema-scuro"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "stato/registrazione",
+      "type": "COLOR",
+      "hex": "#FF3B30",
+      "alpha": 1,
+      "alias": "colore/rosso-registrazione"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "stato/notifica",
+      "type": "COLOR",
+      "hex": "#FF3B30",
+      "alpha": 1,
+      "alias": "colore/rosso-registrazione"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "grafico/energia",
+      "type": "COLOR",
+      "hex": "#347F75",
+      "alpha": 1,
+      "alias": "colore/dark-green"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "grafico/idratazione",
+      "type": "COLOR",
+      "hex": "#87ADC0",
+      "alpha": 1,
+      "alias": "colore/militar"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "grafico/sport",
+      "type": "COLOR",
+      "hex": "#79D4BD",
+      "alpha": 1,
+      "alias": "colore/light-green"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "marchio/foglia-chiara",
+      "type": "COLOR",
+      "hex": "#87ADC0",
+      "alpha": 1,
+      "alias": "colore/militar"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "marchio/foglia-scura",
+      "type": "COLOR",
+      "hex": "#347F75",
+      "alpha": 1,
+      "alias": "colore/dark-green"
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/secondario",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.6
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/terziario",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.5
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/attenuato",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.7
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/corpo-attenuato",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.8
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/segnaposto",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.45
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/disabilitato",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.4
+    },
+    {
+      "collection": "App · Colori",
+      "name": "testo/futuro",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.3
+    },
+    {
+      "collection": "App · Colori",
+      "name": "icona/secondaria",
+      "type": "COLOR",
+      "hex": "#646362",
+      "alpha": 1,
+      "description": "Icone non selezionate o secondarie. Colore pieno (non trasparenza): equivale a nero 60% su sfondo/card (#646362); in Scuro #F4F0E8 60% su #201E1C (#9F9C96). Pieno per evitare che i tratti sovrapposti risultino più scuri."
+    },
+    {
+      "collection": "App · Colori",
+      "name": "linea/separatore",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.06
+    },
+    {
+      "collection": "App · Colori",
+      "name": "linea/guida",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.08
+    },
+    {
+      "collection": "App · Colori",
+      "name": "maniglia",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.15
+    },
+    {
+      "collection": "App · Colori",
+      "name": "linea/avanzamento",
+      "type": "COLOR",
+      "hex": "#000000",
+      "alpha": 0.1
+    },
+    {
+      "collection": "App · Colori",
+      "name": "sfondo/barra",
+      "type": "COLOR",
+      "hex": "#FAF8F5",
+      "alpha": 0.8
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/4",
+      "type": "FLOAT",
+      "value": 4
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/8",
+      "type": "FLOAT",
+      "value": 8
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/12",
+      "type": "FLOAT",
+      "value": 12
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/16",
+      "type": "FLOAT",
+      "value": 16
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/20",
+      "type": "FLOAT",
+      "value": 20
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/24",
+      "type": "FLOAT",
+      "value": 24
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/32",
+      "type": "FLOAT",
+      "value": 32
+    },
+    {
+      "collection": "App · Misure",
+      "name": "raggio/foto",
+      "type": "FLOAT",
+      "value": 16
+    },
+    {
+      "collection": "App · Misure",
+      "name": "raggio/card",
+      "type": "FLOAT",
+      "value": 24
+    },
+    {
+      "collection": "App · Misure",
+      "name": "raggio/pieno",
+      "type": "FLOAT",
+      "value": 999
+    },
+    {
+      "collection": "App · Misure",
+      "name": "tocco/minimo-ios",
+      "type": "FLOAT",
+      "value": 44
+    },
+    {
+      "collection": "App · Misure",
+      "name": "tocco/minimo-android",
+      "type": "FLOAT",
+      "value": 48
+    },
+    {
+      "collection": "App · Misure",
+      "name": "margine/pagina",
+      "type": "FLOAT",
+      "value": 20
+    },
+    {
+      "collection": "App · Misure",
+      "name": "raggio/piccolo",
+      "type": "FLOAT",
+      "value": 12
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/2",
+      "type": "FLOAT",
+      "value": 2
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/3",
+      "type": "FLOAT",
+      "value": 3
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/5",
+      "type": "FLOAT",
+      "value": 5
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/6",
+      "type": "FLOAT",
+      "value": 6
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/10",
+      "type": "FLOAT",
+      "value": 10
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/14",
+      "type": "FLOAT",
+      "value": 14
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/28",
+      "type": "FLOAT",
+      "value": 28
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/30",
+      "type": "FLOAT",
+      "value": 30
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/36",
+      "type": "FLOAT",
+      "value": 36
+    },
+    {
+      "collection": "App · Misure",
+      "name": "spazio/40",
+      "type": "FLOAT",
+      "value": 40
+    },
+    {
+      "collection": "App · Misure",
+      "name": "raggio/badge",
+      "type": "FLOAT",
+      "value": 10
+    },
+    {
+      "collection": "App · Misure",
+      "name": "raggio/contenuto",
+      "type": "FLOAT",
+      "value": 20
+    },
+    {
+      "collection": "App · Misure",
+      "name": "icona/16",
+      "type": "FLOAT",
+      "value": 16
+    },
+    {
+      "collection": "App · Misure",
+      "name": "icona/18",
+      "type": "FLOAT",
+      "value": 18
+    },
+    {
+      "collection": "App · Misure",
+      "name": "icona/20",
+      "type": "FLOAT",
+      "value": 20
+    },
+    {
+      "collection": "App · Misure",
+      "name": "icona/24",
+      "type": "FLOAT",
+      "value": 24
+    },
+    {
+      "collection": "App · Misure",
+      "name": "icona/32",
+      "type": "FLOAT",
+      "value": 32
+    },
+    {
+      "collection": "App · Misure",
+      "name": "icona/36",
+      "type": "FLOAT",
+      "value": 36
+    }
+  ],
+  "textStyles": [
+    {
+      "name": "Intro title",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 32,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 110
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "Heading",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 19,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 120
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "Body",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 130
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "Body details",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 14,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 130
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "Caption",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 11,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 140
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "App/Display",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 44,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 105
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": -2
+      },
+      "description": "Titoli d'impatto su una riga (es. numeri grandi, benvenuto). Spaziatura negativa solo da 24 in su."
+    },
+    {
+      "name": "App/H1",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 32,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 100
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": -1
+      },
+      "description": "Titolo di pagina: 32, Regular, interlinea 100%."
+    },
+    {
+      "name": "App/H2",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 24,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 120
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": -0.5
+      },
+      "description": "Titolo di sezione."
+    },
+    {
+      "name": "App/Heading",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 19,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 120
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Titolo di card e blocchi."
+    },
+    {
+      "name": "App/Body large",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 18,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 140
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Testo introduttivo o in evidenza."
+    },
+    {
+      "name": "App/Body",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 140
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Testo principale."
+    },
+    {
+      "name": "App/Body details",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 14,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 120
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Dettagli e metadati."
+    },
+    {
+      "name": "App/Caption",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 11,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 140
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Misura minima. Solo micro-testi."
+    },
+    {
+      "name": "App/Accento serif",
+      "family": "DM Serif Display",
+      "style": "Italic",
+      "size": 32,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 100
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Accento serif: 32, interlinea 100%. Anche titoli delle pagine principali."
+    },
+    {
+      "name": "App/Citazione",
+      "family": "DM Sans",
+      "style": "Light Italic",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 130
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Citazioni e parole dei clienti."
+    },
+    {
+      "name": "App/Etichetta",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 16,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 140
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Etichette delle domande nel diario (Energia, Sazietà, ecc.)."
+    },
+    {
+      "name": "App/Link",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 14,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 120
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Link testuali di navigazione (Avanti). In codice area toccabile minima 44."
+    },
+    {
+      "name": "App/Etichetta piccola",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 14,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 140
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Etichette piccole (es. \"Di cosa posso parlare?\")."
+    },
+    {
+      "name": "App/H1 Accesso",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 36,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 100
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": -1
+      },
+      "description": "Titolo delle sole schermate di accesso (36, SemiBold)."
+    },
+    {
+      "name": "App/Accento serif Accesso",
+      "family": "DM Serif Display",
+      "style": "Italic",
+      "size": 36,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 100
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      },
+      "description": "Accento serif delle sole schermate di accesso (36)."
+    },
+    {
+      "name": "App/Caption SemiBold",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 11,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 140
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "App/Etichetta AI",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 14,
+      "lineHeight": {
+        "unit": "AUTO"
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "App/Body details 130",
+      "family": "DM Sans",
+      "style": "Regular",
+      "size": 14,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 130
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    },
+    {
+      "name": "App/Etichetta piccola 130",
+      "family": "DM Sans",
+      "style": "SemiBold",
+      "size": 14,
+      "lineHeight": {
+        "unit": "PERCENT",
+        "value": 130
+      },
+      "letterSpacing": {
+        "unit": "PERCENT",
+        "value": 0
+      }
+    }
+  ],
+  "paintStyles": [
+    {
+      "name": "Dark green",
+      "paints": [
+        {
+          "type": "SOLID",
+          "hex": "#347F75",
+          "opacity": 1
+        }
+      ]
+    },
+    {
+      "name": "Militar",
+      "paints": [
+        {
+          "type": "SOLID",
+          "hex": "#87ADC0",
+          "opacity": 1
+        }
+      ]
+    },
+    {
+      "name": "Cream",
+      "paints": [
+        {
+          "type": "SOLID",
+          "hex": "#FAF8F5",
+          "opacity": 1
+        }
+      ]
+    },
+    {
+      "name": "White",
+      "paints": [
+        {
+          "type": "SOLID",
+          "hex": "#FFFFFF",
+          "opacity": 1
+        }
+      ]
+    },
+    {
+      "name": "Black",
+      "paints": [
+        {
+          "type": "SOLID",
+          "hex": "#000000",
+          "opacity": 1
+        }
+      ]
+    },
+    {
+      "name": "Terracotta",
+      "paints": [
+        {
+          "type": "SOLID",
+          "hex": "#B4534B",
+          "opacity": 1
+        }
+      ]
+    },
+    {
+      "name": "Light green",
+      "paints": [
+        {
+          "type": "SOLID",
+          "hex": "#79D4A6",
+          "opacity": 1
+        }
+      ]
+    },
+    {
+      "name": "App/Gradiente card diario",
+      "paints": [
+        {
+          "type": "GRADIENT_LINEAR",
+          "opacity": 1,
+          "stops": [
+            {
+              "hex": "#FAF8F5",
+              "alpha": 1,
+              "position": 0
+            },
+            {
+              "hex": "#F4F0E8",
+              "alpha": 1,
+              "position": 0.3
+            }
+          ],
+          "transform": [
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              -1,
+              0,
+              1
+            ]
+          ]
+        }
+      ],
+      "description": "Sfumatura dal crema al crema scuro, solo per la card del diario."
+    },
+    {
+      "name": "App/Gradiente AI",
+      "paints": [
+        {
+          "type": "GRADIENT_LINEAR",
+          "opacity": 1,
+          "stops": [
+            {
+              "hex": "#87ADC0",
+              "alpha": 1,
+              "position": 0
+            },
+            {
+              "hex": "#79D4BD",
+              "alpha": 1,
+              "position": 0.5
+            },
+            {
+              "hex": "#347F75",
+              "alpha": 1,
+              "position": 1
+            }
+          ],
+          "transform": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ]
+          ]
+        }
+      ],
+      "description": "Sfumatura delle funzionalità AI (icona): Militar → verde chiaro → verde scuro. Solo per elementi che indicano una funzione AI."
+    }
+  ],
+  "effectStyles": [
+    {
+      "name": "App/Vetro",
+      "effects": [
+        {
+          "type": "GLASS",
+          "visible": true,
+          "radius": 4,
+          "boundVariables": {},
+          "refraction": 1,
+          "depth": 20,
+          "lightAngle": 96,
+          "lightIntensity": 0.8,
+          "dispersion": 0.5,
+          "splay": 0
+        }
+      ],
+      "description": "Effetto vetro: solo card settimana e barra di navigazione."
+    }
+  ],
+  "iconsPage": "🧩 Componenti · App nativa",
+  "iconsPageId": "418:2",
+  "icons": [
+    {
+      "id": "439:79",
+      "name": "Icona / 16 / Colazione",
+      "size": 16,
+      "description": "Lucide: sun. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 1.33,
+      "shapes": 9,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:380",
+      "name": "Icona / 16 / Grafico",
+      "size": 16,
+      "description": "Lucide chart-line · 16 px, tratto 1,33. Selettore vista (Grafico).",
+      "strokeWeight": 1.33,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "520:215",
+      "name": "Icona / 16 / Imparando la nutrizione",
+      "size": 16,
+      "description": "Lucide: library-big. Lucide a 16×16, tratto 1,33. Icona della categoria dei contenuti.",
+      "strokeWeight": 1.33,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "520:219",
+      "name": "Icona / 16 / Integrando nuove abitudini",
+      "size": 16,
+      "description": "Lucide: blocks. Lucide a 16×16, tratto 1,33. Icona della categoria dei contenuti.",
+      "strokeWeight": 1.33,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "520:223",
+      "name": "Icona / 16 / Scelte più consapevoli",
+      "size": 16,
+      "description": "Lucide: compass. Lucide a 16×16, tratto 1,33. Icona della categoria dei contenuti.",
+      "strokeWeight": 1.33,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:388",
+      "name": "Icona / 16 / Tabella",
+      "size": 16,
+      "description": "Lucide list · 16 px, tratto 1,33. Selettore vista (Tabella).",
+      "strokeWeight": 1.33,
+      "shapes": 6,
+      "stroke": "icona/secondaria"
+    },
+    {
+      "id": "467:235",
+      "name": "Icona / 20 / Argomento · Acqua",
+      "size": 20,
+      "description": "Lucide: glass-water.",
+      "strokeWeight": 1.67,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "467:246",
+      "name": "Icona / 20 / Argomento · Altro",
+      "size": 20,
+      "description": "Lucide: message-circle-reply (da confermare).",
+      "strokeWeight": 1.67,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "467:227",
+      "name": "Icona / 20 / Argomento · Energia",
+      "size": 20,
+      "description": "Lucide: zap.",
+      "strokeWeight": 1.67,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "467:242",
+      "name": "Icona / 20 / Argomento · Movimento",
+      "size": 20,
+      "description": "Lucide: dumbbell.",
+      "strokeWeight": 1.67,
+      "shapes": 5,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "467:224",
+      "name": "Icona / 20 / Argomento · Pasti",
+      "size": 20,
+      "description": "Lucide: soup.",
+      "strokeWeight": 1.67,
+      "shapes": 6,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "467:231",
+      "name": "Icona / 20 / Argomento · Sazietà",
+      "size": 20,
+      "description": "Lucide: gauge.",
+      "strokeWeight": 1.67,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:345",
+      "name": "Icona / 20 / Calendario",
+      "size": 20,
+      "description": "Lucide calendar · 20 px, tratto 1,67. Apri storico nella Card settimana; righe dettaglio appuntamenti.",
+      "strokeWeight": 1.67,
+      "shapes": 4,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:373",
+      "name": "Icona / 20 / Campanella attiva",
+      "size": 20,
+      "description": "Lucide bell-ring · 20 px, tratto 1,67. Passaggi delle conferme (Stati 5 e 10).",
+      "strokeWeight": 1.5,
+      "shapes": 4,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "657:400",
+      "name": "Icona / 20 / Carta",
+      "size": 20,
+      "description": "Lucide credit-card · 20 px, tratto 1,5. Riga dettaglio (pagamento) delle schermate Stati; sta sotto la barra dei pulsanti fissa.",
+      "strokeWeight": 1.5,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "519:2833",
+      "name": "Icona / 20 / Certificazione",
+      "size": 20,
+      "description": "Lucide: graduation-cap. Lucide graduation-cap a 20×20, tratto 1,67 (proporzionale al 2 delle icone a 24).",
+      "strokeWeight": 1.67,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:367",
+      "name": "Icona / 20 / Email",
+      "size": 20,
+      "description": "Lucide mail · 20 px, tratto 1,67. Passaggi delle conferme (Stati 5 e 10).",
+      "strokeWeight": 1.5,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:348",
+      "name": "Icona / 20 / Giù",
+      "size": 20,
+      "description": "Lucide chevron-down · 20 px, tratto 1,67. Menu argomenti chiuso.",
+      "strokeWeight": 1.67,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:359",
+      "name": "Icona / 20 / Info",
+      "size": 20,
+      "description": "Lucide info · 20 px, tratto 1,67. Card spiegazione AI.",
+      "strokeWeight": 1.67,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "657:397",
+      "name": "Icona / 20 / Link",
+      "size": 20,
+      "description": "Lucide link · 20 px, tratto 1,5. Riga dettaglio (link della videochiamata) e Riga passaggio delle schermate Stati; sta sotto la barra dei pulsanti fissa.",
+      "strokeWeight": 1.5,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:354",
+      "name": "Icona / 20 / Matita",
+      "size": 20,
+      "description": "Lucide pencil · 20 px, tratto 1,67. Intestazione sezione con azione (Modifica).",
+      "strokeWeight": 1.67,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:339",
+      "name": "Icona / 20 / Più",
+      "size": 20,
+      "description": "Lucide plus · 20 px, tratto 1,67. Riga pasto diario da compilare.",
+      "strokeWeight": 1.67,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:335",
+      "name": "Icona / 20 / Spunta",
+      "size": 20,
+      "description": "Lucide check · 20 px, tratto 1,67. Riga pasto diario aperta (al 50 %).",
+      "strokeWeight": 1.67,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:351",
+      "name": "Icona / 20 / Su",
+      "size": 20,
+      "description": "Lucide chevron-up · 20 px, tratto 1,67. Menu argomenti aperto.",
+      "strokeWeight": 1.67,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:363",
+      "name": "Icona / 20 / Videochiamata",
+      "size": 20,
+      "description": "Lucide picture-in-picture-2 · 20 px, tratto 1,67. Riga dettaglio appuntamento (videochiamata).",
+      "strokeWeight": 1.67,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:376",
+      "name": "Icona / 20 / WhatsApp",
+      "size": 20,
+      "description": "Logo WhatsApp (asset esterno svgrepo, non Lucide) · 20 px, Light green. Card contatto della nutrizionista.",
+      "strokeWeight": 0.63,
+      "shapes": 1,
+      "fill": "badge/sfondo"
+    },
+    {
+      "id": "493:227",
+      "name": "Icona / 24 / Account",
+      "size": 24,
+      "description": "Lucide: user.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:51",
+      "name": "Icona / 24 / Avanti",
+      "size": 24,
+      "description": "Lucide: chevron-right. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "418:20",
+      "name": "Icona / 24 / Avviso",
+      "size": 24,
+      "description": "Lucide: circle-alert. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "474:168",
+      "name": "Icona / 24 / Calendario",
+      "size": 24,
+      "description": "Lucide: calendar-days.",
+      "strokeWeight": 2,
+      "shapes": 10,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "513:2708",
+      "name": "Icona / 24 / Calendario semplice",
+      "size": 24,
+      "description": "Lucide: calendar. Icona Lucide 24×24, tratto 2.",
+      "strokeWeight": 2,
+      "shapes": 4,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:36",
+      "name": "Icona / 24 / Campanella",
+      "size": 24,
+      "description": "Lucide: bell. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "508:211",
+      "name": "Icona / 24 / Chiudi",
+      "size": 24,
+      "description": "Lucide: x.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "508:220",
+      "name": "Icona / 24 / Contenuti",
+      "size": 24,
+      "description": "Lucide: graduation-cap.",
+      "strokeWeight": 2,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "501:2574",
+      "name": "Icona / 24 / Copia",
+      "size": 24,
+      "description": "Lucide: copy.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:57",
+      "name": "Icona / 24 / Energia",
+      "size": 24,
+      "description": "Lucide: zap. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:54",
+      "name": "Icona / 24 / Goccia",
+      "size": 24,
+      "description": "Lucide: droplet. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "513:2717",
+      "name": "Icona / 24 / Grafico",
+      "size": 24,
+      "description": "Lucide: chart-line. Icona Lucide 24×24, tratto 2.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "418:15",
+      "name": "Icona / 24 / Indietro",
+      "size": 24,
+      "description": "Lucide: chevron-left. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "418:25",
+      "name": "Icona / 24 / Info",
+      "size": 24,
+      "description": "Lucide: info. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:61",
+      "name": "Icona / 24 / Invia",
+      "size": 24,
+      "description": "Lucide: send. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "508:224",
+      "name": "Icona / 24 / Lucchetto",
+      "size": 24,
+      "description": "Lucide: lock.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:65",
+      "name": "Icona / 24 / Matita",
+      "size": 24,
+      "description": "Lucide: pencil. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "534:220",
+      "name": "Icona / 24 / Meno",
+      "size": 24,
+      "description": "Lucide: minus.",
+      "strokeWeight": 2,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:32",
+      "name": "Icona / 24 / Menu",
+      "size": 24,
+      "description": "Lucide: menu. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:41",
+      "name": "Icona / 24 / Microfono",
+      "size": 24,
+      "description": "Lucide: mic. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "513:2713",
+      "name": "Icona / 24 / Nutrizionista",
+      "size": 24,
+      "description": "Lucide: user-round-check. Icona Lucide 24×24, tratto 2.",
+      "strokeWeight": 2,
+      "shapes": 3,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "418:6",
+      "name": "Icona / 24 / Occhio",
+      "size": 24,
+      "description": "Lucide: eye. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "418:12",
+      "name": "Icona / 24 / Occhio barrato",
+      "size": 24,
+      "description": "Lucide: eye-off. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 4,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "563:271",
+      "name": "Icona / 24 / Offline",
+      "size": 24,
+      "description": "Lucide: wifi-off.",
+      "strokeWeight": 2,
+      "shapes": 7,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:324",
+      "name": "Icona / 24 / Piano",
+      "size": 24,
+      "description": "Lucide file · 24 px, tratto 2. Voce Piano della Barra di navigazione.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/secondaria"
+    },
+    {
+      "id": "439:48",
+      "name": "Icona / 24 / Più",
+      "size": 24,
+      "description": "Lucide: plus. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:332",
+      "name": "Icona / 24 / Profilo",
+      "size": 24,
+      "description": "Lucide user-round · 24 px, tratto 2. Voce Account della Barra di navigazione (diversa da Icona / 24 / Account = user).",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/secondaria"
+    },
+    {
+      "id": "626:328",
+      "name": "Icona / 24 / Revisioni",
+      "size": 24,
+      "description": "Lucide book-open · 24 px, tratto 2. Voce Revisioni della Barra di navigazione.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/secondaria"
+    },
+    {
+      "id": "539:3713",
+      "name": "Icona / 24 / Ricette",
+      "size": 24,
+      "description": "Lucide: chef-hat.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "439:44",
+      "name": "Icona / 24 / Spunta",
+      "size": 24,
+      "description": "Lucide: check. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria.",
+      "strokeWeight": 2,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "508:228",
+      "name": "Icona / 24 / Video",
+      "size": 24,
+      "description": "Lucide: video.",
+      "strokeWeight": 2,
+      "shapes": 2,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:320",
+      "name": "Icona / 32 / Matita",
+      "size": 32,
+      "description": "Lucide pencil · 32 px, tratto 2,67. Usata nel pulsante tondo Scrivi della Card diario.",
+      "strokeWeight": 2.67,
+      "shapes": 1,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "626:317",
+      "name": "Icona / 36 / Conferma",
+      "size": 36,
+      "description": "Lucide circle-check · 36 px, Dark green. Usata nelle conferme (Stati 5 e 10).",
+      "strokeWeight": 3,
+      "shapes": 2,
+      "stroke": "azione/primaria"
+    },
+    {
+      "id": "626:313",
+      "name": "Icona / 36 / Offline",
+      "size": 36,
+      "description": "Lucide wifi-off · 36 px, tratto 3. Usata da Errore di caricamento.",
+      "strokeWeight": 3,
+      "shapes": 7,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "532:3425",
+      "name": "Icona AI / 20 / Sostituisci",
+      "size": 20,
+      "description": "Lucide: sparkle. Icona della funzione AI di sostituzione, tratto con la sfumatura App/Gradiente AI (20 px, tratto 2.08).",
+      "strokeWeight": 2.08,
+      "shapes": 1,
+      "stroke": "GRADIENT_LINEAR"
+    }
+  ],
+  "opacitaLivello": {
+    "_nota": "Opacità di livello usate nelle schermate ma non presenti come variabili in Figma (fonte: docs/figma-pulizia.md, Inventario della trasparenza). Da promuovere a variabili se Alessmarc lo decide.",
+    "velo": 0.25,
+    "veloTutorial": 0.4,
+    "pulsantePrimarioDisabilitato": 0.4,
+    "iconaRigaAttenuata": 0.4,
+    "trattinoOggi": 0.3,
+    "giornoNonCondiviso": 0.3,
+    "oggiDaCondividere": 0.5,
+    "segnapostoPulsazione": 0.5
+  }
+}

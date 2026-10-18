@@ -57,6 +57,51 @@ Compatibili sui dati, efficienti nel resto.
   spaziature e raggi vengono dai token del design system (dallo step 2).
   Allo step 1 la schermata provvisoria non definisce alcun valore visivo.
 
+## Token del design system
+
+- Unica fonte: Figma. In codice i token stanno in `apps/app/src/ui/theme/`:
+  `figma-tokens.json` (fotografia in sola lettura) → `tokens.generated.ts`
+  (generato) → `index.ts` (punto d'ingresso: `import { colori, spazio, testi,
+  icone } from '@/ui/theme'`). Nessun valore visivo scritto a mano fuori da
+  `src/ui/theme`: la regola ESLint `no-restricted-syntax` blocca i colori
+  letterali (esadecimali, `rgb()`/`rgba()`, nomi CSS) in `app/` e `src/`.
+- **Rigenerare quando Figma cambia** (solo lettura su Figma):
+  1. Eseguire nel connettore Figma (`use_figma`, file `gEx2IMz69sIuUnOYkLBjcf`)
+     il contenuto di `apps/app/scripts/figma/01-variabili-stili.js` e incollare
+     il risultato nelle chiavi omonime di `figma-tokens.json` (`collections`,
+     `variables`, `textStyles`, `paintStyles`, `effectStyles`).
+  2. Eseguire `apps/app/scripts/figma/02-icone.js` (pagina Componenti `418:2`)
+     e incollare il risultato in `icons`; aggiornare `letturaDel`.
+  3. Dentro `apps/app`: `npm run tokens`, poi `npm run typecheck` e `npm run lint`.
+  4. Un font o uno stile nuovo in Figma richiede di aggiornare la mappa `FONT`
+     in `scripts/tokens/genera-token.mjs` e il caricamento in `src/ui/theme/font.ts`.
+- Conversioni fatte dal generatore: interlinea e spaziatura da percentuale a
+  pixel (`fontSize × %`), colori con alfa in `rgba()`, gradienti da
+  `gradientTransform` a punti `inizio`/`fine` relativi (0–1), icone con chiave
+  `"misura/nome"` e nome Lucide dalla descrizione del componente. Gli stili
+  senza prefisso `App/` (Intro title, Heading, Body…) sono del funnel web e
+  non vengono generati. Le opacità di livello (`opacitaLivello`) non sono
+  variabili in Figma: vengono da `docs/figma-pulizia.md`.
+
+## Verifiche a schermo e rotte di sviluppo
+
+- Rotte solo di sviluppo (`Stack.Protected guard={__DEV__}` in `app/_layout.tsx`,
+  mai nelle versioni per i clienti): `/sviluppo/componenti?sezione=Colori|Misure|Testi|Icone`
+  (pagina dei componenti), `/sviluppo/confronto-testi` e `/sviluppo/confronto-icone`
+  (celle su fondo `sfondo/card` per il ritaglio automatico dei confronti).
+- `xcrun simctl openurl` con lo schema `balanced://` fa comparire il dialogo di
+  sistema «Open in Balanced?», che non si può confermare senza permessi di
+  accessibilità. Per aprire una rotta negli screenshot automatici si usa la
+  variabile `EXPO_PUBLIC_ROTTA_SVILUPPO=/sviluppo/...` (letta solo in `__DEV__`
+  da `app/index.tsx`), riavviando Metro: script
+  `~/Desktop/censimenti-app/strumenti/apri-rotta.sh "<rotta>" <uscita.png>`.
+- Confronto a pixel Figma ↔ simulatore (3×): `~/Desktop/censimenti-app/strumenti/`
+  (`confronta-png.mjs`, `ritaglia-celle.mjs`, `componi-su-fondo.mjs`,
+  `confronto-lotto1.sh`); esiti in `~/Desktop/censimenti-app/step2b-confronti/`.
+- Icone: componente `Icona` (`src/ui/icone`), `nome` italiano + `misura` dai
+  token; tratto e colore di Figma per ogni icona; Lucide via
+  `lucide-react-native` con `absoluteStrokeWidth`, le non Lucide come SVG.
+
 ## Architettura
 
 - Workspace npm con l'app in `apps/app`. Server e regole condivise si
