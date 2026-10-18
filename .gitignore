@@ -1,0 +1,70 @@
+# Dipendenze
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+web-build/
+
+# Variabili d'ambiente — mai committare, in nessuna forma
+.env
+.env.*
+*.env
+!.env.example
+*.local
+
+# Log
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Expo
+.expo/
+.expo-shared/
+expo-env.d.ts
+.metro-health-check*
+*.tsbuildinfo
+
+# Cartelle native generate (prebuild continuo): si rigenerano con expo run:ios / run:android
+apps/*/ios/
+apps/*/android/
+.kotlin/
+*.orig.*
+
+# Chiavi e certificati
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Xcode
+xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+Pods/
+*.moved-aside
+
+# TEMP-VERIFY: screenshot delle verifiche a schermo
+verify/
