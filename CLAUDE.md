@@ -43,8 +43,14 @@ Compatibili sui dati, efficienti nel resto.
 ## Design
 
 - **Figma prima del codice.** File `gEx2IMz69sIuUnOYkLBjcf`, pagine
-  "📱 App iOS Android" (schermate), "🧩 Componenti · App nativa"
-  (componenti), "🧱 Foundations · App nativa" (token).
+  "📱 App iOS Android" (schermate, `414:39`), "🧩 Componenti · App nativa"
+  (componenti, `418:2`), "🧱 Foundations · App nativa" (token, `413:2`).
+  L'elenco completo di sezioni e schermate con i node-id è in
+  `docs/figma-indice.md`.
+- **Si parte sempre dagli ID.** L'elenco pagine del connettore Figma
+  (`get_metadata` senza nodeId) restituisce solo la prima pagina del file:
+  non cercare le pagine per nome, usare i node-id sopra o quelli
+  dell'indice.
 - **Fedeltà pixel-perfect** verificata con confronto a schermo tra Figma e
   simulatore prima di dichiarare chiusa una schermata.
 - **Nessun valore scritto a mano se esiste il token:** colori, font,
