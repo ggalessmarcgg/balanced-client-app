@@ -53,7 +53,7 @@ Lasciati scollegati e documentati: veli dei pannelli al 25 % (`474:1533`, `475:1
 - `Logo` (`625:254`): 18,93 × 33,74, foglie collegate a `marchio/*`. Sostituiti 65 gruppi (59 "Logo" + 6 "Group 1091"), 3 ridotti al 71,1 % nelle notifiche di esempio.
 - `Barra superiore` (set `625:382`, 9 varianti). Sostituite 56 barre a mano: Campanella/Menu 40, Con nuove/Menu 5, Nascosta/Menu 6, Nascosta/Chiudi 1, Nascosta/Nascosta 4; le due nei mockup di Primo accesso 2 e 4 ridotte alla scala 0,84.
 - `Separatore` (`625:383`): 178 separatori a mano sostituiti (8 residui con nome o altezza diversi restano frame).
-- Icone nuove (19, componenti `626:313` … `626:388`): `Icona / 36 / Offline`, `/ 36 / Conferma`, `/ 32 / Matita`, `/ 24 / Piano`, `/ 24 / Revisioni`, `/ 24 / Profilo`, `/ 20 / Spunta`, `/ 20 / Più`, `/ 20 / Calendario`, `/ 20 / Giù`, `/ 20 / Su`, `/ 20 / Matita`, `/ 20 / Info`, `/ 20 / Videochiamata`, `/ 20 / Email`, `/ 20 / Campanella attiva`, `/ 20 / WhatsApp` (asset esterno, non Lucide), `/ 16 / Grafico`, `/ 16 / Tabella`. Icone staccate sostituite: 38 nei componenti, 57 nelle schermate (con override di colore dove erano al 60 %). Non sostituite: `icon/link` e `icon/credit-card` negli Stati (12 frame che rendono vuoti, rinominati "Icona … (vuota)").
+- Icone nuove (19, componenti `626:313` … `626:388`): `Icona / 36 / Offline`, `/ 36 / Conferma`, `/ 32 / Matita`, `/ 24 / Piano`, `/ 24 / Revisioni`, `/ 24 / Profilo`, `/ 20 / Spunta`, `/ 20 / Più`, `/ 20 / Calendario`, `/ 20 / Giù`, `/ 20 / Su`, `/ 20 / Matita`, `/ 20 / Info`, `/ 20 / Videochiamata`, `/ 20 / Email`, `/ 20 / Campanella attiva`, `/ 20 / WhatsApp` (asset esterno, non Lucide), `/ 16 / Grafico`, `/ 16 / Tabella`. Icone staccate sostituite: 38 nei componenti, 57 nelle schermate (con override di colore dove erano al 60 %). Non sostituite in questo blocco: `icon/link` e `icon/credit-card` negli Stati (12 frame rinominati "Icona … (vuota)"); sistemate la sera stessa, vedi "Icone link e carta negli Stati" in fondo.
 - Esito: 12 sezioni identiche; pagina componenti cambiata solo dove sono stati aggiunti i componenti.
 
 ### Tabella di corrispondenza delle icone
@@ -100,6 +100,7 @@ Lasciati scollegati e documentati: veli dei pannelli al 25 % (`474:1533`, `475:1
 | Icona / 20 / Certificazione | graduation-cap | Icona 20 / Certificazione |
 | Icona / 20 / Spunta · Più · Calendario · Giù · Su · Matita · Info · Videochiamata · Email · Campanella attiva | check · plus · calendar · chevron-down · chevron-up · pencil · info · picture-in-picture-2 · mail · bell-ring | nuove |
 | Icona / 20 / WhatsApp | — (svgrepo) | nuova |
+| Icona / 20 / Link · Carta | link · credit-card | Icona link (vuota) · Icona carta (vuota) negli Stati (aggiunte la sera, vedi in fondo) |
 | Icona AI / 20 / Sostituisci | sparkle, tratto App/Gradiente AI | Icona AI / Sostituisci |
 | Icona / 16 / Colazione | sun | Icona / Colazione |
 | Icona / 16 / Imparando la nutrizione · Integrando nuove abitudini · Scelte più consapevoli | library-big · blocks · compass | Icona 16 / … |
@@ -140,7 +141,7 @@ Eliminati (0 istanze): `Riga pasto` (`439:156`), `Riga pasto/Compilato` (`439:13
 
 ## Blocco 6 · Ordine e documentazione
 
-- Nomi in italiano: "Button / primary" → "Pulsante primario (a mano)" (2), "card/contatto" → "Card contatto" (3), "whatsapp-row" → "Riga WhatsApp" (3), "segment / active|upcoming" → "Segmento attivo"/"Segmento" (28), "detail-row"/"step-row" → "Riga dettaglio"/"Riga passaggio" (32), "icon/link"/"icon/credit-card" → "Icona … (vuota)" (12), `531:3658` → "Card informativa", `508:2724` → "Spazio"; dentro Pannello scelta orario "day-head"/"Chip / slot"/"Tab / …" → "Giorno"/"Chip orario"/"Scheda…" (72).
+- Nomi in italiano: "Button / primary" → "Pulsante primario (a mano)" (2), "card/contatto" → "Card contatto" (3), "whatsapp-row" → "Riga WhatsApp" (3), "segment / active|upcoming" → "Segmento attivo"/"Segmento" (28), "detail-row"/"step-row" → "Riga dettaglio"/"Riga passaggio" (32), "icon/link"/"icon/credit-card" → "Icona … (vuota)" (12, poi sostituiti da istanze: vedi in fondo), `531:3658` → "Card informativa", `508:2724` → "Spazio"; dentro Pannello scelta orario "day-head"/"Chip / slot"/"Tab / …" → "Giorno"/"Chip orario"/"Scheda…" (72).
 - Foundations · App nativa: i 6 swatch collegati ai primitivi; "Light green" rinominato "Light green · funnel" (#79D4A6); aggiunti "Light green · app" #79D4BD, "Crema scuro" #F4F0E8, "Rosso iOS" #FF3B30. Testi aggiornati: `414:25` (collezioni e variabili complete), `416:33` (Body details 120 %), `413:100` (regola del funnel, per l'app vale "Icone"), `413:112` (#79D4BD nell'app), `413:95` (card 32/32), `449:1077` (gradiente usato da più card), `413:93`, `413:109`, `413:110`, `413:113` (superate per l'app). Sezioni nuove: "Titoli di pagina", "Scala delle opacità", "Barra di navigazione e barra superiore", "Pulizia del 18/10/2026".
 - Descrizioni aggiornate: Barra di navigazione (voce attiva, fondo 80 %, fissa al viewport), Giorno della settimana (L M M G V S D), Segnaposto (altezza libera), Card contenuto (Alta a riempimento), più tutte quelle dei componenti nuovi.
 
@@ -156,7 +157,7 @@ Corretti: Account 4 (`499:2721`), Stati 5 e 10 (`552:4376`, `558:4507`). Lasciat
 
 1. I quattro titoli delle schermate di recupero password (step 3).
 2. Card informativa di Piano 4.3, pillola argomenti di Racconta 5/5.1, righe Certificazione di Menu 3, contenitori Selettore: senza componente corrispondente, da decidere.
-3. `icon/link` e `icon/credit-card` negli Stati sono frame vuoti: da ridisegnare o eliminare.
+3. ~~`icon/link` e `icon/credit-card` negli Stati sono frame vuoti~~ Risolto la sera del 18/10/2026: non erano vuoti, vedi "Icone link e carta negli Stati".
 4. `Icona / 20 / Argomento · Altro`: nome Lucide da confermare.
 5. Dentro Pannello scelta orario restano 4 nodi con nomi inglesi non riconosciuti dallo script.
 6. Veli dei pannelli al 25 % sul livello: se servirà una variabile, `velo` = nero 25 %.
@@ -202,3 +203,11 @@ Sezioni toccate confrontate con lo stato precedente: differenze solo dove previs
 - La variabile `icona/secondaria` (`VariableID:617:29`) non è più nero con trasparenza ma un colore pieno: Chiaro #646362 (equivale a nero 60 % su `sfondo/card` #FAF8F5), Scuro #9F9C96 (#F4F0E8 al 60 % su #201E1C). Motivo: con la trasparenza i tratti sovrapposti delle icone Lucide (giunzioni, incroci) risultavano più scuri del resto del tratto. Descrizione aggiornata sulla variabile.
 - Verifica in sola lettura: 172 nodi collegati nelle schermate e 44 nei componenti; nessuno ha opacità di fill o di livello, e nessun antenato attenuato. Le icone secondarie sono quindi rese solo dal colore pieno.
 - Conseguenza per il codice: `icona/secondaria` va usata come colore opaco; su sfondi diversi da `sfondo/card` il risultato differisce leggermente dal 60 % reale.
+
+### Icone link e carta negli Stati (18/10/2026, sera)
+
+- Causa dell'equivoco: i 12 frame `icon/link` e `icon/credit-card` (poi "Icona … (vuota)") non erano vuoti. Nelle schermate sono coperti dalla barra dei pulsanti fissa in fondo, che simula lo sticky delle call to action: nelle Riga dettaglio (link della videochiamata, pagamento) di Stati 1, 3, 4, 4.1, 4.2 e nelle Riga passaggio di Stati 5 e 10. Nell'app devono esserci, sotto la barra, come nel disegno.
+- Tracciati: 20 × 20, due vettori ciascuno, tratto 1,5 arrotondato legato a `icona/primaria`, geometria identica in tutti i 12 frame (lo stesso tratto 1,5 di `Icona / 20 / Email` e `Icona / 20 / Campanella attiva` nelle stesse schermate).
+- Componenti nuovi, clonando i vettori di Stati 1: `Icona / 20 / Link` (`657:397`, Lucide link) e `Icona / 20 / Carta` (`657:400`, Lucide credit-card), a x 760 e 800 nella riga delle icone nuove (y 80), descrizione con il nome Lucide. La misura nel nome è 20 e non 24 perché lo schema `Icona / <misura> / <nome>` indica la dimensione reale del tracciato.
+- Sostituzioni: 12 istanze allo stesso indice delle righe auto-layout (7 Link: `657:7372`, `657:7378`, `657:7384`, `657:7387`, `657:7393`, `657:7399`, `657:7405`; 5 Carta: `657:7375`, `657:7381`, `657:7390`, `657:7396`, `657:7402`). Nessun frame "(vuota)" residuo.
+- Verifica: per ognuno dei 12, PNG esportato prima e dopo (icona a 4×, riga genitore a 2×) identico al byte; sezione Stati (`550:3635`, 4096 px) confrontata pixel per pixel prima e dopo: identica. Pagina componenti: 104 componenti di primo livello (61 icone, 43 di interfaccia).
