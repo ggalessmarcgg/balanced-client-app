@@ -23,7 +23,7 @@ Principio: nessun cambiamento visivo, salvo le eccezioni decise e riportate in f
 
 Collezione `App · Misure` (18 variabili): `spazio/2`, `/3`, `/5`, `/6`, `/10`, `/14`, `/28`, `/30`, `/36`, `/40`; `raggio/badge` 10, `raggio/contenuto` 20; `icona/16`, `/18`, `/20`, `/24`, `/32`, `/36`.
 
-Collezione `App · Colori` (14 variabili, modalità Chiaro e Scuro): `marchio/foglia-chiara` → `colore/militar`, `marchio/foglia-scura` → `colore/dark-green`; `testo/secondario` 60 %, `testo/terziario` 50 %, `testo/attenuato` 70 %, `testo/corpo-attenuato` 80 %, `testo/segnaposto` 45 %, `testo/disabilitato` 40 %, `testo/futuro` 30 %; `icona/secondaria` 60 %; `linea/separatore` 6 %, `linea/guida` 8 %, `linea/avanzamento` 10 % (aggiunta nel blocco 4), `maniglia` 15 %. In Chiaro: nero con alfa; in Scuro: #F4F0E8 con la stessa alfa.
+Collezione `App · Colori` (14 variabili, modalità Chiaro e Scuro): `marchio/foglia-chiara` → `colore/militar`, `marchio/foglia-scura` → `colore/dark-green`; `testo/secondario` 60 %, `testo/terziario` 50 %, `testo/attenuato` 70 %, `testo/corpo-attenuato` 80 %, `testo/segnaposto` 45 %, `testo/disabilitato` 40 %, `testo/futuro` 30 %; `icona/secondaria` (nata come nero al 60 %, poi resa colore pieno: vedi "Aggiornamento icona/secondaria" in fondo); `linea/separatore` 6 %, `linea/guida` 8 %, `linea/avanzamento` 10 % (aggiunta nel blocco 4), `maniglia` 15 %. In Chiaro: nero con alfa; in Scuro: #F4F0E8 con la stessa alfa.
 
 Stili di testo (4): `App/Caption SemiBold` (11 SemiBold 140 %), `App/Etichetta AI` (14 SemiBold, interlinea automatica), `App/Body details 130` (14 Regular 130 %), `App/Etichetta piccola 130` (14 SemiBold 130 %).
 
@@ -183,7 +183,7 @@ Corretti: Account 4 (`499:2721`), Stati 5 e 10 (`552:4376`, `558:4507`). Lasciat
 | Separatori | 186 istanze di Separatore a `linea/separatore` (6 %) |
 | Barre di avanzamento delle revisioni | 5 a `linea/avanzamento` (10 %) |
 | Testi secondari | `testo/secondario` 384, `testo/terziario` 142, `testo/attenuato` 59, `testo/corpo-attenuato` 24, `testo/segnaposto` 6, `testo/futuro` 46, `testo/disabilitato` 4 |
-| Icone inattive | 172 vettori a `icona/secondaria` (60 %) |
+| Icone inattive | 172 vettori a `icona/secondaria` (colore pieno dal 18/10/2026 sera, vedi sotto) |
 | Opacità di livello rimaste (originali) | pulsante primario disabilitato 40 % (7), frecce e icone copia nelle righe 40 % (51), trattino "oggi" 30 % (21), giorni non condivisi 30 % e "oggi da condividere" 50 % nei grafici (24), pallini 60/30 % (4), hero 40 %, "Quando" 40 % (2), "Scelta" 30 % (2), segnaposto "Salta" 0 % (1) |
 | Nodi con doppia attenuazione (variabile con alfa + opacità di livello) | nessuno |
 
@@ -195,4 +195,10 @@ Corretti: Account 4 (`499:2721`), Stati 5 e 10 (`552:4376`, `558:4507`). Lasciat
 
 ### Confronti
 
-Sezioni toccate confrontate con lo stato precedente: differenze solo dove previsto (lettere dei giorni nelle Card settimana; fondo della barra all'80 % in Revisioni, Account, Piano; titolo di Account 4). Nella sezione Piano compaiono ora, sovrapposte all'area a destra, le schermate "Menu · 7 · Le tue ricette" e "7.1": non le ho spostate io (posizione invariata nel loro frame di sezione); vanno riposizionate a mano se si vogliono dentro la sezione Menu.
+Sezioni toccate confrontate con lo stato precedente: differenze solo dove previsto (lettere dei giorni nelle Card settimana; fondo della barra all'80 % in Revisioni, Account, Piano; titolo di Account 4). Le schermate "Menu · 7 · Le tue ricette" e "7.1" sono state spostate volutamente da Alessmarc nell'area della sezione Piano: non vanno toccate.
+
+### Aggiornamento `icona/secondaria` (18/10/2026, sera · modifica fatta da Alessmarc e Claude in chat)
+
+- La variabile `icona/secondaria` (`VariableID:617:29`) non è più nero con trasparenza ma un colore pieno: Chiaro #646362 (equivale a nero 60 % su `sfondo/card` #FAF8F5), Scuro #9F9C96 (#F4F0E8 al 60 % su #201E1C). Motivo: con la trasparenza i tratti sovrapposti delle icone Lucide (giunzioni, incroci) risultavano più scuri del resto del tratto. Descrizione aggiornata sulla variabile.
+- Verifica in sola lettura: 172 nodi collegati nelle schermate e 44 nei componenti; nessuno ha opacità di fill o di livello, e nessun antenato attenuato. Le icone secondarie sono quindi rese solo dal colore pieno.
+- Conseguenza per il codice: `icona/secondaria` va usata come colore opaco; su sfondi diversi da `sfondo/card` il risultato differisce leggermente dal 60 % reale.

@@ -99,7 +99,7 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Account · 3 · Elimina account · avviso | `499:2568` | 852 |
 | Account · 4 · Elimina account · conferma | `499:2709` | 852 |
 
-### 6 · Menu · `508:2613` · 14 schermate
+### 6 · Menu · `508:2613` · 12 schermate
 
 | Schermata | node-id | Altezza |
 |---|---|---|
@@ -115,10 +115,8 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Menu · 6 · Peso e misure · grafici | `525:2846` | 1093 |
 | Menu · 6.1 · Peso e misure · tabelle | `525:2930` | 1265 |
 | Menu · 3.1 · La tua nutrizionista · in ferie | `596:5846` | 1868 |
-| Menu · 7 · Le tue ricette | `539:3724` | 852 |
-| Menu · 7.1 · Le tue ricette · nessuna ricetta | `539:3777` | 852 |
 
-### 7 · Piano · `527:2946` · 12 schermate
+### 7 · Piano · `527:2946` · 14 schermate
 
 | Schermata | node-id | Altezza |
 |---|---|---|
@@ -135,6 +133,8 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Piano · 5.2 · Genera ricetta · ricerca delle idee | `537:4384` | 852 |
 | Piano · 5.3 · Genera ricetta · tre idee | `536:3770` | 852 |
 | Piano · 5.4 · Ricetta | `539:3500` | 993 |
+| Menu · 7 (spostata qui da Alessmarc il 18/10/2026) · Le tue ricette | `539:3724` | 852 |
+| Menu · 7.1 (spostata qui da Alessmarc il 18/10/2026) · Le tue ricette · nessuna ricetta | `539:3777` | 852 |
 
 ### 8 · Stati dell'account · `550:3635` · 14 schermate
 
