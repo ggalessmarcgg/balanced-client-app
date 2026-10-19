@@ -21,15 +21,18 @@ export type SchermataStatoSupportoProps = {
   onEmailSupporto?: () => void;
   onTelefonoSupporto?: () => void;
   onNutrizionista?: () => void;
+  /** Elementi sopra la pagina (Notifica breve dopo la copia di un contatto). */
+  sovrapposti?: ReactNode;
 };
 
 /**
  * Schermate di stato con il blocco Supporto (Figma Stati 6, 7, 11, 12): barra superiore con le icone nascoste,
- * saluto, Supporto, card della nutrizionista; in fondo "Account" e "Esci".
+ * saluto, Supporto (righe che copiano il contatto), card della nutrizionista; in fondo "Account" e "Esci".
  */
-export function SchermataStatoSupporto({ titolo, testo, nutrizionista, onAccount, onEsci, onEmailSupporto, onTelefonoSupporto, onNutrizionista }: SchermataStatoSupportoProps) {
+export function SchermataStatoSupporto({ titolo, testo, nutrizionista, onAccount, onEsci, onEmailSupporto, onTelefonoSupporto, onNutrizionista, sovrapposti }: SchermataStatoSupportoProps) {
   return (
     <Pagina
+      sovrapposti={sovrapposti}
       piede={
         <View style={stili.comandi}>
           {onAccount && <Pulsante etichetta="Account" livello="secondario" onPress={onAccount} />}

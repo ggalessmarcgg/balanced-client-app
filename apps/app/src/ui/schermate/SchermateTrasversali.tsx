@@ -20,11 +20,31 @@ export function BarraNavigazioneFissa({ attiva }: { attiva: VoceNavigazione }) {
   );
 }
 
-/** Trasversali · 2 · Caricamento (Figma 563:4751): tre segnaposti che pulsano, barra superiore e di navigazione. */
-export function SchermataCaricamento() {
+/**
+ * Struttura della pagina in cui compare uno stato trasversale: gli stati trasversali stanno dentro la pagina del
+ * cliente e ne rispettano la struttura. La barra di navigazione c'è solo se la pagina ce l'ha (app dell'abbonato);
+ * all'avvio, nell'accesso e nelle schermate dei non abbonati non c'è, e la barra superiore ha solo il logo.
+ */
+export type StrutturaPagina = {
+  /** Barra superiore: solo logo (predefinito: avvio e non abbonati) o completa (app dell'abbonato). */
+  barraSuperiore?: 'soloLogo' | 'completa';
+  /** Voce attiva della barra di navigazione; assente = nessuna barra (predefinito). */
+  barraNavigazione?: VoceNavigazione;
+};
+
+function Struttura({ barraSuperiore = 'soloLogo' }: StrutturaPagina) {
+  return barraSuperiore === 'completa' ? <BarraSuperiore /> : <BarraSuperiore notifiche="nascosta" azione="nascosta" />;
+}
+
+function barraDi(struttura: StrutturaPagina) {
+  return struttura.barraNavigazione ? <BarraNavigazioneFissa attiva={struttura.barraNavigazione} /> : undefined;
+}
+
+/** Trasversali · 2 · Caricamento (Figma 563:4751): tre segnaposti che pulsano dentro la struttura della pagina. */
+export function SchermataCaricamento(struttura: StrutturaPagina) {
   return (
-    <Pagina scorrevole={false} sovrapposti={<BarraNavigazioneFissa attiva="oggi" />}>
-      <BarraSuperiore />
+    <Pagina scorrevole={false} sovrapposti={barraDi(struttura)}>
+      <Struttura {...struttura} />
       <View style={stili.contenutoCaricamento}>
         <Segnaposto altezza={230} />
         <Segnaposto altezza={130} />
@@ -34,16 +54,16 @@ export function SchermataCaricamento() {
   );
 }
 
-export type SchermataSenzaConnessioneProps = { onRiprova: () => void };
+export type SchermataSenzaConnessioneProps = StrutturaPagina & { onRiprova: () => void };
 
 /**
  * Trasversali · 1 · Senza connessione (Figma 563:4517) all'avvio, quando non ci sono dati salvati da mostrare:
  * avviso in cima al contenuto e invito a riprovare.
  */
-export function SchermataSenzaConnessione({ onRiprova }: SchermataSenzaConnessioneProps) {
+export function SchermataSenzaConnessione({ onRiprova, ...struttura }: SchermataSenzaConnessioneProps) {
   return (
-    <Pagina scorrevole={false} sovrapposti={<BarraNavigazioneFissa attiva="oggi" />}>
-      <BarraSuperiore />
+    <Pagina scorrevole={false} sovrapposti={barraDi(struttura)}>
+      <Struttura {...struttura} />
       <View style={stili.contenutoOffline}>
         <AvvisoConnessione posizione="nelContenuto" />
         <View style={stili.spazio} />
@@ -53,13 +73,13 @@ export function SchermataSenzaConnessione({ onRiprova }: SchermataSenzaConnessio
   );
 }
 
-export type SchermataErroreCaricamentoProps = { onRiprova: () => void; titolo?: string; descrizione?: string };
+export type SchermataErroreCaricamentoProps = StrutturaPagina & { onRiprova: () => void; titolo?: string; descrizione?: string };
 
 /** Trasversali · 3 · Errore di caricamento (Figma 563:4978): titolo serif opzionale, spazio 120, blocco "Riprova". */
-export function SchermataErroreCaricamento({ onRiprova, titolo, descrizione }: SchermataErroreCaricamentoProps) {
+export function SchermataErroreCaricamento({ onRiprova, titolo, descrizione, ...struttura }: SchermataErroreCaricamentoProps) {
   return (
-    <Pagina scorrevole={false} sovrapposti={<BarraNavigazioneFissa attiva="oggi" />}>
-      <BarraSuperiore />
+    <Pagina scorrevole={false} sovrapposti={barraDi(struttura)}>
+      <Struttura {...struttura} />
       <View style={stili.contenutoErrore}>
         {titolo && (
           <Testo stile="accentoSerif" accessibilityRole="header">

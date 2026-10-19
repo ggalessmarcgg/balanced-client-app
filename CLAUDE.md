@@ -90,7 +90,11 @@ Compatibili sui dati, efficienti nel resto.
   lo stile e la correzione verticale per stile di `src/ui/theme/testo-correzioni.ts`,
   misurata con il confronto a pixel (su iOS, con interlinea ≤ altezza naturale del font,
   i glifi stanno più in alto che in Figma). Da rimisurare se cambiano font,
-  interlinee o versione di React Native.
+  interlinee o versione di React Native. Su iOS il testo viene inoltre ritagliato al
+  riquadro di riga: per gli stili con interlinea sotto l'altezza naturale (H1, Display,
+  Accento serif, H1 Accesso) `Testo` allarga il riquadro con un padding verticale
+  compensato da margini negativi, altrimenti accenti e discendenti spariscono
+  (verifica: `/sviluppo/titoli`, esiti in `step3-confronti/titoli/`).
 - **Icone**: tratto unico per misura (`misura/12`: 16 → 1,33, 20 → 1,67, 24 → 2,
   32 → 2,67, 36 → 3), lo stesso in Figma. I componenti icona in Figma seguono la
   versione Lucide installata (`lucide-react-native`): se un aggiornamento cambia un
@@ -108,6 +112,22 @@ Compatibili sui dati, efficienti nel resto.
   nativo con `expo-glass-effect` (Liquid Glass, iOS 26+) e tinta `sfondo/barra`;
   su Android e dove il vetro non è disponibile fondo `sfondo/card` al 90 % senza
   sfocatura (`coloriCodice.sfondoBarraAndroid`). Decisione del 19/10/2026.
+
+## Stati trasversali (Caricamento, Senza connessione, Errore di caricamento, Notifica breve)
+
+- Compaiono **dentro la pagina in cui si trova il cliente** e ne rispettano la
+  struttura (barra superiore, titolo, margini). La **barra di navigazione c'è
+  solo se la pagina ce l'ha**, cioè solo nell'app dell'abbonato (stato J).
+  All'avvio (stato ancora non noto), nel login, nelle schermate di accesso e in
+  tutte le schermate dei non abbonati: senza barra, barra superiore con il solo
+  logo. I disegni "Trasversali" in Figma (`563:4516`) mostrano il caso
+  dell'abbonato. In codice: `StrutturaPagina` in
+  `src/ui/schermate/SchermateTrasversali.tsx` (`barraSuperiore`,
+  `barraNavigazione`), predefinito senza barra. Vale anche per le pagine future.
+- Notifica breve: 16 sopra l'area sicura inferiore, margini 20
+  (`NotificaInBasso`); nelle pagine con la barra di navigazione sta sopra la barra.
+- Contatti del supporto: si **copiano** negli appunti (`expo-clipboard`, icona
+  Copia) con Notifica breve di conferma; nessun reindirizzamento fuori dall'app.
 
 ## Verifiche a schermo e rotte di sviluppo
 
@@ -209,8 +229,8 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `src/core/stato/letture.ts`) → `calcolaStato` (`src/core/stato/stato.ts`,
   stati A–L, orari in Europe/Rome senza dipendenze) → rotta in
   `src/servizi/rotte.ts`. Mai `select *`, mai `nutritionist_id` dal lead.
-- Account di prova: proposta in `~/Desktop/censimenti-app/step3-account-prova.md`;
-  le scritture le applica la chat di progetto.
+- Account di prova: tabella in `docs/account-prova.md` (senza password); le
+  scritture le applica la chat di progetto.
 
 ## Note su Xcode 27 / Device Hub
 

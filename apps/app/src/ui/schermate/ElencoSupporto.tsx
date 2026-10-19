@@ -13,7 +13,8 @@ export type ElencoSupportoProps = {
 
 /**
  * Blocco "Supporto" delle schermate di stato (Figma 558:4206 e seguenti): etichetta e card crema con le due
- * righe (email e numero). Toccando una riga si apre l'app del telefono (mail o WhatsApp).
+ * righe (email e numero). Toccando una riga il contatto viene copiato negli appunti (icona Copia): nessun
+ * reindirizzamento fuori dall'app.
  */
 export function ElencoSupporto({ onEmail, onTelefono }: ElencoSupportoProps) {
   return (

@@ -3,7 +3,7 @@ import { SchermataStatoSupporto, type SchermataStatoSupportoProps } from '@/ui/s
 import { TitoloAccento } from '@/ui/schermate/TitoloAccento';
 import { Testo } from '@/ui/Testo';
 
-type Azioni = Pick<SchermataStatoSupportoProps, 'onAccount' | 'onEsci' | 'onEmailSupporto' | 'onTelefonoSupporto' | 'onNutrizionista'>;
+type Azioni = Pick<SchermataStatoSupportoProps, 'onAccount' | 'onEsci' | 'onEmailSupporto' | 'onTelefonoSupporto' | 'onNutrizionista' | 'sovrapposti'>;
 export type SchermataStatoProps = Azioni & { profilo: Profilo };
 
 /** Saluto declinato per genere (clients.gender: female | male | other | null). */

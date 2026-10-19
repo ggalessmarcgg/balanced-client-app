@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import * as Clipboard from 'expo-clipboard';
+
 import { accedi } from '@/servizi/accesso';
 import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
 import { leggiStato } from '@/servizi/statoCliente';
@@ -30,6 +32,12 @@ export default function ProvaAccesso() {
         scrivi_(`portachiavi a pezzi (5 004 caratteri): ${letto === valore ? 'OK' : 'KO'}; dopo la rimozione: ${(await leggi(chiave)) === null ? 'vuoto' : 'KO'}`);
       } catch (e) {
         scrivi_(`portachiavi: errore ${String(e)}`);
+      }
+      try {
+        await Clipboard.setStringAsync('prova appunti balanced');
+        scrivi_(`appunti: ${(await Clipboard.getStringAsync()) === 'prova appunti balanced' ? 'OK' : 'KO'}`);
+      } catch (e) {
+        scrivi_(`appunti: errore ${String(e)}`);
       }
       const stato = await leggiStato({ forza: true });
       scrivi_(`leggiStato senza sessione: ${stato.tipo}`);

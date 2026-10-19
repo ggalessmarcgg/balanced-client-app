@@ -8,5 +8,5 @@ export default function Rotta() {
   const stato = statoCorrente();
   const azioni = useAzioniStato();
   if (!stato || !(stato.codice === 'L')) return <Redirect href="/" />;
-  return <SchermataAccountNonCollegato onEsci={azioni.onEsci} onEmailSupporto={azioni.onEmailSupporto} onTelefonoSupporto={azioni.onTelefonoSupporto} />;
+  return <SchermataAccountNonCollegato onEsci={azioni.onEsci} onEmailSupporto={azioni.onEmailSupporto} onTelefonoSupporto={azioni.onTelefonoSupporto} sovrapposti={azioni.sovrapposti} />;
 }

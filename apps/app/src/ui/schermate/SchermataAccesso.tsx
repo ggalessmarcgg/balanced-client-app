@@ -13,8 +13,9 @@ import { colori, spazio, testi } from '@/ui/theme';
 
 /**
  * Varianti della schermata di accesso (Figma 425:224, 425:252, 562:4254, 562:4319):
- * normale · errore (messaggio terracotta, campo password in errore) · emailNonConfermata (messaggio info e
- * "Invia di nuovo il link") · linkInviato (messaggio con l'email e pulsante disabilitato con il conto alla rovescia).
+ * normale · errore (messaggio terracotta, campo password in errore) · emailNonConfermata (messaggio info,
+ * "Invia di nuovo il link" e "Accedi") · linkInviato (messaggio con l'email e reinvio disabilitato con il conto alla
+ * rovescia, sempre con "Accedi" sotto). Aggiornata a Figma del 19/10/2026.
  */
 export type VarianteAccesso =
   | { tipo: 'normale' }
@@ -31,8 +32,8 @@ export type SchermataAccessoProps = {
   onPasswordDimenticata: () => void;
   onReinvia: () => void;
   variante: VarianteAccesso;
-  /** Accesso o reinvio in corso: pulsanti in caricamento. */
-  inCorso?: boolean;
+  /** Quale azione è in corso: il pulsante corrispondente mostra il caricamento. */
+  inCorso?: 'accesso' | 'reinvio' | false;
   /** Elementi sopra la pagina (notifica breve). */
   sovrapposti?: React.ReactNode;
 };
@@ -51,12 +52,13 @@ export function SchermataAccesso({ email, password, onEmail, onPassword, onAcced
             {variante.tipo === 'linkInviato' ? (
               <Pulsante etichetta={`Invia di nuovo tra ${variante.secondiRimanenti} s`} livello="secondario" stato="disabilitato" />
             ) : (
-              <Pulsante etichetta="Invia di nuovo il link" livello="secondario" stato={inCorso ? 'caricamento' : 'normale'} onPress={onReinvia} />
+              <Pulsante etichetta="Invia di nuovo il link" livello="secondario" stato={inCorso === 'reinvio' ? 'caricamento' : 'normale'} onPress={onReinvia} />
             )}
+            <Pulsante etichetta="Accedi" stato={inCorso === 'accesso' ? 'caricamento' : puoAccedere ? 'normale' : 'disabilitato'} onPress={onAccedi} />
           </View>
         ) : (
           <View style={stili.azioni}>
-            <Pulsante etichetta="Accedi" stato={inCorso ? 'caricamento' : puoAccedere ? 'normale' : 'disabilitato'} onPress={onAccedi} />
+            <Pulsante etichetta="Accedi" stato={inCorso === 'accesso' ? 'caricamento' : puoAccedere ? 'normale' : 'disabilitato'} onPress={onAccedi} />
             <Testo stile="bodyDetails" colore={colori.testo.attenuato} style={stili.nota}>
               Non hai ancora un account? <Text style={testi.etichettaPiccola130}>Viene creato quando prenoti la tua prima consulenza.</Text>
             </Testo>
@@ -107,7 +109,7 @@ export function SchermataAccesso({ email, password, onEmail, onPassword, onAcced
 }
 
 // Misure da Figma 425:224: Corpo pt 32 / px 32, gap 24; gruppo testi gap 8; gruppo campi gap 16 centrato;
-// Azioni pt 16 / px 32, gap 8 (versione conferma: pt 12 / pb 8).
+// Azioni pt 16 / px 32, gap 8 (versione conferma: pt 12 / pb 8, due pulsanti).
 const stili = StyleSheet.create({
   corpo: { flex: 1, paddingTop: spazio[32], paddingHorizontal: spazio[32], gap: spazio[24], alignItems: 'flex-start' },
   gruppoTesti: { alignSelf: 'stretch', gap: spazio[8] },

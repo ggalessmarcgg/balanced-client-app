@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Profilo } from '@/core/stato/stato';
 import { NotificaBreve } from '@/ui/NotificaBreve';
+import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
 import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
 import { SchermataAbbonato, SchermataSegnapostoPrenotazione } from '@/ui/schermate/SchermateSegnaposto';
@@ -32,9 +33,13 @@ export const STATI_SVILUPPO = [
   ['J', 'J · Abbonato (segnaposto con barra di navigazione)'],
   ['K', 'K · Stati 7 · Percorso concluso (558:4260)'],
   ['L', 'L · Stati 11 · Account non collegato (558:4316)'],
-  ['caricamento', 'Trasversali 2 · Caricamento (563:4751)'],
-  ['senza-connessione', 'Trasversali 1 · Senza connessione (563:4517)'],
-  ['errore-caricamento', 'Trasversali 3 · Errore di caricamento (563:4978)'],
+  ['caricamento', "Caricamento all'avvio (senza barra di navigazione)"],
+  ['senza-connessione', "Senza connessione all'avvio (senza barra)"],
+  ['errore-caricamento', "Errore di caricamento all'avvio (senza barra)"],
+  ['caricamento-abbonato', 'Trasversali 2 · Caricamento nell app dell abbonato (563:4751)'],
+  ['senza-connessione-abbonato', 'Trasversali 1 · Senza connessione nell app dell abbonato (563:4517)'],
+  ['errore-caricamento-abbonato', 'Trasversali 3 · Errore di caricamento nell app dell abbonato (563:4978)'],
+  ['copia-contatto', 'H con Notifica breve dopo la copia di un contatto'],
 ] as const;
 export type ChiaveStatoSviluppo = (typeof STATI_SVILUPPO)[number][0];
 
@@ -120,6 +125,21 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <SchermataSenzaConnessione onRiprova={nulla} />;
     case 'errore-caricamento':
       return <SchermataErroreCaricamento onRiprova={nulla} />;
+    case 'caricamento-abbonato':
+      return <SchermataCaricamento barraSuperiore="completa" barraNavigazione="oggi" />;
+    case 'senza-connessione-abbonato':
+      return <SchermataSenzaConnessione onRiprova={nulla} barraSuperiore="completa" barraNavigazione="oggi" />;
+    case 'errore-caricamento-abbonato':
+      return <SchermataErroreCaricamento onRiprova={nulla} titolo="Piano" barraSuperiore="completa" barraNavigazione="piano" />;
+    case 'copia-contatto':
+      return (
+        <SchermataPercorsoNonAttivo
+          profilo={PROFILO}
+          onAccount={nulla}
+          onEsci={nulla}
+          sovrapposti={<NotificaInBasso tipo="conferma" testo="Email copiata negli appunti." />}
+        />
+      );
   }
 }
 

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { TipoErroreAccesso } from '@/core/accesso/errori';
 import { accedi, ATTESA_REINVIO_SECONDI, reinviaConferma } from '@/servizi/accesso';
-import { NotificaBreve } from '@/ui/NotificaBreve';
+import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio } from '@/ui/theme';
@@ -23,7 +23,7 @@ export default function RottaAccesso() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fase, setFase] = useState<Fase>({ tipo: 'normale' });
-  const [inCorso, setInCorso] = useState(false);
+  const [inCorso, setInCorso] = useState<'accesso' | 'reinvio' | false>(false);
   const [scadenzaReinvio, setScadenzaReinvio] = useState<number | null>(null);
   const [secondi, setSecondi] = useState(0);
   const [notifica, setNotifica] = useState(avviso === 'recupero');
@@ -52,7 +52,7 @@ export default function RottaAccesso() {
 
   const onAccedi = useCallback(async () => {
     if (inCorso) return;
-    setInCorso(true);
+    setInCorso('accesso');
     const esito = await accedi(email, password);
     setInCorso(false);
     if (esito.ok) {
@@ -64,7 +64,7 @@ export default function RottaAccesso() {
 
   const onReinvia = useCallback(async () => {
     if (inCorso || scadenzaReinvio !== null) return;
-    setInCorso(true);
+    setInCorso('reinvio');
     const esito = await reinviaConferma(email);
     setInCorso(false);
     if (esito.ok) {
@@ -99,20 +99,11 @@ export default function RottaAccesso() {
       inCorso={inCorso}
       sovrapposti={
         <>
-          {notifica && <NotificaRecupero onScomparsa={() => setNotifica(false)} />}
+          {notifica && <NotificaInBasso tipo="conferma" testo="Ti abbiamo inviato il link per scegliere una nuova password." onScomparsa={() => setNotifica(false)} />}
           {__DEV__ && <LinkSviluppo />}
         </>
       }
     />
-  );
-}
-
-function NotificaRecupero({ onScomparsa }: { onScomparsa: () => void }) {
-  const insets = useSafeAreaInsets();
-  return (
-    <View style={[stili.notifica, { bottom: insets.bottom + spazio[16] }]} pointerEvents="box-none">
-      <NotificaBreve tipo="conferma" testo="Ti abbiamo inviato il link per scegliere una nuova password." onScomparsa={onScomparsa} />
-    </View>
   );
 }
 
@@ -136,6 +127,5 @@ function LinkSviluppo() {
 }
 
 const stili = StyleSheet.create({
-  notifica: { position: 'absolute', left: margine.pagina, right: margine.pagina },
   sviluppo: { position: 'absolute', right: margine.pagina, flexDirection: 'row', gap: spazio[12], paddingVertical: spazio[4] },
 });

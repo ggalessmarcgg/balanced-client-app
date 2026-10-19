@@ -1,12 +1,19 @@
-// Apre le app del telefono per i contatti del supporto (mail e WhatsApp, stessi link della web app).
-import { Linking } from 'react-native';
+// Contatti del supporto: si copiano negli appunti (icona Copia in Figma), nessun reindirizzamento fuori dall'app.
+import * as Clipboard from 'expo-clipboard';
 
-import { linkEmailSupporto, linkWhatsAppSupporto } from '@/core/accesso/costanti';
+import { SUPPORTO } from '@/core/accesso/costanti';
 
-export function apriEmailSupporto(): void {
-  Linking.openURL(linkEmailSupporto()).catch(() => {});
-}
+export type ContattoCopiato = 'email' | 'telefono';
 
-export function apriWhatsAppSupporto(): void {
-  Linking.openURL(linkWhatsAppSupporto('Ciao! Vorrei gestire il mio percorso Balanced.')).catch(() => {});
+export const TESTO_COPIATO: Record<ContattoCopiato, string> = {
+  email: 'Email copiata negli appunti.',
+  telefono: 'Numero copiato negli appunti.',
+};
+
+export async function copiaContattoSupporto(contatto: ContattoCopiato): Promise<boolean> {
+  try {
+    return await Clipboard.setStringAsync(contatto === 'email' ? SUPPORTO.email : SUPPORTO.telefono);
+  } catch {
+    return false;
+  }
 }
