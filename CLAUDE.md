@@ -107,7 +107,7 @@ Compatibili sui dati, efficienti nel resto.
   `Riga elenco`, …), `/sviluppo/confronto-testi` e `/sviluppo/confronto-icone`
   (celle su fondo `sfondo/card` per il ritaglio automatico dei confronti),
   `/sviluppo/confronto-componenti?componente=<nome>` (varianti in colonna per il confronto
-  con il set Figma; esiti in `~/Desktop/censimenti-app/step2b-confronti/lotto2/`).
+  con il set Figma; esiti in `~/Desktop/censimenti-app/step2b-confronti/lotto2/` e `lotto3/`).
 - `xcrun simctl openurl` con lo schema `balanced://` fa comparire il dialogo di
   sistema «Open in Balanced?», che non si può confermare senza permessi di
   accessibilità. Per aprire una rotta negli screenshot automatici si usa la

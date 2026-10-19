@@ -180,7 +180,7 @@ function SezioneComponente({ nome }: { nome: NomeComponente }) {
       {gruppo.varianti.map((v) => (
         <View key={v.nome} style={stili.gruppo}>
           <Text style={stili.campioneNome}>{v.nome}</Text>
-          <RiquadroVariante variante={v} suCard={nome === 'Riga elenco' || nome === 'Separatore'} />
+          <RiquadroVariante variante={v} suCard={nome === 'Riga elenco' || nome === 'Separatore' || nome === 'Notifica breve'} />
         </View>
       ))}
     </View>
