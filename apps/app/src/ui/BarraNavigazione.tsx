@@ -1,10 +1,10 @@
-import { GlassView } from 'expo-glass-effect';
+import { GlassView, isLiquidGlassAvailable } from 'expo-glass-effect';
 import type { ReactNode } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { Icona } from '@/ui/icone';
 import { Testo } from '@/ui/Testo';
-import { colori, misuraIcona, raggio, spazio, type IconaPerMisura } from '@/ui/theme';
+import { colori, coloriCodice, misuraIcona, raggio, spazio, type IconaPerMisura } from '@/ui/theme';
 
 /** Voci della Barra di navigazione (Figma 493:368, proprietà "Attiva"). Account è provvisoria (in futuro Obiettivi). */
 export type VoceNavigazione = 'oggi' | 'piano' | 'revisioni' | 'account';
@@ -14,12 +14,6 @@ export type BarraNavigazioneProps = {
   /** Pallino rosso sulle Revisioni quando ne è arrivata una nuova (proprietà "Revisione nuova"). */
   revisioneNuova?: boolean;
   onSeleziona?: (voce: VoceNavigazione) => void;
-  /**
-   * Resa del fondo (Figma: sfondo/barra all'80 % con effetto App/Vetro).
-   * "nativo": vetro di sistema iOS (expo-glass-effect, Liquid Glass su iOS 26+).
-   * "semitrasparente": solo il fondo sfondo/barra, senza sfocatura.
-   */
-  vetro?: 'nativo' | 'semitrasparente';
 };
 
 const VOCI: { voce: VoceNavigazione; etichetta: string; icona: IconaPerMisura[24] }[] = [
@@ -37,8 +31,10 @@ const CONTORNO_PALLINO = 2;
  * Barra di navigazione fluttuante: pillola alta 64 con quattro voci (icona 24 + Caption), voce attiva su
  * sfondo/campo con Caption SemiBold, voci inattive al 60 %. La posizione (8 sopra l'area sicura, margini 20,
  * fissa al viewport) è a cura della schermata.
+ * Fondo (Figma: sfondo/barra all'80 % con effetto App/Vetro): vetro nativo iOS (expo-glass-effect, Liquid Glass
+ * su iOS 26+); su Android, e dove il vetro non è disponibile, sfondo/card al 90 % senza sfocatura (coloriCodice).
  */
-export function BarraNavigazione({ attiva, revisioneNuova = false, onSeleziona, vetro = 'nativo' }: BarraNavigazioneProps) {
+export function BarraNavigazione({ attiva, revisioneNuova = false, onSeleziona }: BarraNavigazioneProps) {
   const voci = VOCI.map(({ voce, etichetta, icona }) => {
     const selezionata = voce === attiva;
     const conPallino = voce === 'revisioni' && revisioneNuova;
@@ -63,7 +59,7 @@ export function BarraNavigazione({ attiva, revisioneNuova = false, onSeleziona, 
     );
   });
   return (
-    <Sfondo vetro={vetro}>
+    <Sfondo>
       <View style={stili.barra} accessibilityRole="tablist">
         {voci}
       </View>
@@ -71,20 +67,22 @@ export function BarraNavigazione({ attiva, revisioneNuova = false, onSeleziona, 
   );
 }
 
-function Sfondo({ vetro, children }: { vetro: 'nativo' | 'semitrasparente'; children: ReactNode }) {
-  if (vetro === 'nativo') {
+const VETRO_NATIVO = Platform.OS === 'ios' && isLiquidGlassAvailable();
+
+function Sfondo({ children }: { children: ReactNode }) {
+  if (VETRO_NATIVO) {
     return (
       <GlassView glassEffectStyle="regular" colorScheme="light" tintColor={colori.sfondo.barra} style={stili.vetro}>
         {children}
       </GlassView>
     );
   }
-  return <View style={[stili.vetro, stili.semitrasparente]}>{children}</View>;
+  return <View style={[stili.vetro, stili.senzaVetro]}>{children}</View>;
 }
 
 const stili = StyleSheet.create({
   vetro: { alignSelf: 'stretch', borderRadius: raggio.pieno, overflow: 'hidden' },
-  semitrasparente: { backgroundColor: colori.sfondo.barra },
+  senzaVetro: { backgroundColor: coloriCodice.sfondoBarraAndroid },
   barra: { flexDirection: 'row', alignItems: 'center', minHeight: 64, paddingVertical: spazio[6], paddingHorizontal: spazio[8] },
   voce: { flex: 1, minHeight: 52, alignItems: 'center', justifyContent: 'center', borderRadius: raggio.pieno },
   voceAttiva: { backgroundColor: colori.sfondo.campo },

@@ -227,12 +227,12 @@ export function variantiDi(componente: NomeComponente): GruppoVarianti {
         figma: '493:368',
         varianti: [
           ...VOCI_NAV.map((v) => ({
-            nome: `Attiva ${v.nome} · A vetro nativo | B semitrasparente`,
+            nome: `Attiva ${v.nome}`,
             elemento: <ConfrontoVetro attiva={v.voce} />,
             larghezza: 'schermo' as const,
           })),
           {
-            nome: 'Attiva Oggi · Revisione nuova · A | B',
+            nome: 'Attiva Oggi · Revisione nuova',
             elemento: <ConfrontoVetro attiva="oggi" revisioneNuova />,
             larghezza: 'schermo' as const,
           },
@@ -272,24 +272,18 @@ export function variantiDi(componente: NomeComponente): GruppoVarianti {
   }
 }
 
-// Versioni A (vetro nativo iOS, sopra) e B (fondo semitrasparente senza sfocatura, sotto) a tutta larghezza
-// (353 come in Figma), su un fondo a strisce e testo così si vede cosa c'è sotto la barra.
+// Barra a tutta larghezza (353 come in Figma) su un fondo a strisce e testo, così si vede cosa c'è sotto il vetro.
 function ConfrontoVetro({ attiva, revisioneNuova }: { attiva: VoceNavigazione; revisioneNuova?: boolean }) {
   return (
     <View style={stili.fondoVetro}>
       <View style={stili.strisce}>
         <View style={[stili.striscia, stili.strisciaScura]} />
         <View style={stili.strisciaTesto}>
-          <Testo stile="bodyLarge">Testo che scorre sotto la barra di navigazione, versione A</Testo>
-        </View>
-        <View style={[stili.striscia, stili.strisciaCard]} />
-        <View style={stili.strisciaTesto}>
-          <Testo stile="bodyLarge">Testo che scorre sotto la barra di navigazione, versione B</Testo>
+          <Testo stile="bodyLarge">Testo che scorre sotto la barra di navigazione</Testo>
         </View>
         <View style={[stili.striscia, stili.strisciaVerde]} />
       </View>
-      <BarraNavigazione attiva={attiva} revisioneNuova={revisioneNuova} vetro="nativo" onSeleziona={nulla} />
-      <BarraNavigazione attiva={attiva} revisioneNuova={revisioneNuova} vetro="semitrasparente" onSeleziona={nulla} />
+      <BarraNavigazione attiva={attiva} revisioneNuova={revisioneNuova} onSeleziona={nulla} />
     </View>
   );
 }
@@ -335,7 +329,6 @@ const stili = StyleSheet.create({
   strisce: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, justifyContent: 'space-between' },
   striscia: { height: 20 },
   strisciaScura: { backgroundColor: colori.testo.primario },
-  strisciaCard: { backgroundColor: colori.sfondo.foto },
   strisciaVerde: { backgroundColor: colori.azione.primaria },
   strisciaTesto: { paddingHorizontal: spazio[4] },
   anteprimaPannello: { alignSelf: 'stretch', backgroundColor: colori.sfondo.pagina },

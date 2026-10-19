@@ -97,7 +97,13 @@ Compatibili sui dati, efficienti nel resto.
   `"misura/nome"` e nome Lucide dalla descrizione del componente. Gli stili
   senza prefisso `App/` (Intro title, Heading, Body…) sono del funnel web e
   non vengono generati. Le opacità di livello (`opacitaLivello`) non sono
-  variabili in Figma: vengono da `docs/figma-pulizia.md`.
+  variabili in Figma: vengono da `docs/figma-pulizia.md`. I colori decisi in
+  codice (`coloriCodice`, es. `sfondoBarraAndroid`) sono una variabile Figma di
+  base più un'alfa, risolti dal generatore.
+- **Effetto vetro** (Barra di navigazione, `App/Vetro` in Figma): su iOS vetro
+  nativo con `expo-glass-effect` (Liquid Glass, iOS 26+) e tinta `sfondo/barra`;
+  su Android e dove il vetro non è disponibile fondo `sfondo/card` al 90 % senza
+  sfocatura (`coloriCodice.sfondoBarraAndroid`). Decisione del 19/10/2026.
 
 ## Verifiche a schermo e rotte di sviluppo
 

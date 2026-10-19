@@ -147,6 +147,14 @@ const tipoPerMisura = Object.entries(perMisura).sort((a, b) => Number(a[0]) - Nu
 
 // --- Opacità di livello -------------------------------------------------------
 const { _nota: _n, ...opacita } = t.opacitaLivello;
+// Colori decisi in codice (coloriCodice): variabile Figma di base + alfa, risolti qui così il valore resta uno solo.
+const coloriCodice = {};
+for (const [nome, def] of Object.entries(t.coloriCodice ?? {})) {
+  if (nome === '_nota') continue;
+  const base = t.variables.find((x) => x.type === 'COLOR' && x.name === def.base);
+  if (!base) throw new Error(`coloriCodice.${nome}: variabile Figma "${def.base}" non trovata`);
+  coloriCodice[nome] = colore(base.hex, def.alfa);
+}
 
 const ts = `// GENERATO da scripts/tokens/genera-token.mjs a partire da src/ui/theme/figma-tokens.json
 // (file Figma ${t.fileKey}, modalità ${t.mode}, lettura del ${t.letturaDel}).
@@ -188,6 +196,9 @@ export const effetti = ${lit(effetti)} as const;
 
 /** Opacità di livello usate nelle schermate (non variabili in Figma). */
 export const opacita = ${lit(opacita)} as const;
+
+/** Colori decisi in codice (non variabili in Figma): variabile Figma di base con un'alfa, vedi figma-tokens.json → coloriCodice. */
+export const coloriCodice = ${lit(coloriCodice)} as const;
 
 /** Icone del design system: chiave "misura/nome", nome Lucide dalla descrizione del componente Figma.
  * tratto: unico per misura (misura/12) per le icone Lucide; trattoFigma: valore letto dal componente. */

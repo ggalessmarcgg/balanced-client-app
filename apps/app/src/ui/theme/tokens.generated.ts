@@ -462,6 +462,11 @@ export const opacita = {
   caricamentoPuntoChiaro: 0.3,
 } as const;
 
+/** Colori decisi in codice (non variabili in Figma): variabile Figma di base con un'alfa, vedi figma-tokens.json → coloriCodice. */
+export const coloriCodice = {
+  sfondoBarraAndroid: 'rgba(250, 248, 245, 0.9)',
+} as const;
+
 /** Icone del design system: chiave "misura/nome", nome Lucide dalla descrizione del componente Figma.
  * tratto: unico per misura (misura/12) per le icone Lucide; trattoFigma: valore letto dal componente. */
 export const icone = {

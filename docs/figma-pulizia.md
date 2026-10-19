@@ -226,3 +226,10 @@ Sezioni toccate confrontate con lo stato precedente: differenze solo dove previs
 - Pulsante `Terziario · Caricamento` (`418:56`): padding 12/4 e gap 8 come gli altri stati, altezza minima 46. Nessun salto di layout al cambio di stato. In codice il Pulsante tiene sempre l'etichetta nel layout (invisibile durante il caricamento) e sovrappone i puntini: un pulsante non cambia misura al cambiare di stato o testo.
 - Campo di testo e Campo password `Disabilitato` (`418:105`, `418:237`): gap 4 come gli altri stati, altezza 73.
 - Icone ridimensionate: le istanze più piccole o più grandi del componente hanno il tratto proporzionale alla misura (2 × misura / 24: 16 → 1,33, 18 → 1,5, 20 → 1,67, 32 → 2,67), 38 nei componenti e 109 nelle schermate. In codice `Icona` applica sempre il tratto della misura effettiva (prop `dimensione`), senza più la deroga del tratto 2.
+
+## Aggiornamenti del 19/10/2026 (sera, dopo il lotto 3 dei componenti)
+
+- Barra di navigazione, variante `Attiva=Piano` (`493:368`): l'icona attiva era rimasta `icona/secondaria`; ora è `icona/primaria` come nelle altre tre varianti. Il codice usa già l'icona primaria per la voce attiva.
+- Errore di caricamento (`563:294`): rimossa la proprietà di testo "Titolo", che non aveva nodi; restano Descrizione e il pulsante "Riprova". In codice non è implementata.
+- Effetto vetro della Barra di navigazione (decisione di Alessmarc): su iOS vetro nativo (`expo-glass-effect`, Liquid Glass su iOS 26+) con tinta `sfondo/barra`; su Android, dove il vetro nativo non esiste, fondo `sfondo/card` al 90 % senza sfocatura, token di codice `coloriCodice.sfondoBarraAndroid` (`figma-tokens.json` → `coloriCodice`, derivato dalla variabile Figma con alfa 0,9). Non è una variabile in Figma.
+
