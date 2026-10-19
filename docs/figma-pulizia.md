@@ -220,3 +220,9 @@ Sezioni toccate confrontate con lo stato precedente: differenze solo dove previs
 - Verifica: 61 icone su 61 entro l'antialiasing nel confronto a 3× (pixel diversi ≤ 3,4 % della cella, scarto massimo ≤ 100 solo sui bordi), vedi `~/Desktop/censimenti-app/step2b-confronti/lotto1/README.md`.
 - Voce 4 di "Cosa resta aperto" (nome Lucide di Argomento · Altro): risolta.
 
+
+## Aggiornamenti del 19/10/2026 (Alessmarc e Claude in chat, dopo il lotto 2 dei componenti)
+
+- Pulsante `Terziario · Caricamento` (`418:56`): padding 12/4 e gap 8 come gli altri stati, altezza minima 46. Nessun salto di layout al cambio di stato. In codice il Pulsante tiene sempre l'etichetta nel layout (invisibile durante il caricamento) e sovrappone i puntini: un pulsante non cambia misura al cambiare di stato o testo.
+- Campo di testo e Campo password `Disabilitato` (`418:105`, `418:237`): gap 4 come gli altri stati, altezza 73.
+- Icone ridimensionate: le istanze più piccole o più grandi del componente hanno il tratto proporzionale alla misura (2 × misura / 24: 16 → 1,33, 18 → 1,5, 20 → 1,67, 32 → 2,67), 38 nei componenti e 109 nelle schermate. In codice `Icona` applica sempre il tratto della misura effettiva (prop `dimensione`), senza più la deroga del tratto 2.

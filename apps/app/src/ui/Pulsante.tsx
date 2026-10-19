@@ -53,7 +53,6 @@ export function Pulsante({ etichetta, livello = 'primario', stato = 'normale', o
       style={({ pressed }) => [
         stili.base,
         stili[livello],
-        livello === 'terziario' && caricamento && stili.terziarioCaricamento,
         (pressed || stato === 'premuto') && !disabilitato && !caricamento && stili.premuto,
         disabilitato && stili.disabilitato,
         style,
@@ -75,7 +74,8 @@ export function Pulsante({ etichetta, livello = 'primario', stato = 'normale', o
 }
 
 // Padding e misure: Figma 418:62. Primario/Secondario fissi a 353 × 56 (qui: larghezza a riempimento,
-// altezza minima 56 così il testo ingrandito dal sistema non viene tagliato).
+// altezza minima 56 così il testo ingrandito dal sistema non viene tagliato); Terziario altezza minima 46.
+// Regola: un pulsante non cambia misura al cambiare dello stato (i puntini si sovrappongono all'etichetta).
 const PILLOLA = {
   alignSelf: 'stretch' as const,
   minHeight: 56,
@@ -94,16 +94,14 @@ const stili = StyleSheet.create({
     paddingVertical: spazio[16] - 1.5,
     paddingHorizontal: spazio[24] - 1.5,
   },
-  terziario: { alignSelf: 'flex-start', paddingVertical: spazio[12], paddingHorizontal: spazio[4] },
-  // Variante Figma "Terziario, Caricamento": padding 4 e gap 4 (diversa dalle altre, vedi report del lotto 2).
-  terziarioCaricamento: { paddingVertical: spazio[4], paddingHorizontal: spazio[4], gap: spazio[4] },
+  terziario: { alignSelf: 'flex-start', minHeight: 46, paddingVertical: spazio[12], paddingHorizontal: spazio[4] },
   terziarioCompatto: { alignSelf: 'flex-start' },
   terziarioCompattoEvidenziato: { alignSelf: 'flex-start' },
   premuto: { opacity: opacita.pulsantePremuto },
   disabilitato: { opacity: opacita.pulsantePrimarioDisabilitato },
-  puntini: { flexDirection: 'row', alignItems: 'center', gap: spazio[4] },
+  puntini: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spazio[4] },
   puntino: { width: spazio[8], height: spazio[8], borderRadius: raggio.pieno },
   puntinoMedio: { opacity: opacita.caricamentoPuntoMedio },
   puntinoChiaro: { opacity: opacita.caricamentoPuntoChiaro },
 });
-const stiliTesto = StyleSheet.create({ etichetta: { textAlign: 'center' } });
+const stiliTesto = StyleSheet.create({ etichetta: { textAlign: 'center' }, nascosta: { opacity: 0 } });

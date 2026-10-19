@@ -11,12 +11,13 @@ import { Opzione } from '@/ui/Opzione';
 import { Pulsante, type LivelloPulsante, type StatoPulsante } from '@/ui/Pulsante';
 import { RigaElenco } from '@/ui/RigaElenco';
 import { Separatore } from '@/ui/Separatore';
-import { colori, spazio } from '@/ui/theme';
+import { colori, margine, spazio } from '@/ui/theme';
 
 // Catalogo delle varianti dei componenti del lotto 2, nello stesso ordine dei set Figma: lo usano la
 // pagina dei componenti (con le didascalie) e la rotta di confronto (solo i componenti, per lo screenshot).
 
-export type Variante = { nome: string; figma?: string; elemento: ReactNode; larghezza?: number };
+/** larghezza: numero = larghezza del componente Figma; 'schermo' = componente largo quanto lo schermo (393 in Figma), senza margini di pagina. */
+export type Variante = { nome: string; figma?: string; elemento: ReactNode; larghezza?: number | 'schermo' };
 export type GruppoVarianti = { titolo: string; figma: string; varianti: Variante[] };
 
 export const COMPONENTI = ['Pulsante', 'Campo di testo', 'Campo password', 'Messaggio', 'Intestazione', 'Logo', 'Barra superiore', 'Opzione', 'Riga elenco', 'Separatore'] as const;
@@ -118,8 +119,8 @@ export function variantiDi(componente: NomeComponente): GruppoVarianti {
         titolo: 'Intestazione',
         figma: '638:416',
         varianti: [
-          { nome: 'App', elemento: <Intestazione titolo="Recupera password" contesto="app" onIndietro={nulla} />, larghezza: 393 },
-          { nome: 'Accesso', elemento: <Intestazione titolo="Recupera password" contesto="accesso" onIndietro={nulla} />, larghezza: 393 },
+          { nome: 'App', elemento: <Intestazione titolo="Recupera password" contesto="app" onIndietro={nulla} /> },
+          { nome: 'Accesso', elemento: <Intestazione titolo="Recupera password" contesto="accesso" onIndietro={nulla} /> },
         ],
       };
     case 'Logo':
@@ -132,7 +133,7 @@ export function variantiDi(componente: NomeComponente): GruppoVarianti {
           AZIONI.map((a) => ({
             nome: `Notifiche ${n.nome} · Azione ${a.nome}`,
             elemento: <BarraSuperiore notifiche={n.notifiche} azione={a.azione} onNotifiche={nulla} onAzione={nulla} />,
-            larghezza: 393,
+            larghezza: 'schermo' as const,
           })),
         ),
       };
@@ -192,12 +193,13 @@ export function variantiDi(componente: NomeComponente): GruppoVarianti {
 
 /** Riquadro di una variante: larghezza come il componente Figma (353 se non indicata), su sfondo pagina. */
 export function RiquadroVariante({ variante, suCard = false }: { variante: Variante; suCard?: boolean }) {
-  return (
-    <View style={[stili.riquadro, { width: variante.larghezza ?? 353 }, suCard && stili.riquadroCard]}>{variante.elemento}</View>
-  );
+  const larghezza = variante.larghezza === 'schermo' ? stili.riquadroSchermo : { width: variante.larghezza ?? 353 };
+  return <View style={[stili.riquadro, larghezza, suCard && stili.riquadroCard]}>{variante.elemento}</View>;
 }
 
 const stili = StyleSheet.create({
   riquadro: { alignItems: 'flex-start' },
+  // Annulla i margini di pagina del contenitore: il componente occupa tutta la larghezza dello schermo.
+  riquadroSchermo: { alignSelf: 'stretch', marginHorizontal: -margine.pagina },
   riquadroCard: { backgroundColor: colori.sfondo.card, paddingHorizontal: spazio[24] },
 });

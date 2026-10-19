@@ -110,8 +110,7 @@ export function CampoTesto({
 
 const stili = StyleSheet.create({
   contenitore: { alignSelf: 'stretch', gap: spazio[4] },
-  // Variante Figma "Disabilitato": opacità 50 % e gap 8 (le altre hanno 4, vedi report del lotto 2).
-  contenitoreDisabilitato: { opacity: opacita.campoDisabilitato, gap: spazio[8] },
+  contenitoreDisabilitato: { opacity: opacita.campoDisabilitato },
   campo: {
     alignSelf: 'stretch',
     flexDirection: 'row',
