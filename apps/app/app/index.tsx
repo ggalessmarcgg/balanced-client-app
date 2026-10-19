@@ -1,31 +1,49 @@
-import { Link, Redirect } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { Redirect } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 
-import { APP_NAME, STEP_LABEL } from '@/core/appInfo';
-import { Centered } from '@/ui/Centered';
-import { colori, spazio, testi, tocco } from '@/ui/theme';
+import { rottaPerStato } from '@/servizi/rotte';
+import { leggiStato, type EsitoStato } from '@/servizi/statoCliente';
+import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 
-// Solo in sviluppo: EXPO_PUBLIC_ROTTA_SVILUPPO=/sviluppo/confronto-testi npx expo start
+// Solo in sviluppo: EXPO_PUBLIC_ROTTA_SVILUPPO=/sviluppo/stati?stato=H npx expo start
 // apre direttamente una rotta di sviluppo (serve per gli screenshot automatici dal simulatore).
 const ROTTA_SVILUPPO = __DEV__ ? process.env.EXPO_PUBLIC_ROTTA_SVILUPPO : undefined;
 
-export default function HomeScreen() {
-  if (ROTTA_SVILUPPO) return <Redirect href={ROTTA_SVILUPPO as never} />;
-  return (
-    <Centered>
-      <Text style={stili.nome}>{APP_NAME}</Text>
-      <Text style={stili.passo}>{STEP_LABEL}</Text>
-      {__DEV__ && (
-        <Link href="/sviluppo/componenti" style={stili.link} accessibilityRole="link">
-          Componenti (sviluppo)
-        </Link>
-      )}
-    </Centered>
-  );
-}
+/**
+ * Avvio: una sola lettura (sessione salvata + stato del cliente) e smistamento verso la rotta dello stato.
+ * Intanto la schermata di caricamento (Trasversali 2); senza rete Trasversali 1; altri errori Trasversali 3.
+ */
+export default function Avvio() {
+  const [esito, setEsito] = useState<EsitoStato | null>(null);
+  const [tentativo, setTentativo] = useState(0);
 
-const stili = StyleSheet.create({
-  nome: { ...testi.accentoSerif, color: colori.testo.primario },
-  passo: { ...testi.bodyDetails, color: colori.testo.secondario, marginTop: spazio[8] },
-  link: { ...testi.link, color: colori.azione.primaria, marginTop: spazio[32], minHeight: tocco.minimoIos, paddingVertical: spazio[12] },
-});
+  // "Riprova": azzera l'esito e fa ripartire la lettura (l'effetto dipende dal numero del tentativo).
+  const carica = useCallback(() => {
+    setEsito(null);
+    setTentativo((t) => t + 1);
+  }, []);
+
+  useEffect(() => {
+    if (ROTTA_SVILUPPO) return;
+    let attivo = true;
+    leggiStato({ forza: true }).then((e) => {
+      if (attivo) setEsito(e);
+    });
+    return () => {
+      attivo = false;
+    };
+  }, [tentativo]);
+
+  if (ROTTA_SVILUPPO) return <Redirect href={ROTTA_SVILUPPO as never} />;
+  if (!esito) return <SchermataCaricamento />;
+  switch (esito.tipo) {
+    case 'nonAutenticato':
+      return <Redirect href="/accesso" />;
+    case 'rete':
+      return <SchermataSenzaConnessione onRiprova={carica} />;
+    case 'errore':
+      return <SchermataErroreCaricamento onRiprova={carica} descrizione="Non riusciamo a caricare il tuo percorso. Riprova tra poco." />;
+    case 'ok':
+      return <Redirect href={rottaPerStato(esito.stato.codice)} />;
+  }
+}

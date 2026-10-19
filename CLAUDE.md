@@ -114,7 +114,8 @@ Compatibili sui dati, efficienti nel resto.
 - Rotte solo di sviluppo (`Stack.Protected guard={__DEV__}` in `app/_layout.tsx`,
   mai nelle versioni per i clienti): `/sviluppo/componenti?sezione=Colori|Misure|Testi|Icone`
   (pagina dei componenti, dal lotto 2 anche le sezioni dei componenti: `?sezione=Pulsante`,
-  `Riga elenco`, …), `/sviluppo/confronto-testi` e `/sviluppo/confronto-icone`
+  `Riga elenco`, …), `/sviluppo/stati` (elenco) e `/sviluppo/stati?stato=H` (una schermata dello
+  step 3 con dati finti, chiavi in `src/ui/sviluppo/PaginaStati.tsx`), `/sviluppo/confronto-testi` e `/sviluppo/confronto-icone`
   (celle su fondo `sfondo/card` per il ritaglio automatico dei confronti),
   `/sviluppo/confronto-componenti?componente=<nome>` (varianti in colonna per il confronto
   con il set Figma; esiti in `~/Desktop/censimenti-app/step2b-confronti/lotto2/` e `lotto3/`).
@@ -140,8 +141,15 @@ Compatibili sui dati, efficienti nel resto.
 - `apps/app/src/ui/` → componenti React Native di presentazione. Possono
   importare da `core/`.
 - `apps/app/src/core/` → TypeScript puro: tipi, validazioni, macchine a
-  stati, client API. **Nessun import da React, React Native, Expo o `ui/`**
-  (come in `onboarding-v2`); la regola è imposta da ESLint.
+  stati, client API. **Nessun import da React, React Native, Expo, `ui/` o
+  `servizi/`** (come in `onboarding-v2`); la regola è imposta da ESLint. Gli
+  import relativi interni a `core` portano l'estensione `.ts`, così i test
+  girano con `node --test` senza bundler (`npm test` dentro `apps/app`,
+  file `*.test.ts` accanto al modulo).
+- `apps/app/src/servizi/` → collegamento ai servizi esterni (client Supabase,
+  sessione nel portachiavi, lettura dello stato, accesso, contatti): l'unico
+  posto che importa `@supabase/supabase-js` ed `expo-secure-store`; usa
+  `core/` e viene usato dalle rotte in `app/`.
 - Alias `@/*` → `apps/app/src/*`.
 - **Dipendenze pinnate** a versione esatta (niente `^` o `~`);
   `package-lock.json` tracciato. Nuovi pacchetti con `npx expo install`,
@@ -172,6 +180,9 @@ npm run lint                # ESLint (configurazione ufficiale Expo)
 npm run typecheck           # tsc --noEmit
 ```
 
+Dentro `apps/app`: `npm test` esegue i test di `src/core` con il test runner
+di Node (nessuna dipendenza).
+
 Dentro `apps/app`:
 
 ```bash
@@ -180,6 +191,26 @@ npx expo start --ios                     # solo Metro, riusa l'app già installa
 npx expo-doctor                          # diagnosi dipendenze e config
 npx expo install --fix                   # riallinea versioni alla SDK
 ```
+
+## Accesso e stati (step 3)
+
+- Supabase: URL e chiave pubblica "default" (`sb_publishable_…`) in `apps/app/.env`
+  (non versionato; nomi in `.env.example`), letti da `src/servizi/supabase.ts`.
+  Login con `signInWithPassword`; nessuna registrazione né accesso da link
+  nell'app. Reinvio del link di conferma (`auth.resend` tipo `signup`) e recupero
+  password (`resetPasswordForEmail`) con gli stessi redirect web di funnel e
+  web app (`src/core/accesso/costanti.ts`).
+- Sessione nel portachiavi (`expo-secure-store`) a pezzi da 1,8 KB
+  (`src/servizi/archivio.ts`, logica in `src/core/sessione/pezzi.ts`), rinnovata
+  in automatico con l'app in primo piano. "Esci" = `signOut` globale + svuotamento
+  della cache locale.
+- Smistamento: una sola lettura all'avvio (`clients` per `user_id` con lead,
+  appuntamenti e nutrizionista incorporati, colonne esplicite in
+  `src/core/stato/letture.ts`) → `calcolaStato` (`src/core/stato/stato.ts`,
+  stati A–L, orari in Europe/Rome senza dipendenze) → rotta in
+  `src/servizi/rotte.ts`. Mai `select *`, mai `nutritionist_id` dal lead.
+- Account di prova: proposta in `~/Desktop/censimenti-app/step3-account-prova.md`;
+  le scritture le applica la chat di progetto.
 
 ## Note su Xcode 27 / Device Hub
 

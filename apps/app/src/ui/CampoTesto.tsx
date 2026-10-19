@@ -32,6 +32,7 @@ export type CampoTestoProps = {
   | 'onSubmitEditing'
   | 'onFocus'
   | 'onBlur'
+  | 'autoFocus'
   | 'testID'
 >;
 

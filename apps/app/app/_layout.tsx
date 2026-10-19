@@ -22,14 +22,29 @@ export default function RootLayout() {
 
   return (
     <>
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colori.sfondo.pagina } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colori.sfondo.pagina }, animation: 'none' }}>
+        {/* Avvio: legge sessione e stato e smista. */}
         <Stack.Screen name="index" />
+        {/* Accesso (sfondo card): login con le sue varianti e recupero password. */}
+        <Stack.Screen name="accesso/index" options={{ contentStyle: { backgroundColor: colori.sfondo.card } }} />
+        <Stack.Screen name="accesso/recupero" options={{ contentStyle: { backgroundColor: colori.sfondo.card }, animation: 'default' }} />
+        {/* Stati del cliente e app dell'abbonato. */}
+        <Stack.Screen name="stato/prenotazione" />
+        <Stack.Screen name="stato/prenotato" />
+        <Stack.Screen name="stato/percorso-non-attivo" />
+        <Stack.Screen name="stato/consulenza-non-svolta" />
+        <Stack.Screen name="stato/percorso-concluso" />
+        <Stack.Screen name="stato/account-non-collegato" />
+        <Stack.Screen name="abbonato" />
+        <Stack.Screen name="account" options={{ animation: 'default' }} />
         {/* Rotte di sviluppo: escluse dalle versioni per i clienti. */}
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="sviluppo/componenti" />
           <Stack.Screen name="sviluppo/confronto-testi" />
           <Stack.Screen name="sviluppo/confronto-icone" />
           <Stack.Screen name="sviluppo/confronto-componenti" />
+          <Stack.Screen name="sviluppo/stati" />
+          <Stack.Screen name="sviluppo/prova-accesso" />
         </Stack.Protected>
       </Stack>
       <StatusBar style="dark" />

@@ -24,8 +24,8 @@ module.exports = defineConfig([
         {
           patterns: [
             {
-              group: ['react', 'react/*', 'react-native', 'react-native/*', 'react-native-*', 'expo', 'expo-*', '@expo/*', '**/ui', '**/ui/*', '@/ui', '@/ui/*'],
-              message: 'src/core deve restare TypeScript puro: nessun import da React, React Native, Expo o src/ui.',
+              group: ['react', 'react/*', 'react-native', 'react-native/*', 'react-native-*', 'expo', 'expo-*', '@expo/*', '**/ui', '**/ui/*', '@/ui', '@/ui/*', '**/servizi', '**/servizi/*', '@/servizi', '@/servizi/*'],
+              message: 'src/core deve restare TypeScript puro: nessun import da React, React Native, Expo, src/ui o src/servizi.',
             },
           ],
         },
