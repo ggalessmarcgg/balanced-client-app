@@ -232,6 +232,22 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Account di prova: tabella in `docs/account-prova.md` (senza password); le
   scritture le applica la chat di progetto.
 
+## Diario (step 5, lotto 1)
+
+- Logica pura in `src/core/diario/` (`data.ts` date in Europe/Rome, `modello.ts` formati dei campi,
+  `bozza.ts` macchina a stati bozza/condivisione, `settimana.ts`, `letture.ts` colonne esplicite,
+  `nomi.ts` nomi stabili per gli eventi → `docs/diario-nomi.md`); collegamento in
+  `src/servizi/diario.ts` e hook `useDiario.ts`; componenti in `src/ui/diario/`, schermata
+  `src/ui/schermate/SchermataOggi.tsx`, rotta `app/abbonato.tsx`.
+- Regole sui dati (censimento `~/Desktop/censimenti-app/step5-censimento-diario.md`): data sempre in ora
+  italiana e nelle chiavi di cache; `client_id` dallo stato letto una volta per sessione; una lettura per
+  l'intervallo settimana + ultimi 7 giorni (senza testi) e al massimo una seconda per la riga di oggi; mai
+  una bozza vuota; salvataggi della bozza senza `status`; condivisione in una sola modifica filtrata su
+  `status = draft` (0 righe → la riga era già condivisa: si mostra condiviso, nulla da riscrivere); mai
+  scrivere colonne della nutrizionista, `submission_number`, `review_id`, `client_id` dopo la creazione.
+- Pagina di sviluppo: `/sviluppo/stati?stato=J|oggi-2-pasti|…|oggi-7-condiviso|racconta`; esiti dei
+  confronti in `~/Desktop/censimenti-app/step5-confronti/lotto1/`.
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

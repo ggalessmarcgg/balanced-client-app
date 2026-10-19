@@ -8,12 +8,13 @@ import { NotificaBreve } from '@/ui/NotificaBreve';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
 import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
-import { SchermataAbbonato, SchermataSegnapostoPrenotazione } from '@/ui/schermate/SchermateSegnaposto';
+import { SchermataRaccontaSegnaposto, SchermataSegnapostoPrenotazione } from '@/ui/schermate/SchermateSegnaposto';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
+import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
 import { colori, margine, spazio, testi, tocco } from '@/ui/theme';
 
-// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata dello step 3 con dati finti, per i
+// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3 e 5 con dati finti, per i
 // confronti con Figma senza accedere. /sviluppo/stati?stato=<chiave> mostra la sola schermata a tutto schermo.
 
 export const STATI_SVILUPPO = [
@@ -30,7 +31,16 @@ export const STATI_SVILUPPO = [
   ['G', 'G · Appena prenotata (segnaposto)'],
   ['H', 'H · Stati 6 · Percorso non ancora attivo (558:4206)'],
   ['I', 'I · Stati 12 · Consulenza non svolta (562:4195)'],
-  ['J', 'J · Abbonato (segnaposto con barra di navigazione)'],
+  ['J', 'J · Oggi · 1 · Diario da iniziare (444:1103)'],
+  ['oggi-2-pasti', 'Oggi · 2 · Diario aperto · Pasti (444:1539)'],
+  ['oggi-3-valori', 'Oggi · 3 · Diario aperto · Valori (444:2624)'],
+  ['oggi-4-sport', 'Oggi · 4 · Diario aperto · Sport (444:2962)'],
+  ['oggi-5-commento', 'Oggi · 5 · Diario aperto · Commento (444:3247)'],
+  ['oggi-6-bozza', 'Oggi · 6 · Diario in bozza (446:3703)'],
+  ['oggi-7-condiviso', 'Oggi · 7 · Diario condiviso (446:3777)'],
+  ['oggi-errore-salvataggio', 'Oggi in bozza con Notifica breve di errore (salvataggio non riuscito, Riprova)'],
+  ['oggi-condiviso-notifica', 'Oggi condiviso con Notifica breve di conferma'],
+  ['racconta', 'Racconta (segnaposto fino allo step 10)'],
   ['K', 'K · Stati 7 · Percorso concluso (558:4260)'],
   ['L', 'L · Stati 11 · Account non collegato (558:4316)'],
   ['caricamento', "Caricamento all'avvio (senza barra di navigazione)"],
@@ -114,7 +124,25 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
     case 'I':
       return <SchermataConsulenzaNonSvolta profilo={PROFILO} onAccount={nulla} onEsci={nulla} />;
     case 'J':
-      return <SchermataAbbonato nome={PROFILO.nome} onEsci={nulla} />;
+      return <OggiSviluppo scenario="daIniziare" />;
+    case 'oggi-2-pasti':
+      return <OggiSviluppo scenario="pasti" />;
+    case 'oggi-3-valori':
+      return <OggiSviluppo scenario="valori" />;
+    case 'oggi-4-sport':
+      return <OggiSviluppo scenario="sport" />;
+    case 'oggi-5-commento':
+      return <OggiSviluppo scenario="commento" />;
+    case 'oggi-6-bozza':
+      return <OggiSviluppo scenario="bozza" />;
+    case 'oggi-7-condiviso':
+      return <OggiSviluppo scenario="condiviso" />;
+    case 'oggi-errore-salvataggio':
+      return <OggiSviluppo scenario="erroreSalvataggio" />;
+    case 'oggi-condiviso-notifica':
+      return <OggiSviluppo scenario="condivisoNotifica" />;
+    case 'racconta':
+      return <SchermataRaccontaSegnaposto onIndietro={nulla} />;
     case 'K':
       return <SchermataPercorsoConcluso profilo={PROFILO} onAccount={nulla} onEsci={nulla} />;
     case 'L':

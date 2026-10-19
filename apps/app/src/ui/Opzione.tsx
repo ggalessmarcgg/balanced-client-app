@@ -10,10 +10,12 @@ export type OpzioneProps = {
   forma?: 'standard' | 'compatta' | 'suPiuRighe';
   selezionata: boolean;
   onPress?: () => void;
+  /** Riempie lo spazio della riga (opzioni affiancate a larghezza uguale, come nel diario). */
+  cresce?: boolean;
 };
 
 /** Opzione selezionabile a pillola (Figma 439:96): sfondo card / verde quando selezionata, testo Body details. */
-export function Opzione({ etichetta, forma = 'standard', selezionata, onPress }: OpzioneProps) {
+export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, cresce = false }: OpzioneProps) {
   const { hitSlop, onLayout } = useAreaToccabile();
   return (
     <Pressable
@@ -23,7 +25,7 @@ export function Opzione({ etichetta, forma = 'standard', selezionata, onPress }:
       accessibilityRole="button"
       accessibilityLabel={etichetta}
       accessibilityState={{ selected: selezionata }}
-      style={[stili.base, stili[forma], selezionata ? stili.selezionata : stili.nonSelezionata]}
+      style={[stili.base, stili[forma], selezionata ? stili.selezionata : stili.nonSelezionata, cresce && stili.cresce]}
     >
       <Testo stile="bodyDetails" colore={selezionata ? colori.testo.suAzione : colori.testo.primario} style={stili.etichetta}>
         {etichetta}
@@ -39,5 +41,6 @@ const stili = StyleSheet.create({
   suPiuRighe: { paddingVertical: spazio[8], paddingHorizontal: spazio[16] },
   nonSelezionata: { backgroundColor: colori.sfondo.card },
   selezionata: { backgroundColor: colori.azione.primaria },
+  cresce: { flex: 1, alignSelf: 'stretch' },
   etichetta: { flexShrink: 1, textAlign: 'center' },
 });

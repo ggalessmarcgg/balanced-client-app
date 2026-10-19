@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import type { StatoCliente } from '@/core/stato/stato';
 import { NOMI_STATI } from '@/core/stato/stato';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
+import { Intestazione } from '@/ui/Intestazione';
 import { Pulsante } from '@/ui/Pulsante';
 import { Pagina } from '@/ui/schermate/Pagina';
-import { BarraNavigazioneFissa } from '@/ui/schermate/SchermateTrasversali';
 import { TitoloAccento } from '@/ui/schermate/TitoloAccento';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio } from '@/ui/theme';
@@ -63,21 +63,20 @@ export function SchermataSegnapostoPrenotazione({ stato, nome, onEsci }: Scherma
   );
 }
 
-export type SchermataAbbonatoProps = { nome: string; onEsci: () => void };
+export type SchermataRaccontaSegnapostoProps = { onIndietro: () => void };
 
-/** Segnaposto dello stato J (app dell'abbonato, dallo step 5): barra superiore, saluto e barra di navigazione. */
-export function SchermataAbbonato({ nome, onEsci }: SchermataAbbonatoProps) {
+/** Segnaposto di "Racconta" (diario vocale, sezione Figma 3.1): le schermate vere arrivano con lo step 10. */
+export function SchermataRaccontaSegnaposto({ onIndietro }: SchermataRaccontaSegnapostoProps) {
   return (
-    <Pagina sovrapposti={<BarraNavigazioneFissa attiva="oggi" />}>
-      <BarraSuperiore />
-      <View style={stili.contenuto}>
-        <View style={stili.saluto}>
-          <TitoloAccento prima="Ciao " accento={`${nome},`} dopo=" come è andata oggi?" />
-          <Testo stile="body" colore={colori.testo.corpoAttenuato}>
-            {"L'app dell'abbonato arriva con lo step 5. Per ora qui c'è solo la barra di navigazione."}
-          </Testo>
-        </View>
-        <Pulsante etichetta="Esci" livello="terziario" onPress={onEsci} style={stili.centrato} />
+    <Pagina>
+      <View style={stili.contenutoIntestazione}>
+        <Intestazione titolo="Racconta" onIndietro={onIndietro} />
+        <Testo stile="body" colore={colori.testo.corpoAttenuato}>
+          Qui potrai raccontare la tua giornata a voce e lasciare che il diario si compili da solo. Arriva con lo step 10.
+        </Testo>
+        <Testo stile="caption" colore={colori.testo.secondario}>
+          Segnaposto · Racconta · sezione Figma 3.1 · Diario vocale
+        </Testo>
       </View>
     </Pagina>
   );
@@ -85,6 +84,7 @@ export function SchermataAbbonato({ nome, onEsci }: SchermataAbbonatoProps) {
 
 const stili = StyleSheet.create({
   contenuto: { flex: 1, paddingTop: spazio[16], paddingHorizontal: margine.pagina, gap: spazio[24] },
+  contenutoIntestazione: { flex: 1, paddingTop: spazio[12], paddingHorizontal: margine.pagina, gap: spazio[24] },
   saluto: { gap: spazio[8] },
   centrato: { alignSelf: 'center' },
   comandi: { paddingTop: spazio[12], paddingBottom: spazio[8], paddingHorizontal: margine.pagina, gap: spazio[4], alignItems: 'center' },

@@ -11,14 +11,17 @@ import { Testo } from '@/ui/Testo';
 import { margine, spazio } from '@/ui/theme';
 
 /** Barra di navigazione fissa al viewport: 8 sopra l'area sicura inferiore, margini laterali 20 (Figma 493:368). */
-export function BarraNavigazioneFissa({ attiva }: { attiva: VoceNavigazione }) {
+export function BarraNavigazioneFissa({ attiva, onSeleziona }: { attiva: VoceNavigazione; onSeleziona?: (voce: VoceNavigazione) => void }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[stili.barraFissa, { bottom: insets.bottom + spazio[8] }]} pointerEvents="box-none">
-      <BarraNavigazione attiva={attiva} />
+      <BarraNavigazione attiva={attiva} onSeleziona={onSeleziona} />
     </View>
   );
 }
+
+/** Altezza della barra di navigazione più il suo distacco dall'area sicura: spazio da lasciare sotto il contenuto e sopra la Notifica breve. */
+export const INGOMBRO_BARRA_NAVIGAZIONE = 64 + spazio[8];
 
 /**
  * Struttura della pagina in cui compare uno stato trasversale: gli stati trasversali stanno dentro la pagina del

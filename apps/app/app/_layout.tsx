@@ -36,6 +36,7 @@ export default function RootLayout() {
         <Stack.Screen name="stato/percorso-concluso" />
         <Stack.Screen name="stato/account-non-collegato" />
         <Stack.Screen name="abbonato" />
+        <Stack.Screen name="racconta" options={{ animation: 'default' }} />
         <Stack.Screen name="account" options={{ animation: 'default' }} />
         {/* Rotte di sviluppo: escluse dalle versioni per i clienti. */}
         <Stack.Protected guard={__DEV__}>
