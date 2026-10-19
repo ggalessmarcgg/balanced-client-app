@@ -45,27 +45,43 @@ rivedere in Impostazioni di Sistema → Privacy e sicurezza → Automazione.
 Dalla seconda volta, se non sono cambiati moduli nativi, basta il dev server:
 
 ```bash
-npm run start      # poi premere i per aprire il simulatore
+npm run start      # Metro per la development build (expo start --dev-client)
 ```
 
-Le modifiche a `app/`, `src/ui/` e `src/core/` si vedono in tempo reale
-senza ricompilare (Fast Refresh).
+`npm run start` serve la **development build** installata da `npm run ios`
+(schema `balanced://`), non Expo Go: l'app contiene moduli nativi
+(`expo-secure-store`, `expo-clipboard`, `expo-glass-effect`) che Expo Go non
+ha. Se l'app è già aperta sul simulatore si ricollega da sola a Metro; altrimenti
+si apre da Device Hub o con `xcrun simctl launch booted it.joinbalanced.app`.
+Dopo aver aggiunto un modulo nativo serve di nuovo `npm run ios`.
+
+Le modifiche a `app/`, `src/ui/`, `src/servizi/` e `src/core/` si vedono in
+tempo reale senza ricompilare (Fast Refresh).
+
+### Collegamento a Supabase
+
+Copiare `apps/app/.env.example` in `apps/app/.env` (non versionato) e
+compilare `EXPO_PUBLIC_SUPABASE_URL` e `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+con i valori della dashboard del progetto. Senza `.env` l'app si ferma
+all'avvio con un errore esplicito.
 
 ## Verifiche
 
 ```bash
 npm run lint
 npm run typecheck
+cd apps/app && npm test     # test di src/core con il test runner di Node
 ```
 
 ## Struttura
 
 ```
 apps/app/
-  app/        rotte Expo Router (ogni file è una schermata)
-  src/ui/     componenti React Native
-  src/core/   TypeScript puro, senza React Native né ui/
-  assets/     icone e splash
+  app/          rotte Expo Router (ogni file è una schermata)
+  src/ui/       componenti React Native e schermate
+  src/servizi/  Supabase, sessione nel portachiavi, lettura dello stato
+  src/core/     TypeScript puro, senza React Native, ui/ né servizi/
+  assets/       icone, splash e font
 ```
 
 Le convenzioni complete sono in `CLAUDE.md`.
