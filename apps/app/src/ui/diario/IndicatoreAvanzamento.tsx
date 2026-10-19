@@ -9,6 +9,8 @@ export type IndicatoreAvanzamentoProps = {
 };
 
 // Indicatore di avanzamento (Figma 449:241): segmenti alti 4 con gap 4; l'attivo è verde e lungo 125, gli altri a riempimento su linea/guida.
+// Attivo e inattivo definiscono tutte le stesse proprietà flex: cambiando passaggio un segmento che era attivo torna corto
+// (una proprietà solo rimossa dallo stile non viene sempre azzerata dalla vista nativa).
 const ALTEZZA = 4;
 const LARGHEZZA_ATTIVO = 125;
 
@@ -17,7 +19,7 @@ export function IndicatoreAvanzamento({ attivo, passi = 4 }: IndicatoreAvanzamen
   return (
     <View style={stili.riga} accessibilityRole="progressbar" accessibilityLabel={`Passaggio ${attivo + 1} di ${passi}`} accessibilityValue={{ min: 1, max: passi, now: attivo + 1 }}>
       {Array.from({ length: passi }, (_, i) => (
-        <View key={i} style={[stili.segmento, i === attivo ? stili.segmentoAttivo : stili.segmentoInattivo]} />
+        <View key={`${i}-${i === attivo ? 'attivo' : 'inattivo'}`} style={[stili.segmento, i === attivo ? stili.segmentoAttivo : stili.segmentoInattivo]} />
       ))}
     </View>
   );
@@ -26,6 +28,6 @@ export function IndicatoreAvanzamento({ attivo, passi = 4 }: IndicatoreAvanzamen
 const stili = StyleSheet.create({
   riga: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'flex-start', gap: spazio[4] },
   segmento: { height: ALTEZZA, borderRadius: raggio.pieno },
-  segmentoAttivo: { width: LARGHEZZA_ATTIVO, backgroundColor: colori.azione.primaria },
-  segmentoInattivo: { flex: 1, backgroundColor: colori.linea.guida },
+  segmentoAttivo: { flexGrow: 0, flexShrink: 0, flexBasis: LARGHEZZA_ATTIVO, backgroundColor: colori.azione.primaria },
+  segmentoInattivo: { flexGrow: 1, flexShrink: 1, flexBasis: 0, backgroundColor: colori.linea.guida },
 });

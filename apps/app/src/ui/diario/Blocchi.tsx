@@ -8,6 +8,7 @@ import {
   ETICHETTE_IDRATAZIONE,
   ETICHETTE_PASTI,
   ETICHETTE_SPORT,
+  haContenuto,
   LIVELLI_ENERGIA,
   LIVELLI_IDRATAZIONE,
   PASTI,
@@ -179,8 +180,13 @@ export type BloccoCommentoProps = PropsBlocco & { onCondividi: () => void; invia
 // Campo nota (Figma 449:961): alto 96 su sfondo/card, raggio foto, padding 16, segnaposto in Caption.
 const ALTEZZA_NOTA = 96;
 
-/** Passaggio 4 · Commento (Figma 449:966): nota libera e pulsante primario "Invia alla nutrizionista", gap 8. */
+/**
+ * Passaggio 4 · Commento (Figma 449:966): nota libera e pulsante primario "Invia alla nutrizionista", gap 8.
+ * "Invia" è disattivato finché il diario non ha almeno un contenuto (un pasto, un valore, lo sport o il commento):
+ * nessuna condivisione di diari vuoti.
+ */
 export function BloccoCommento({ diario, onChange, onCondividi, inviando }: BloccoCommentoProps) {
+  const statoInvio = inviando ? 'caricamento' : haContenuto(diario) ? 'normale' : 'disabilitato';
   return (
     <BloccoDiario blocco="commento">
       <View style={stili.commento}>
@@ -196,7 +202,12 @@ export function BloccoCommento({ diario, onChange, onCondividi, inviando }: Bloc
           accessibilityLabel="Commento per la nutrizionista"
           style={stili.nota}
         />
-        <Pulsante etichetta="Invia alla nutrizionista" onPress={onCondividi} stato={inviando ? 'caricamento' : 'normale'} accessibilityHint="Condivide la giornata: non si può annullare" />
+        <Pulsante
+          etichetta="Invia alla nutrizionista"
+          onPress={onCondividi}
+          stato={statoInvio}
+          accessibilityHint={statoInvio === 'disabilitato' ? 'Compila almeno un pasto, un valore, lo sport o il commento' : 'Condivide la giornata: non si può annullare'}
+        />
       </View>
     </BloccoDiario>
   );

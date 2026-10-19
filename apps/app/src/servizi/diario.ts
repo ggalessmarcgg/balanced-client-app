@@ -3,6 +3,7 @@
 // client_id viene dallo stato letto una volta per sessione (statoCliente.ts); user_id dalla sessione locale.
 import { classificaErrore } from '@/core/accesso/errori';
 import {
+  copiaLocalePiuRecente,
   copiaValida,
   diarioLocaleIniziale,
   dopoCondivisione,
@@ -42,10 +43,24 @@ async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null>
   }
 }
 
+// La copia locale si aggiorna a ogni modifica (tasto, tocco, trascinamento): le scritture nel portachiavi sono
+// serializzate e, se ne arrivano molte mentre una è in corso, si scrive solo l'ultima.
+let scritturaCache: Promise<void> = Promise.resolve();
+let cacheInCoda: Cache | null = null;
+
 /** Salva la copia locale (diario di oggi + settimana). Non blocca: gli errori del portachiavi si ignorano. */
 export function salvaCache(dati: DatiOggi): void {
   const cache: Cache = { ...dati, letto: new Date().toISOString() };
-  scrivi(chiaveCache(dati.locale.clientId, dati.locale.data), JSON.stringify(cache)).catch(() => {});
+  const primaInCoda = cacheInCoda === null;
+  cacheInCoda = cache;
+  if (!primaInCoda) return;
+  scritturaCache = scritturaCache.then(async () => {
+    while (cacheInCoda) {
+      const daScrivere = cacheInCoda;
+      cacheInCoda = null;
+      await scrivi(chiaveCache(daScrivere.locale.clientId, daScrivere.locale.data), JSON.stringify(daScrivere)).catch(() => {});
+    }
+  });
 }
 
 export async function svuotaCacheDiario(clientId: string, data: string): Promise<void> {
@@ -81,7 +96,8 @@ async function leggiRigaOggi(id: string): Promise<RigaOggi | null> {
 /**
  * Lettura della pagina Oggi: una query per l'intervallo (settimana corrente + ultimi 7 giorni, per client_id, senza
  * testi) e, se oggi ha già una riga, una seconda per la riga completa. Il contenuto locale in attesa vince sul
- * server (è la copia più recente); lo stato della riga (bozza/condivisa) viene sempre dal server.
+ * server se è più recente di updated_at (app chiusa in modo improvviso prima del salvataggio: la bozza riparte dalla
+ * copia locale e viene salvata); lo stato della riga (bozza/condivisa) viene sempre dal server.
  * Senza rete si usa la copia locale se c'è.
  */
 export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date()): Promise<EsitoLetturaDiario> {
@@ -109,7 +125,7 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
   let locale: DiarioLocale;
   try {
     const rigaOggi = oggiInElenco ? await leggiRigaOggi(oggiInElenco.id) : null;
-    const inAttesa = cache?.locale.inAttesa ? cache.locale : null;
+    const inAttesa = cache && copiaLocalePiuRecente(cache.locale, rigaOggi?.updated_at) ? cache.locale : null;
     if (!rigaOggi) {
       locale = inAttesa ?? diarioLocaleIniziale(clientId, data, DIARIO_VUOTO, { tipo: 'assente' });
     } else {

@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   aggiornaDiario,
+  copiaLocalePiuRecente,
   copiaValida,
   diarioLocaleIniziale,
   dopoCondivisione,
@@ -131,5 +132,30 @@ describe('copia locale', () => {
     assert.equal(copiaValida(locale, CLIENT, '2026-10-20'), false);
     assert.equal(copiaValida(locale, 'altro', OGGI), false);
     assert.equal(copiaValida(null, CLIENT, OGGI), false);
+  });
+});
+
+describe('copia locale più recente del server (app chiusa in modo improvviso)', () => {
+  const T0 = '2026-10-19T19:00:00.000Z';
+  const T1 = '2026-10-19T19:05:00.000Z';
+  it("una modifica locale porta l'istante e resta in attesa anche con il campo di testo ancora aperto", () => {
+    const locale = aggiornaDiario(nuovo(), { ...DIARIO_VUOTO, dinner: 'Minestra di verd' }, T1);
+    assert.equal(locale.modificatoAlle, T1);
+    assert.equal(locale.inAttesa, true);
+    const op = pianificaSalvataggio(locale, USER);
+    assert.equal(op.tipo, 'inserisci');
+    if (op.tipo === 'inserisci') assert.equal(op.riga.dinner, 'Minestra di verd');
+  });
+  it('la copia locale in attesa vince se è più recente di updated_at, altrimenti vince il server', () => {
+    const locale = aggiornaDiario(nuovo(), { ...DIARIO_VUOTO, lunch: 'Pasta' }, T1);
+    assert.equal(copiaLocalePiuRecente(locale, T0), true);
+    assert.equal(copiaLocalePiuRecente(locale, '2026-10-19T19:05:00+00:00'), true); // stesso istante, formato Postgres
+    assert.equal(copiaLocalePiuRecente(locale, '2026-10-19T19:06:00+00:00'), false);
+    assert.equal(copiaLocalePiuRecente(locale, null), true); // riga assente sul server
+  });
+  it('una copia locale senza modifiche in attesa non vince mai', () => {
+    assert.equal(copiaLocalePiuRecente(nuovo(), null), false);
+    const salvato = dopoSalvataggio(aggiornaDiario(nuovo(), { ...DIARIO_VUOTO, lunch: 'Pasta' }, T1), 'riga-1', campiDaSalvare({ ...DIARIO_VUOTO, lunch: 'Pasta' }));
+    assert.equal(copiaLocalePiuRecente(salvato, T0), false);
   });
 });

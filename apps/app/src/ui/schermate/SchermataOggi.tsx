@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import type { DiarioLocale } from '@/core/diario/bozza';
 import { etichettaData } from '@/core/diario/data';
-import { BLOCCHI, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
+import { BLOCCHI, haContenuto, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
 import type { GiornoSettimana } from '@/core/diario/settimana';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import type { VoceNavigazione } from '@/ui/BarraNavigazione';
@@ -15,7 +15,7 @@ import { PulsanteTondo } from '@/ui/diario/PulsanteTondo';
 import { Icona } from '@/ui/icone';
 import { Pagina } from '@/ui/schermate/Pagina';
 import { BarraNavigazioneFissa, INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
-import { margine, spazio } from '@/ui/theme';
+import { colori, margine, spazio } from '@/ui/theme';
 
 export type SchermataOggiProps = {
   nome: string;
@@ -71,6 +71,8 @@ export function SchermataOggi({
 
   const data = etichettaData(locale.data);
   const condiviso = locale.riga.tipo === 'condiviso';
+  // In bozza (Figma 451:758): c'è una riga draft o un contenuto locale non ancora salvato → "Continua" in verde.
+  const inBozza = locale.riga.tipo === 'bozza' || haContenuto(locale.diario);
 
   return (
     <Pagina
@@ -91,7 +93,17 @@ export function SchermataOggi({
           <CardDiario>
             <SalutoDiario prima="Ciao " accento={`${nome}, `} dopo="come è andata oggi?" dataEtichetta={data} />
             <View style={stili.scelta}>
-              <PulsanteTondo etichetta="Scrivi" icona={<Icona misura={32} nome="Matita" />} onPress={onScrivi} accessibilityHint="Compila il diario a blocchi" />
+              {inBozza ? (
+                <PulsanteTondo
+                  etichetta="Continua"
+                  colore={colori.azione.primaria}
+                  icona={<Icona misura={32} nome="Matita" colore={colori.azione.primaria} />}
+                  onPress={onScrivi}
+                  accessibilityHint="Riprende la bozza del diario"
+                />
+              ) : (
+                <PulsanteTondo etichetta="Scrivi" icona={<Icona misura={32} nome="Matita" />} onPress={onScrivi} accessibilityHint="Compila il diario a blocchi" />
+              )}
               <PulsanteTondo etichetta="Racconta" icona={<Icona misura={24} nome="Microfono" dimensione={32} />} onPress={onRacconta} accessibilityHint="Racconta la giornata a voce" />
             </View>
           </CardDiario>

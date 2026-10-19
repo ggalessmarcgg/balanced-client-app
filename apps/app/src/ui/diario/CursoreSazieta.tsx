@@ -6,15 +6,16 @@ import { Testo } from '@/ui/Testo';
 import { colori, raggio, spazio, testi } from '@/ui/theme';
 
 export type CursoreSazietaProps = {
-  /** 1..10, null se non ancora risposto (nessun riempimento né pallino). */
+  /** 1..10, null = stato "Vuoto": pallino a sinistra senza numero, nessun riempimento; satiety_level resta null finché non si trascina. */
   valore: number | null;
   onChange: (valore: number) => void;
   etichettaMinimo?: string;
   etichettaMassimo?: string;
 };
 
-// Cursore sazietà (Figma 449:847): traccia alta 28 con base 6 su sfondo/campo, riempimento verde, pallino 24 verde con il
-// valore in SemiBold 9,5 (misura del solo pallino, senza stile Figma), estremi in Caption al 60 % con gap 8.
+// Cursore sazietà (Figma 691:7467, stati Vuoto | Con valore): traccia alta 28 con base 6 sempre grigia (linea/avanzamento),
+// riempimento verde fino al pallino, pallino 24 verde con il valore in SemiBold 9,5 (misura del solo pallino, senza stile
+// Figma), estremi in Caption al 60 % con gap 8.
 const ALTEZZA_TRACCIA = 28;
 const SPESSORE = 6;
 const PALLINO = 24;
@@ -40,8 +41,9 @@ export function CursoreSazieta({ valore, onChange, etichettaMinimo = 'Poco sazio
     });
   }, [onChange, larghezza]);
 
-  const riempimento = valore === null ? 0 : (valore / SAZIETA_MAX) * larghezza;
-  const sinistraPallino = Math.min(Math.max(riempimento - PALLINO / 2, 0), Math.max(larghezza - PALLINO, 0));
+  const vuoto = valore === null;
+  const riempimento = vuoto ? 0 : (valore / SAZIETA_MAX) * larghezza;
+  const sinistraPallino = vuoto ? 0 : Math.min(Math.max(riempimento - PALLINO / 2, 0), Math.max(larghezza - PALLINO, 0));
 
   return (
     <View style={stili.cursore}>
@@ -52,7 +54,7 @@ export function CursoreSazieta({ valore, onChange, etichettaMinimo = 'Poco sazio
         accessible
         accessibilityRole="adjustable"
         accessibilityLabel="Sazietà"
-        accessibilityValue={{ min: SAZIETA_MIN, max: SAZIETA_MAX, now: valore ?? undefined, text: valore === null ? 'Non indicata' : `${valore} su ${SAZIETA_MAX}` }}
+        accessibilityValue={{ min: SAZIETA_MIN, max: SAZIETA_MAX, now: valore ?? undefined, text: vuoto ? 'Non indicata' : `${valore} su ${SAZIETA_MAX}` }}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={(e) => {
           const attuale = valore ?? SAZIETA_MIN - 1;
@@ -61,16 +63,14 @@ export function CursoreSazieta({ valore, onChange, etichettaMinimo = 'Poco sazio
         }}
       >
         <View style={stili.base} />
-        {valore !== null && (
-          <>
-            <View style={[stili.riempimento, { width: riempimento }]} />
-            <View style={[stili.pallino, { left: sinistraPallino }]}>
-              <Text style={stili.valore} allowFontScaling={false}>
-                {valore}
-              </Text>
-            </View>
-          </>
-        )}
+        {!vuoto && <View style={[stili.riempimento, { width: riempimento }]} />}
+        <View style={[stili.pallino, { left: sinistraPallino }]}>
+          {!vuoto && (
+            <Text style={stili.valore} allowFontScaling={false}>
+              {valore}
+            </Text>
+          )}
+        </View>
       </View>
       <View style={stili.estremi}>
         <Testo stile="caption" colore={colori.testo.secondario}>
@@ -87,7 +87,7 @@ export function CursoreSazieta({ valore, onChange, etichettaMinimo = 'Poco sazio
 const stili = StyleSheet.create({
   cursore: { alignSelf: 'stretch', gap: spazio[8] },
   traccia: { alignSelf: 'stretch', height: ALTEZZA_TRACCIA, justifyContent: 'center' },
-  base: { position: 'absolute', left: 0, right: 0, height: SPESSORE, borderRadius: raggio.pieno, backgroundColor: colori.sfondo.campo },
+  base: { position: 'absolute', left: 0, right: 0, height: SPESSORE, borderRadius: raggio.pieno, backgroundColor: colori.linea.avanzamento },
   riempimento: { position: 'absolute', left: 0, height: SPESSORE, borderRadius: raggio.pieno, backgroundColor: colori.azione.primaria },
   pallino: {
     position: 'absolute',

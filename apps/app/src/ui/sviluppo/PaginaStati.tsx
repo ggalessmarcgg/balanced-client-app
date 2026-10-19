@@ -40,6 +40,8 @@ export const STATI_SVILUPPO = [
   ['oggi-7-condiviso', 'Oggi · 7 · Diario condiviso (446:3777)'],
   ['oggi-errore-salvataggio', 'Oggi in bozza con Notifica breve di errore (salvataggio non riuscito, Riprova)'],
   ['oggi-condiviso-notifica', 'Oggi condiviso con Notifica breve di conferma'],
+  ['oggi-valori-vuoti', 'Oggi · 3 · Valori senza risposte (cursore sazietà Vuoto, 691:7467)'],
+  ['oggi-avanzamento', 'Oggi · indicatore di avanzamento: i blocchi cambiano da soli ogni 3 s'],
   ['racconta', 'Racconta (segnaposto fino allo step 10)'],
   ['K', 'K · Stati 7 · Percorso concluso (558:4260)'],
   ['L', 'L · Stati 11 · Account non collegato (558:4316)'],
@@ -141,6 +143,10 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="erroreSalvataggio" />;
     case 'oggi-condiviso-notifica':
       return <OggiSviluppo scenario="condivisoNotifica" />;
+    case 'oggi-valori-vuoti':
+      return <OggiSviluppo scenario="valoriVuoti" />;
+    case 'oggi-avanzamento':
+      return <OggiSviluppo scenario="avanzamento" />;
     case 'racconta':
       return <SchermataRaccontaSegnaposto onIndietro={nulla} />;
     case 'K':

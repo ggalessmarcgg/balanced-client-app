@@ -28,6 +28,7 @@ export const SELEZIONE_OGGI = [
   'submission_date',
   'status',
   'submitted_at',
+  'updated_at',
   'breakfast',
   'lunch',
   'dinner',
@@ -45,6 +46,7 @@ export type RigaOggi = CampiDiarioDb & {
   submission_date: string;
   status: string;
   submitted_at: string | null;
+  updated_at: string | null;
 };
 
 export function statoRiga(status: string): StatoRigaDb {

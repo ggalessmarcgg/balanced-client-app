@@ -22,6 +22,8 @@ export type DiarioLocale = {
   inAttesa: boolean;
   /** Ultimo errore di scrittura visibile all'utente (null se l'ultima scrittura è andata a buon fine). */
   errore: 'rete' | 'altro' | null;
+  /** Istante (ISO) dell'ultima modifica locale: serve a capire, all'avvio, se la copia locale è più recente di quella sul server. */
+  modificatoAlle?: string | null;
 };
 
 /** Colonne da scrivere alla creazione della riga: client_id e user_id solo qui, mai dopo. */
@@ -39,15 +41,32 @@ export type OperazioneCondivisione =
   | { tipo: 'condividi'; modifica: ModificaCondivisione };
 
 export function diarioLocaleIniziale(clientId: string, data: string, diario: Diario, riga: StatoRiga): DiarioLocale {
-  return { clientId, data, diario, riga, inAttesa: false, errore: null };
+  return { clientId, data, diario, riga, inAttesa: false, errore: null, modificatoAlle: null };
 }
 
-/** Nuovo contenuto locale: la riga resta quella nota, la copia è "in attesa" se i campi da salvare cambiano. */
-export function aggiornaDiario(locale: DiarioLocale, diario: Diario): DiarioLocale {
+/**
+ * Nuovo contenuto locale (ogni scrittura, tocco o trascinamento): la riga resta quella nota, la copia è "in attesa"
+ * se i campi da salvare cambiano e porta l'istante della modifica. Chi la chiama la persiste subito sul telefono.
+ */
+export function aggiornaDiario(locale: DiarioLocale, diario: Diario, adesso: string = new Date().toISOString()): DiarioLocale {
   if (locale.riga.tipo === 'condiviso') return locale;
   const campi = campiDaSalvare(diario);
   const inAttesa = locale.riga.tipo === 'bozza' ? !stessiCampi(campi, locale.riga.salvato) : haContenuto(diario);
-  return { ...locale, diario, inAttesa: inAttesa || locale.inAttesa };
+  return { ...locale, diario, inAttesa: inAttesa || locale.inAttesa, modificatoAlle: adesso };
+}
+
+/**
+ * All'avvio: la copia locale in attesa vince sulla riga del server (app chiusa in modo improvviso prima del salvataggio)
+ * solo se è più recente dell'ultima modifica sul server (`updated_at`). Se il server è più recente (altro dispositivo),
+ * vince il server. Senza `updated_at` o senza istante locale si considera più recente la copia locale in attesa.
+ */
+export function copiaLocalePiuRecente(locale: DiarioLocale, updatedAt: string | null | undefined): boolean {
+  if (!locale.inAttesa) return false;
+  if (!updatedAt || !locale.modificatoAlle) return true;
+  const server = Date.parse(updatedAt);
+  const mia = Date.parse(locale.modificatoAlle);
+  if (Number.isNaN(server) || Number.isNaN(mia)) return true;
+  return mia >= server;
 }
 
 /**

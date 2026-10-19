@@ -10,13 +10,15 @@ export type PulsanteTondoProps = {
   icona: ReactNode;
   onPress?: () => void;
   accessibilityHint?: string;
+  /** Colore dell'etichetta (predefinito testo/primario; "Continua" della bozza usa colore/dark-green = azione/primaria). */
+  colore?: string;
 };
 
 // Pulsante tondo della Card diario chiusa (Figma 456:1263): cerchio 100 su sfondo/card, icona 32 ed etichetta Caption, gap 4.
 const DIAMETRO = 100;
 
 /** Pulsante tondo "Scrivi" / "Racconta" della Card diario. */
-export function PulsanteTondo({ etichetta, icona, onPress, accessibilityHint }: PulsanteTondoProps) {
+export function PulsanteTondo({ etichetta, icona, onPress, accessibilityHint, colore }: PulsanteTondoProps) {
   return (
     <Pressable
       onPress={onPress}
@@ -27,7 +29,7 @@ export function PulsanteTondo({ etichetta, icona, onPress, accessibilityHint }: 
     >
       <View style={stili.contenuto}>
         {icona}
-        <Testo stile="caption" style={stili.etichetta}>
+        <Testo stile="caption" colore={colore} style={stili.etichetta}>
           {etichetta}
         </Testo>
       </View>
