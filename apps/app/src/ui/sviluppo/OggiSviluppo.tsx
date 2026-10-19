@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { aggiornaDiario, diarioLocaleIniziale, dopoCondivisione, type DiarioLocale, type StatoRiga } from '@/core/diario/bozza';
 import type { RigaSettimana } from '@/core/diario/letture';
-import { bloccoSuccessivo, campiDaSalvare, DIARIO_VUOTO, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
+import { BLOCCHI, bloccoSuccessivo, campiDaSalvare, DIARIO_VUOTO, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
 import { giorniSettimana } from '@/core/diario/settimana';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
@@ -21,7 +21,7 @@ const DIARIO_PASTI: Diario = { ...DIARIO_VUOTO, breakfast: 'Yogurt greco, fiocch
 /** Diario delle schermate Oggi · 3 e 4: energia Buona, sazietà 7, idratazione 2 L, camminata 30 min. */
 const DIARIO_VALORI: Diario = { ...DIARIO_PASTI, dinner: 'Pesce al forno con patate', energy_level: 3, satiety_level: 7, hydration_level: 3, sport_type: 'camminata', sport_duration: '30 min' };
 
-export type ScenarioOggi = 'daIniziare' | 'pasti' | 'valori' | 'sport' | 'commento' | 'bozza' | 'condiviso' | 'erroreSalvataggio' | 'condivisoNotifica' | 'avanzamento' | 'valoriVuoti';
+export type ScenarioOggi = 'daIniziare' | 'pasti' | 'valori' | 'sport' | 'sportRiposo' | 'commento' | 'bozza' | 'condiviso' | 'erroreSalvataggio' | 'condivisoNotifica' | 'avanzamento' | 'valoriVuoti';
 
 // Scenario "avanzamento": i blocchi cambiano da soli ogni 3 s (avanti e poi indietro) per verificare l'indicatore.
 const CICLO_BLOCCHI: Blocco[] = ['pasti', 'valori', 'sport', 'commento', 'sport', 'valori', 'pasti'];
@@ -42,6 +42,10 @@ function iniziale(scenario: ScenarioOggi): { locale: DiarioLocale; blocco: Blocc
       return { locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'valori', pasto: null };
     case 'sport':
       return { locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'sport', pasto: null };
+    case 'sportRiposo': {
+      const riposo: Diario = { ...DIARIO_VALORI, riposo: true, sport_type: null, sport_duration: null };
+      return { locale: diarioLocaleIniziale(CLIENT, OGGI, riposo, bozza(riposo)), blocco: 'sport', pasto: null };
+    }
     case 'commento':
       return { locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'commento', pasto: null };
     case 'bozza':
@@ -94,6 +98,8 @@ export function OggiSviluppo({ scenario }: { scenario: ScenarioOggi }) {
       onRacconta={() => {}}
       onChiudi={() => setBlocco(null)}
       onAvanti={() => setBlocco((b) => (b ? bloccoSuccessivo(b) : null))}
+      onIndietro={() => setBlocco((b) => (b ? (BLOCCHI[BLOCCHI.indexOf(b) - 1] ?? b) : null))}
+      onVaiA={setBlocco}
       onAggiorna={aggiorna}
       onCondividi={condividi}
       pastoApertoIniziale={stato.pasto}

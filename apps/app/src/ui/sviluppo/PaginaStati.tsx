@@ -35,6 +35,7 @@ export const STATI_SVILUPPO = [
   ['oggi-2-pasti', 'Oggi · 2 · Diario aperto · Pasti (444:1539)'],
   ['oggi-3-valori', 'Oggi · 3 · Diario aperto · Valori (444:2624)'],
   ['oggi-4-sport', 'Oggi · 4 · Diario aperto · Sport (444:2962)'],
+  ['oggi-4-sport-riposo', 'Oggi · 4 · Sport con "Oggi riposo" (Card diario · Sport riposo 696:416)'],
   ['oggi-5-commento', 'Oggi · 5 · Diario aperto · Commento (444:3247)'],
   ['oggi-6-bozza', 'Oggi · 6 · Diario in bozza (446:3703)'],
   ['oggi-7-condiviso', 'Oggi · 7 · Diario condiviso (446:3777)'],
@@ -133,6 +134,8 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="valori" />;
     case 'oggi-4-sport':
       return <OggiSviluppo scenario="sport" />;
+    case 'oggi-4-sport-riposo':
+      return <OggiSviluppo scenario="sportRiposo" />;
     case 'oggi-5-commento':
       return <OggiSviluppo scenario="commento" />;
     case 'oggi-6-bozza':

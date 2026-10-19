@@ -21,7 +21,9 @@ non cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diar
 |---|---|---|
 | `diario · scrivi` | pulsante tondo "Scrivi" | apre il passaggio Pasti; nessuna scrittura |
 | `diario · racconta` | pulsante tondo "Racconta" | apre il segnaposto; nessuna scrittura |
-| `diario · avanti` | link "Avanti" | passa al blocco successivo e salva la bozza se ci sono modifiche |
+| `diario · avanti` | link "Avanti" o scorrimento verso sinistra | passa al blocco successivo e salva la bozza se ci sono modifiche |
+| `diario · indietro` | scorrimento verso destra | torna al blocco precedente e salva la bozza se ci sono modifiche |
+| `diario · vai al blocco` | tocco su una tacchetta dell'indicatore | va a quel blocco (avanti o indietro) e salva la bozza se ci sono modifiche |
 | `diario · chiudi` | link "Chiudi" | chiude la card e salva la bozza se ci sono modifiche |
 | `diario · salva bozza` | automatico: chiusura/cambio di blocco, uscita dalla pagina, app in secondo piano, ritorno della rete | inserimento (prima volta, solo con contenuto) o modifica dei soli campi, senza `status` |
 | `diario · condividi` | "Invia alla nutrizionista" | una sola modifica con `status = submitted` e `submitted_at` (o inserimento già condiviso) |

@@ -14,6 +14,8 @@ export const AZIONI_DIARIO = {
   scrivi: 'diario · scrivi',
   racconta: 'diario · racconta',
   avanti: 'diario · avanti',
+  indietro: 'diario · indietro',
+  vaiA: 'diario · vai al blocco',
   chiudi: 'diario · chiudi',
   salvaBozza: 'diario · salva bozza',
   condividi: 'diario · condividi',

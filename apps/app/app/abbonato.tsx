@@ -60,6 +60,8 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       onRacconta={onRacconta}
       onChiudi={diario.chiudi}
       onAvanti={diario.avanti}
+      onIndietro={diario.indietro}
+      onVaiA={diario.vaiA}
       onAggiorna={diario.aggiorna}
       onCondividi={diario.condividi}
       onNavigazione={onNavigazione}

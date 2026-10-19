@@ -24,7 +24,7 @@ import { RigaPasto } from '@/ui/diario/RigaPasto';
 import { Opzione } from '@/ui/Opzione';
 import { Pulsante } from '@/ui/Pulsante';
 import { Testo } from '@/ui/Testo';
-import { colori, raggio, spazio, testi } from '@/ui/theme';
+import { colori, opacita, raggio, spazio, testi } from '@/ui/theme';
 
 /** Blocco di un passaggio della Card diario (Figma "Pasti" 449:680 e omologhi): padding verticale 32, titolo Heading, gap 36. */
 export function BloccoDiario({ blocco, children }: { blocco: Blocco; children: ReactNode }) {
@@ -125,12 +125,14 @@ const RIGHE_SPORT: (TipoSport | 'riposo')[][] = [
 const RIGHE_DURATA: DurataSport[][] = [DURATE_SPORT.slice(0, 3), DURATE_SPORT.slice(3)];
 
 /**
- * Passaggio 3 · Sport (Figma 449:921). "Oggi riposo" azzera tipo e durata; la durata si chiede solo con uno sport scelto
- * (il database riceve tipo e durata sempre insieme, altrimenti entrambi null).
+ * Passaggio 3 · Sport (Figma 449:921; con riposo 696:416). "Oggi riposo" azzera tipo e durata: gli altri sport e
+ * "Per quanto tempo?" restano visibili al 50 % e non toccabili; toccando di nuovo "Oggi riposo" tutto torna attivo.
+ * Il database riceve tipo e durata sempre insieme, altrimenti entrambi null.
  */
 export function BloccoSport({ diario, onChange }: PropsBlocco) {
+  const riposo = diario.riposo;
   const scegliSport = (tipo: TipoSport | 'riposo') => {
-    if (tipo === 'riposo') onChange({ ...diario, riposo: true, sport_type: null, sport_duration: null });
+    if (tipo === 'riposo') onChange(riposo ? { ...diario, riposo: false } : { ...diario, riposo: true, sport_type: null, sport_duration: null });
     else onChange({ ...diario, riposo: false, sport_type: tipo });
   };
   return (
@@ -139,20 +141,20 @@ export function BloccoSport({ diario, onChange }: PropsBlocco) {
         <View style={stili.griglia}>
           {RIGHE_SPORT.map((riga, i) => (
             <View key={i} style={stili.rigaOpzioni}>
-              {riga.map((tipo) => (
-                <Opzione
-                  key={tipo}
-                  etichetta={tipo === 'riposo' ? 'Oggi riposo' : ETICHETTE_SPORT[tipo]}
-                  cresce
-                  selezionata={tipo === 'riposo' ? diario.riposo : diario.sport_type === tipo}
-                  onPress={() => scegliSport(tipo)}
-                />
-              ))}
+              {riga.map((tipo) =>
+                tipo === 'riposo' ? (
+                  <Opzione key={tipo} etichetta="Oggi riposo" cresce selezionata={riposo} onPress={() => scegliSport(tipo)} />
+                ) : (
+                  <View key={tipo} style={[stili.cresce, riposo && stili.attenuato]}>
+                    <Opzione etichetta={ETICHETTE_SPORT[tipo]} cresce selezionata={diario.sport_type === tipo} disabilitato={riposo} onPress={() => scegliSport(tipo)} />
+                  </View>
+                ),
+              )}
             </View>
           ))}
         </View>
       </Domanda>
-      {!diario.riposo && (
+      <View style={[stili.cresce, riposo && stili.attenuato]} pointerEvents={riposo ? 'none' : 'auto'}>
         <Domanda etichetta="Per quanto tempo?">
           <View style={stili.griglia}>
             {RIGHE_DURATA.map((riga, i) => (
@@ -162,7 +164,8 @@ export function BloccoSport({ diario, onChange }: PropsBlocco) {
                     key={durata}
                     etichetta={ETICHETTE_DURATA[durata]}
                     cresce
-                    selezionata={diario.sport_duration === durata}
+                    selezionata={!riposo && diario.sport_duration === durata}
+                    disabilitato={riposo}
                     onPress={() => onChange({ ...diario, riposo: false, sport_duration: durata })}
                   />
                 ))}
@@ -170,7 +173,7 @@ export function BloccoSport({ diario, onChange }: PropsBlocco) {
             ))}
           </View>
         </Domanda>
-      )}
+      </View>
     </BloccoDiario>
   );
 }
@@ -219,6 +222,8 @@ const stili = StyleSheet.create({
   righe: { alignSelf: 'stretch', gap: spazio[16] },
   griglia: { alignSelf: 'stretch', gap: spazio[4] },
   rigaOpzioni: { alignSelf: 'stretch', flexDirection: 'row', gap: spazio[4] },
+  cresce: { flex: 1, alignSelf: 'stretch' },
+  attenuato: { opacity: opacita.campoDisabilitato },
   commento: { alignSelf: 'stretch', gap: spazio[8] },
   nota: {
     ...testi.bodyDetails,

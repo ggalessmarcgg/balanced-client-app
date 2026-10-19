@@ -7,7 +7,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 import { aggiornaDiario, type DiarioLocale } from '@/core/diario/bozza';
 import { dataOggiRoma } from '@/core/diario/data';
 import type { RigaSettimana } from '@/core/diario/letture';
-import { bloccoSuccessivo, type Blocco, type Diario } from '@/core/diario/modello';
+import { BLOCCHI, bloccoSuccessivo, type Blocco, type Diario } from '@/core/diario/modello';
 import { condividiDiario, leggiDiarioOggi, salvaBozza, salvaCache, type EsitoScrittura } from '@/servizi/diario';
 
 export type FaseDiario = { tipo: 'caricamento' } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string } | { tipo: 'pronto' };
@@ -28,6 +28,9 @@ export type AzioniPaginaOggi = {
   scrivi: () => void;
   chiudi: () => void;
   avanti: () => void;
+  /** Tacchetta dell'indicatore o scorrimento orizzontale: va a un blocco qualsiasi (avanti o indietro) e salva. */
+  vaiA: (blocco: Blocco) => void;
+  indietro: () => void;
   aggiorna: (diario: Diario) => void;
   condividi: () => void;
   riprova: () => void;
@@ -152,6 +155,23 @@ export function useDiario(clientId: string): StatoPaginaOggi & AzioniPaginaOggi 
     void salva(true);
   }, [salva]);
 
+  const vaiA = useCallback(
+    (nuovo: Blocco) => {
+      setBlocco((b) => (b === nuovo ? b : nuovo));
+      void salva(true);
+    },
+    [salva],
+  );
+
+  const indietro = useCallback(() => {
+    setBlocco((b) => {
+      if (!b) return b;
+      const i = BLOCCHI.indexOf(b);
+      return BLOCCHI[i - 1] ?? b;
+    });
+    void salva(true);
+  }, [salva]);
+
   const aggiorna = useCallback(
     (diario: Diario) => {
       const attuale = localeRef.current;
@@ -185,5 +205,5 @@ export function useDiario(clientId: string): StatoPaginaOggi & AzioniPaginaOggi 
 
   const nascondiNotifica = useCallback(() => setNotifica(null), []);
 
-  return { fase, locale, settimana, blocco, inviando, notifica, carica, scrivi, chiudi, avanti, aggiorna, condividi, riprova, nascondiNotifica };
+  return { fase, locale, settimana, blocco, inviando, notifica, carica, scrivi, chiudi, avanti, vaiA, indietro, aggiorna, condividi, riprova, nascondiNotifica };
 }

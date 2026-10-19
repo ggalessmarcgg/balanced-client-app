@@ -12,19 +12,22 @@ export type OpzioneProps = {
   onPress?: () => void;
   /** Riempie lo spazio della riga (opzioni affiancate a larghezza uguale, come nel diario). */
   cresce?: boolean;
+  /** Non toccabile (l'opacità al 50 % la applica il contenitore, come nella Card diario · Sport riposo). */
+  disabilitato?: boolean;
 };
 
 /** Opzione selezionabile a pillola (Figma 439:96): sfondo card / verde quando selezionata, testo Body details. */
-export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, cresce = false }: OpzioneProps) {
+export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, cresce = false, disabilitato = false }: OpzioneProps) {
   const { hitSlop, onLayout } = useAreaToccabile();
   return (
     <Pressable
       onPress={onPress}
+      disabled={disabilitato}
       hitSlop={hitSlop}
       onLayout={onLayout}
       accessibilityRole="button"
       accessibilityLabel={etichetta}
-      accessibilityState={{ selected: selezionata }}
+      accessibilityState={{ selected: selezionata, disabled: disabilitato }}
       style={[stili.base, stili[forma], selezionata ? stili.selezionata : stili.nonSelezionata, cresce && stili.cresce]}
     >
       <Testo stile="bodyDetails" colore={selezionata ? colori.testo.suAzione : colori.testo.primario} style={stili.etichetta}>

@@ -1,9 +1,9 @@
-import { useState, type ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useMemo, useState, type ReactNode } from 'react';
+import { PanResponder, StyleSheet, View } from 'react-native';
 
 import type { DiarioLocale } from '@/core/diario/bozza';
 import { etichettaData } from '@/core/diario/data';
-import { BLOCCHI, haContenuto, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
+import { BLOCCHI, haContenuto, TITOLI_BLOCCHI, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
 import type { GiornoSettimana } from '@/core/diario/settimana';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import type { VoceNavigazione } from '@/ui/BarraNavigazione';
@@ -12,6 +12,7 @@ import { CardDiario, ComandiDiario, SalutoDiario } from '@/ui/diario/CardDiario'
 import { CardSettimana } from '@/ui/diario/CardSettimana';
 import { IndicatoreAvanzamento } from '@/ui/diario/IndicatoreAvanzamento';
 import { PulsanteTondo } from '@/ui/diario/PulsanteTondo';
+import { TransizioneBlocco } from '@/ui/diario/TransizioneBlocco';
 import { Icona } from '@/ui/icone';
 import { Pagina } from '@/ui/schermate/Pagina';
 import { BarraNavigazioneFissa, INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
@@ -28,6 +29,9 @@ export type SchermataOggiProps = {
   onRacconta: () => void;
   onChiudi: () => void;
   onAvanti: () => void;
+  onIndietro: () => void;
+  /** Tacchetta dell'indicatore: va a quel blocco, avanti o indietro. */
+  onVaiA: (blocco: Blocco) => void;
   onAggiorna: (diario: Diario) => void;
   onCondividi: () => void;
   onNavigazione?: (voce: VoceNavigazione) => void;
@@ -53,6 +57,8 @@ export function SchermataOggi({
   onRacconta,
   onChiudi,
   onAvanti,
+  onIndietro,
+  onVaiA,
   onAggiorna,
   onCondividi,
   onNavigazione,
@@ -68,6 +74,21 @@ export function SchermataOggi({
     setBloccoPrecedente(blocco);
     if (blocco !== 'pasti') setPastoAperto(null);
   }
+
+  // Scorrimento orizzontale del contenuto della card: verso sinistra il blocco successivo, verso destra il precedente.
+  // Si attiva solo con un movimento chiaramente orizzontale; il cursore della sazietà non lo cede (termination request).
+  const scorrimento = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, g) => Math.abs(g.dx) > SOGLIA_INIZIO && Math.abs(g.dx) > Math.abs(g.dy) * 1.5,
+        onPanResponderTerminationRequest: () => false,
+        onPanResponderRelease: (_, g) => {
+          if (g.dx < -SOGLIA_CAMBIO || g.vx < -VELOCITA_CAMBIO) onAvanti();
+          else if (g.dx > SOGLIA_CAMBIO || g.vx > VELOCITA_CAMBIO) onIndietro();
+        },
+      }),
+    [onAvanti, onIndietro],
+  );
 
   const data = etichettaData(locale.data);
   const condiviso = locale.riga.tipo === 'condiviso';
@@ -108,21 +129,38 @@ export function SchermataOggi({
             </View>
           </CardDiario>
         ) : (
-          <CardDiario aperta>
-            <SalutoDiario prima="Ciao " accento={`${nome}, `} dopo="come è andata oggi?" dataEtichetta={data} />
-            <IndicatoreAvanzamento attivo={BLOCCHI.indexOf(blocco)} passi={BLOCCHI.length} />
-            {blocco === 'pasti' && <BloccoPasti diario={locale.diario} onChange={onAggiorna} pastoAperto={pastoAperto} onApri={setPastoAperto} />}
-            {blocco === 'valori' && <BloccoValori diario={locale.diario} onChange={onAggiorna} />}
-            {blocco === 'sport' && <BloccoSport diario={locale.diario} onChange={onAggiorna} />}
-            {blocco === 'commento' && <BloccoCommento diario={locale.diario} onChange={onAggiorna} onCondividi={onCondividi} inviando={inviando} />}
-            <ComandiDiario onChiudi={onChiudi} onAvanti={blocco === 'commento' ? undefined : onAvanti} />
-          </CardDiario>
+          <View {...scorrimento.panHandlers}>
+            <CardDiario aperta>
+              <SalutoDiario prima="Ciao " accento={`${nome}, `} dopo="come è andata oggi?" dataEtichetta={data} />
+              <IndicatoreAvanzamento
+                attivo={BLOCCHI.indexOf(blocco)}
+                passi={BLOCCHI.length}
+                etichette={BLOCCHI.map((b) => TITOLI_BLOCCHI[b])}
+                onSeleziona={(i) => {
+                  const scelto = BLOCCHI[i];
+                  if (scelto) onVaiA(scelto);
+                }}
+              />
+              <TransizioneBlocco indice={BLOCCHI.indexOf(blocco)}>
+                {blocco === 'pasti' && <BloccoPasti diario={locale.diario} onChange={onAggiorna} pastoAperto={pastoAperto} onApri={setPastoAperto} />}
+                {blocco === 'valori' && <BloccoValori diario={locale.diario} onChange={onAggiorna} />}
+                {blocco === 'sport' && <BloccoSport diario={locale.diario} onChange={onAggiorna} />}
+                {blocco === 'commento' && <BloccoCommento diario={locale.diario} onChange={onAggiorna} onCondividi={onCondividi} inviando={inviando} />}
+              </TransizioneBlocco>
+              <ComandiDiario onChiudi={onChiudi} onAvanti={blocco === 'commento' ? undefined : onAvanti} />
+            </CardDiario>
+          </View>
         )}
         <CardSettimana giorni={giorni} />
       </View>
     </Pagina>
   );
 }
+
+// Scorrimento: parte oltre 16 pt in orizzontale; cambia blocco oltre 60 pt o con un gesto veloce.
+const SOGLIA_INIZIO = 16;
+const SOGLIA_CAMBIO = 60;
+const VELOCITA_CAMBIO = 0.5;
 
 const stili = StyleSheet.create({
   contenuto: {
