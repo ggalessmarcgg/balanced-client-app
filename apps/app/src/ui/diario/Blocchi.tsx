@@ -125,9 +125,10 @@ const RIGHE_SPORT: (TipoSport | 'riposo')[][] = [
 const RIGHE_DURATA: DurataSport[][] = [DURATE_SPORT.slice(0, 3), DURATE_SPORT.slice(3)];
 
 /**
- * Passaggio 3 · Sport (Figma 449:921; con riposo 696:416). "Oggi riposo" azzera tipo e durata: gli altri sport e
- * "Per quanto tempo?" restano visibili al 50 % e non toccabili; toccando di nuovo "Oggi riposo" tutto torna attivo.
- * Il database riceve tipo e durata sempre insieme, altrimenti entrambi null.
+ * Passaggio 3 · Sport (Figma 449:921; con riposo 696:416). Scelta singola tra "Oggi riposo" e gli sport: con riposo
+ * selezionato gli sport restano attivi (toccarne uno lo seleziona e deseleziona il riposo) e solo "Per quanto tempo?"
+ * resta al 50 % e non toccabile; toccando di nuovo "Oggi riposo" si deseleziona. Il database riceve tipo e durata
+ * sempre insieme, altrimenti entrambi null.
  */
 export function BloccoSport({ diario, onChange }: PropsBlocco) {
   const riposo = diario.riposo;
@@ -141,15 +142,15 @@ export function BloccoSport({ diario, onChange }: PropsBlocco) {
         <View style={stili.griglia}>
           {RIGHE_SPORT.map((riga, i) => (
             <View key={i} style={stili.rigaOpzioni}>
-              {riga.map((tipo) =>
-                tipo === 'riposo' ? (
-                  <Opzione key={tipo} etichetta="Oggi riposo" cresce selezionata={riposo} onPress={() => scegliSport(tipo)} />
-                ) : (
-                  <View key={tipo} style={[stili.cresce, riposo && stili.attenuato]}>
-                    <Opzione etichetta={ETICHETTE_SPORT[tipo]} cresce selezionata={diario.sport_type === tipo} disabilitato={riposo} onPress={() => scegliSport(tipo)} />
-                  </View>
-                ),
-              )}
+              {riga.map((tipo) => (
+                <Opzione
+                  key={tipo}
+                  etichetta={tipo === 'riposo' ? 'Oggi riposo' : ETICHETTE_SPORT[tipo]}
+                  cresce
+                  selezionata={tipo === 'riposo' ? riposo : !riposo && diario.sport_type === tipo}
+                  onPress={() => scegliSport(tipo)}
+                />
+              ))}
             </View>
           ))}
         </View>

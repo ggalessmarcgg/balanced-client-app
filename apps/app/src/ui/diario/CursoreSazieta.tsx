@@ -102,9 +102,11 @@ export function CursoreSazieta({ valore, onChange, etichettaMinimo = 'Poco sazio
           if (e.nativeEvent.actionName === 'decrement') onChange(Math.max(SAZIETA_MIN, attuale - 1));
         }}
       >
-        <View style={stili.base} />
-        {!vuoto && <Animated.View style={[stili.riempimento, { width: posizione }]} />}
-        <Animated.View style={[stili.pallino, { transform: [{ translateX: sinistraPallino }] }]}>
+        {/* Base, riempimento e pallino non ricevono tocchi: così nativeEvent.locationX è sempre relativa alla traccia.
+            Se il dito passasse sopra un figlio, la coordinata cambierebbe riferimento e il pallino salterebbe avanti e indietro. */}
+        <View style={stili.base} pointerEvents="none" />
+        {!vuoto && <Animated.View style={[stili.riempimento, { width: posizione }]} pointerEvents="none" />}
+        <Animated.View style={[stili.pallino, { transform: [{ translateX: sinistraPallino }] }]} pointerEvents="none">
           {!vuoto && (
             <Text style={stili.valore} allowFontScaling={false}>
               {mostrato}

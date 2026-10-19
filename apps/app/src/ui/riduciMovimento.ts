@@ -16,9 +16,11 @@ export function useRiduciMovimento(): boolean {
   return riduci;
 }
 
-/** Durate e curva delle transizioni del diario, riprese dal funnel (onboarding-v2: tacchette 300 ms, push 250 ms, dissolve 200 ms, ease-out). */
+/**
+ * Durate delle transizioni del diario (curva ease-out). Le tacchette riprendono il funnel (onboarding-v2,
+ * segmented-indicator.css: 300 ms); il blocco nuovo compare quasi subito con una dissolvenza brevissima.
+ */
 export const TRANSIZIONI = {
   tacchetteMs: 300,
-  scorrimentoMs: 250,
-  dissolvenzaMs: 200,
+  comparsaMs: 120,
 } as const;
