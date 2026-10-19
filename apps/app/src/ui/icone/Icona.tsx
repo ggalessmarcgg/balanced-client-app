@@ -20,15 +20,20 @@ export type IconaProps<M extends MisuraIcona = MisuraIcona> = {
   tratto?: number;
   /** Etichetta di accessibilità. Se assente l'icona è decorativa e viene ignorata dallo screen reader. */
   etichetta?: string;
+  /**
+   * Misura di resa quando il componente Figma è usato come istanza ridimensionata (es. "Icona / 24 / Avviso"
+   * a 16 nei campi, a 20 nei messaggi). Come in Figma, il tratto resta quello del componente originale.
+   */
+  dimensione?: number;
 };
 
-export function Icona<M extends MisuraIcona>({ misura, nome, colore, tratto, etichetta }: IconaProps<M>) {
+export function Icona<M extends MisuraIcona>({ misura, nome, colore, tratto, etichetta, dimensione }: IconaProps<M>) {
   const chiave = `${misura}/${nome}` as ChiaveIcona;
   const voce = icone[chiave];
 
   if (voce.resa === 'svg') {
-    if (voce.ai) return <IconaSostituisci misura={misura} tratto={tratto} etichetta={etichetta} />;
-    return <IconaWhatsApp misura={misura} colore={colore} etichetta={etichetta} />;
+    if (voce.ai) return <IconaSostituisci misura={dimensione ?? misura} tratto={tratto} etichetta={etichetta} />;
+    return <IconaWhatsApp misura={dimensione ?? misura} colore={colore} etichetta={etichetta} />;
   }
 
   const Componente = (Lucide as unknown as Record<string, Lucide.LucideIcon | undefined>)[voce.lucideComponente];
@@ -38,7 +43,7 @@ export function Icona<M extends MisuraIcona>({ misura, nome, colore, tratto, eti
   }
   return (
     <Componente
-      size={misura}
+      size={dimensione ?? misura}
       color={colore ?? voce.colore ?? colori.icona.primaria}
       strokeWidth={tratto ?? voce.tratto}
       absoluteStrokeWidth

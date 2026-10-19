@@ -1597,7 +1597,7 @@
     }
   ],
   "opacitaLivello": {
-    "_nota": "Opacità di livello usate nelle schermate ma non presenti come variabili in Figma (fonte: docs/figma-pulizia.md, Inventario della trasparenza). Da promuovere a variabili se Alessmarc lo decide.",
+    "_nota": "Opacità di livello usate nelle schermate e nei componenti ma non presenti come variabili in Figma (fonte: docs/figma-pulizia.md, Inventario della trasparenza; componenti Pulsante 418:62 e Campo di testo 418:182 letti il 19/10/2026). Da promuovere a variabili se Alessmarc lo decide.",
     "velo": 0.25,
     "veloTutorial": 0.4,
     "pulsantePrimarioDisabilitato": 0.4,
@@ -1605,6 +1605,10 @@
     "trattinoOggi": 0.3,
     "giornoNonCondiviso": 0.3,
     "oggiDaCondividere": 0.5,
-    "segnapostoPulsazione": 0.5
+    "segnapostoPulsazione": 0.5,
+    "pulsantePremuto": 0.85,
+    "campoDisabilitato": 0.5,
+    "caricamentoPuntoMedio": 0.6,
+    "caricamentoPuntoChiaro": 0.3
   }
 }

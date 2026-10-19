@@ -456,6 +456,10 @@ export const opacita = {
   giornoNonCondiviso: 0.3,
   oggiDaCondividere: 0.5,
   segnapostoPulsazione: 0.5,
+  pulsantePremuto: 0.85,
+  campoDisabilitato: 0.5,
+  caricamentoPuntoMedio: 0.6,
+  caricamentoPuntoChiaro: 0.3,
 } as const;
 
 /** Icone del design system: chiave "misura/nome", nome Lucide dalla descrizione del componente Figma.

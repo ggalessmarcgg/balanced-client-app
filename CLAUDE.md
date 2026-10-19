@@ -103,8 +103,11 @@ Compatibili sui dati, efficienti nel resto.
 
 - Rotte solo di sviluppo (`Stack.Protected guard={__DEV__}` in `app/_layout.tsx`,
   mai nelle versioni per i clienti): `/sviluppo/componenti?sezione=Colori|Misure|Testi|Icone`
-  (pagina dei componenti), `/sviluppo/confronto-testi` e `/sviluppo/confronto-icone`
-  (celle su fondo `sfondo/card` per il ritaglio automatico dei confronti).
+  (pagina dei componenti, dal lotto 2 anche le sezioni dei componenti: `?sezione=Pulsante`,
+  `Riga elenco`, …), `/sviluppo/confronto-testi` e `/sviluppo/confronto-icone`
+  (celle su fondo `sfondo/card` per il ritaglio automatico dei confronti),
+  `/sviluppo/confronto-componenti?componente=<nome>` (varianti in colonna per il confronto
+  con il set Figma; esiti in `~/Desktop/censimenti-app/step2b-confronti/lotto2/`).
 - `xcrun simctl openurl` con lo schema `balanced://` fa comparire il dialogo di
   sistema «Open in Balanced?», che non si può confermare senza permessi di
   accessibilità. Per aprire una rotta negli screenshot automatici si usa la

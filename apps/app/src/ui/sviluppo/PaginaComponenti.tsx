@@ -3,6 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Icona } from '@/ui/icone';
+import { COMPONENTI, RiquadroVariante, variantiDi, type NomeComponente } from '@/ui/sviluppo/VariantiComponenti';
 import { Testo } from '@/ui/Testo';
 import {
   colori,
@@ -22,7 +23,7 @@ import {
 // Pagina dei componenti: solo nelle versioni di sviluppo (rotta protetta da __DEV__ in app/_layout.tsx).
 // Mostra palette, scala degli spazi e dei raggi, stili di testo e tutte le icone, con i valori dai token.
 
-const SEZIONI = ['Colori', 'Misure', 'Testi', 'Icone'] as const;
+const SEZIONI = ['Colori', 'Misure', 'Testi', 'Icone', ...COMPONENTI] as const;
 type Sezione = (typeof SEZIONI)[number];
 
 const FRASE = 'Ciao Alessandro, ci siamo quasi';
@@ -33,7 +34,7 @@ export function PaginaComponenti({ sezioneIniziale }: { sezioneIniziale?: string
   return (
     <SafeAreaView style={stili.pagina} edges={['top', 'bottom']}>
       <Text style={stili.titolo}>Componenti</Text>
-      <View style={stili.selettore} accessibilityRole="tablist">
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={stili.selettoreScorrevole} contentContainerStyle={stili.selettore} accessibilityRole="tablist">
         {SEZIONI.map((s) => {
           const attiva = s === sezione;
           return (
@@ -48,12 +49,13 @@ export function PaginaComponenti({ sezioneIniziale }: { sezioneIniziale?: string
             </Pressable>
           );
         })}
-      </View>
+      </ScrollView>
       <ScrollView contentContainerStyle={stili.contenuto}>
         {sezione === 'Colori' && <SezioneColori />}
         {sezione === 'Misure' && <SezioneMisure />}
         {sezione === 'Testi' && <SezioneTesti />}
         {sezione === 'Icone' && <SezioneIcone />}
+        {(COMPONENTI as readonly string[]).includes(sezione) && <SezioneComponente nome={sezione as NomeComponente} />}
       </ScrollView>
     </SafeAreaView>
   );
@@ -168,6 +170,23 @@ function SezioneTesti() {
   );
 }
 
+// Varianti di un componente del lotto 2 (catalogo in VariantiComponenti.tsx), con nome della variante e
+// nodo Figma del set. Le righe elenco stanno su una card crema come nelle schermate.
+function SezioneComponente({ nome }: { nome: NomeComponente }) {
+  const gruppo = variantiDi(nome);
+  return (
+    <View style={stili.blocco}>
+      <Didascalia>{`Figma ${gruppo.figma} · ${gruppo.varianti.length} varianti`}</Didascalia>
+      {gruppo.varianti.map((v) => (
+        <View key={v.nome} style={stili.gruppo}>
+          <Text style={stili.campioneNome}>{v.nome}</Text>
+          <RiquadroVariante variante={v} suCard={nome === 'Riga elenco' || nome === 'Separatore'} />
+        </View>
+      ))}
+    </View>
+  );
+}
+
 function SezioneIcone() {
   const voci = Object.entries(icone) as [ChiaveIcona, (typeof icone)[ChiaveIcona]][];
   const misure = [...new Set(voci.map(([, v]) => v.misura))].sort((a, b) => a - b) as MisuraIcona[];
@@ -201,6 +220,7 @@ function SezioneIcone() {
 const stili = StyleSheet.create({
   pagina: { flex: 1, backgroundColor: colori.sfondo.pagina },
   titolo: { ...testi.accentoSerif, color: colori.testo.primario, paddingHorizontal: margine.pagina, paddingTop: spazio[16] },
+  selettoreScorrevole: { flexGrow: 0 },
   selettore: { flexDirection: 'row', gap: spazio[8], paddingHorizontal: margine.pagina, paddingVertical: spazio[16] },
   scheda: {
     minHeight: tocco.minimoIos,

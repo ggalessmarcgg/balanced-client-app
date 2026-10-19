@@ -29,6 +29,7 @@ export default function RootLayout() {
           <Stack.Screen name="sviluppo/componenti" />
           <Stack.Screen name="sviluppo/confronto-testi" />
           <Stack.Screen name="sviluppo/confronto-icone" />
+          <Stack.Screen name="sviluppo/confronto-componenti" />
         </Stack.Protected>
       </Stack>
       <StatusBar style="dark" />
