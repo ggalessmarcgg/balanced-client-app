@@ -20,6 +20,10 @@ qualsiasi cosa): `piano-app-balanced`, `mappa-app-balanced`,
   scritture sul database, deploy, build, pubblicazioni e push su GitHub.
 - **Migrazioni:** prima come file nel repo (solo additive: niente drop,
   rename o modifiche distruttive), poi applicate via MCP, identiche al file.
+- **Migrazioni e scritture sul database si applicano dalla chat di progetto**
+  (Claude.ai), mai da Claude Code: qui si salvano solo i file in
+  `supabase/migrations/`, con lo stesso testo e la stessa versione applicati
+  in produzione, e si verifica via MCP in sola lettura che l'oggetto esista.
 - **Edge Function esistenti:** non si modificano né si rideployano senza
   censimento e approvazione.
 - **Prima di scrivere su una tabella** si ispezionano trigger, policy RLS e
