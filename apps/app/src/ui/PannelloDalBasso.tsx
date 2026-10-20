@@ -52,7 +52,7 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
   const [altezzaPiede, setAltezzaPiede] = useState(0);
   const contenutoScorre = altezzaContenuto > altezzaArea + 1;
   // Sotto lo scorrimento c'è solo il piede (che include la sua area sicura); senza piede lo scorrimento arriva al bordo.
-  const { riferimento: scorrimentoInterno, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(piede ? altezzaPiede : 0);
+  const { riferimento: scorrimentoInterno, onScroll: segnaPosizione, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(piede ? altezzaPiede : 0);
   // Il pannello resta montato durante l'animazione di chiusura: stato derivato in render dal cambio di `aperto`.
   const [apertoPrecedente, setApertoPrecedente] = useState(aperto);
   const [inChiusura, setInChiusura] = useState(false);
@@ -158,6 +158,8 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
           </View>
           <Reanimated.ScrollView
             ref={scorrimentoInterno}
+            onScroll={segnaPosizione}
+            scrollEventThrottle={16}
             style={riempie ? stili.scorrimentoPieno : stili.scorrimento}
             contentContainerStyle={[stili.contenuto, { paddingBottom: piede ? spazio[20] : paddingInferiore }]}
             keyboardShouldPersistTaps="handled"

@@ -28,12 +28,12 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
   const insets = useSafeAreaInsets();
   // Il piede sta sotto lo scorrimento: la tastiera copre lo scorrimento solo per la parte che supera piede e area sicura.
   const [altezzaPiede, setAltezzaPiede] = useState(0);
-  const { riferimento: scorrimento, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(altezzaPiede + insets.bottom);
+  const { riferimento: scorrimento, onScroll: segnaPosizione, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(altezzaPiede + insets.bottom);
   return (
     <View style={[stili.pagina, { backgroundColor: sfondo }]}>
       <View style={[stili.pagina, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         {scorrevole ? (
-          <Reanimated.ScrollView ref={scorrimento} style={stili.pagina} contentContainerStyle={stili.contenuto} keyboardShouldPersistTaps="handled" keyboardDismissMode="none">
+          <Reanimated.ScrollView ref={scorrimento} onScroll={segnaPosizione} scrollEventThrottle={16} style={stili.pagina} contentContainerStyle={stili.contenuto} keyboardShouldPersistTaps="handled" keyboardDismissMode="none">
             <FornitoreCampi value={campi}>{children}</FornitoreCampi>
             <Reanimated.View style={spazioTastiera} />
           </Reanimated.ScrollView>
