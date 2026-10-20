@@ -51,7 +51,7 @@ const GIORNATA_COMPLETA: Diario = {
   sport_type: 'camminata',
   sport_duration: '30 min',
 };
-const AUTRICE = { nome: 'Margherita', foto: null, iniziali: 'MC' };
+const AUTRICE = { nome: 'Margherita', foto: null, iniziali: 'MC', fotoPronta: false };
 
 export type ScenarioOggi =
   | 'daIniziare'

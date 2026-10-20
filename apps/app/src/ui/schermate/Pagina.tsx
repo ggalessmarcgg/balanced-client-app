@@ -1,10 +1,10 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { KeyboardAwareScrollView, type KeyboardAwareScrollViewRef } from 'react-native-keyboard-controller';
+import Reanimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colori } from '@/ui/theme';
-import { FornitoreCampi, MARGINE_SOPRA_TASTIERA, useGestoreCampi } from '@/ui/tastiera';
+import { FornitoreCampi, useScorrimentoConTastiera } from '@/ui/tastiera';
 
 export type PaginaProps = {
   children: ReactNode;
@@ -20,33 +20,23 @@ export type PaginaProps = {
 
 /**
  * Impalcatura di una schermata: area sicura in alto e in basso (Figma: barra di stato 59, indicatore home 34),
- * contenuto che cresre e scorre, piede fisso. Tastiera (regola unica dell'app): il contenuto scorre da solo perché il
- * campo a fuoco stia subito sopra la tastiera (KeyboardAwareScrollView, margine MARGINE_SOPRA_TASTIERA); lo
- * scorrimento non chiude la tastiera; un tocco fuori dai campi la chiude; il piede non sale sopra la tastiera.
+ * contenuto che cresce e scorre, piede fisso. Tastiera (regola unica dell'app): il contenuto scorre insieme alla
+ * comparsa della tastiera perché il campo a fuoco stia per intero subito sopra (src/ui/tastiera.tsx); lo scorrimento
+ * non chiude la tastiera; un tocco fuori dai campi la chiude; il piede non sale sopra la tastiera.
  */
 export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrevole = true, sovrapposti }: PaginaProps) {
   const insets = useSafeAreaInsets();
   // Il piede sta sotto lo scorrimento: la tastiera copre lo scorrimento solo per la parte che supera piede e area sicura.
   const [altezzaPiede, setAltezzaPiede] = useState(0);
-  const scorrimento = useRef<KeyboardAwareScrollViewRef>(null);
-  const campi = useGestoreCampi(scorrimento);
+  const { riferimento: scorrimento, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(altezzaPiede + insets.bottom);
   return (
     <View style={[stili.pagina, { backgroundColor: sfondo }]}>
       <View style={[stili.pagina, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         {scorrevole ? (
-          <KeyboardAwareScrollView
-            ref={scorrimento}
-            style={stili.pagina}
-            contentContainerStyle={stili.contenuto}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="none"
-            bottomOffset={MARGINE_SOPRA_TASTIERA}
-            extraKeyboardSpace={-(altezzaPiede + insets.bottom)}
-            onScroll={campi.onScroll}
-            scrollEventThrottle={16}
-          >
-            <FornitoreCampi value={campi.contesto}>{children}</FornitoreCampi>
-          </KeyboardAwareScrollView>
+          <Reanimated.ScrollView ref={scorrimento} style={stili.pagina} contentContainerStyle={stili.contenuto} keyboardShouldPersistTaps="handled" keyboardDismissMode="none">
+            <FornitoreCampi value={campi}>{children}</FornitoreCampi>
+            <Reanimated.View style={spazioTastiera} />
+          </Reanimated.ScrollView>
         ) : (
           <View style={stili.contenuto}>{children}</View>
         )}

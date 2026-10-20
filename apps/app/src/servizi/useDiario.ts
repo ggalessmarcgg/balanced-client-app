@@ -10,6 +10,7 @@ import { aggiornaDiario, type DiarioLocale } from '@/core/diario/bozza';
 import { applicaLettureInAttesa, autoreCommento, pianificaLetto, segnaLettoInCache, statoCommento, type AutoreCommento } from '@/core/diario/commento';
 import { dataOggiRoma, dataValida, giorniDellaSettimana } from '@/core/diario/data';
 import { aggiornaGiornata, giornataDaRiga, giornataDaRileggere, type GiornataLocale } from '@/core/diario/giornata';
+import { fotoInCache } from '@/servizi/foto';
 import { statoRiga, type RigaSettimana } from '@/core/diario/letture';
 import { BLOCCHI, bloccoSuccessivo, type Blocco, type Diario } from '@/core/diario/modello';
 import {
@@ -18,6 +19,7 @@ import {
   leggiDiarioOggi,
   leggiGiornata,
   leggiGiornataPerData,
+  precaricaAutori,
   salvaBozza,
   salvaCache,
   salvaGiornata,
@@ -244,6 +246,11 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
           giornateRef.current = { ...esito.dati.giornate, ...giornateRef.current };
           lettureInAttesaRef.current = [...new Set([...esito.dati.lettureInAttesa, ...lettureInAttesaRef.current])];
           impostaSettimana(applicaLettureInAttesa(esito.dati.settimana, lettureInAttesaRef.current));
+          // Autori dei commenti e foto pronti prima che si apra un pannello (nessuna attesa all'apertura).
+          void precaricaAutori(
+            settimanaRef.current.filter((r) => r.nutritionist_comment && r.comment_author_id).map((r) => r.comment_author_id as string),
+            [nutrizionistaRef.current?.foto],
+          );
           setLocale(esito.dati.locale);
           setFase({ tipo: 'pronto' });
           if (esito.dati.locale.riga.tipo === 'condiviso') setBlocco(null);
@@ -422,8 +429,11 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
         let commento: CommentoPannello | null = null;
         if (stato !== 'nessuno' && riga.nutritionist_comment) {
           const profilo = riga.comment_author_id ? await leggiAutore(riga.comment_author_id) : null;
+          const autore = autoreCommento(profilo, nutrizionistaRef.current);
+          // Foto già su disco (precaricata o vista prima): si mostra subito, senza dissolvenza.
+          if (autore?.foto) autore.fotoPronta = await fotoInCache(autore.foto);
           if (pannelloRef.current?.data !== data) return;
-          commento = { testo: riga.nutritionist_comment.trim(), nuovo: stato === 'daLeggere', autore: autoreCommento(profilo, nutrizionistaRef.current) };
+          commento = { testo: riga.nutritionist_comment.trim(), nuovo: stato === 'daLeggere', autore };
           if (stato === 'daLeggere') segnaLetto(riga);
         }
         persisti();

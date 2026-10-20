@@ -1,12 +1,14 @@
 // Regola unica della tastiera (CLAUDE.md): il campo a fuoco sta per intero subito sopra la tastiera con un piccolo
 // margine (anche mentre cresce), lo scorrimento non la chiude, si chiude toccando fuori dai campi o con
 // Avanti/Chiudi/Invia/Invio, i piedi fissi restano coperti, aspetto sempre chiaro.
-// KeyboardAwareScrollView (react-native-keyboard-controller) tiene visibile il cursore; qui sopra si aggiunge lo
-// scorrimento che porta il bordo inferiore di tutto il campo sopra la tastiera: i contenitori scorrevoli (Pagina,
-// Pannello dal basso) forniscono il contesto, i campi si registrano quando prendono il fuoco.
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ComponentRef, type RefObject } from 'react';
-import { useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type TextInputProps, type View } from 'react-native';
-import { KeyboardEvents, type KeyboardAwareScrollViewRef } from 'react-native-keyboard-controller';
+// Lo scorrimento verso il campo segue la stessa animazione della tastiera: all'inizio della comparsa
+// (useKeyboardHandler.onStart, altezza finale nota) si calcola di quanto scorrere e a ogni fotogramma (onMove) si
+// scorre in proporzione all'avanzamento, sul thread dell'interfaccia (Reanimated). In fondo al contenuto uno spazio
+// alto quanto la parte di tastiera che copre lo scorrimento, così c'è sempre dove scorrere.
+import { createContext, useCallback, useContext, useMemo, useRef, type ComponentRef, type RefObject } from 'react';
+import { useWindowDimensions, type TextInputProps, type View, type ViewStyle } from 'react-native';
+import { useKeyboardHandler } from 'react-native-keyboard-controller';
+import Reanimated, { scrollTo, useAnimatedRef, useAnimatedStyle, useScrollOffset, useSharedValue, type AnimatedRef } from 'react-native-reanimated';
 
 import { colori, spazio } from '@/ui/theme';
 
@@ -37,59 +39,96 @@ export const FornitoreCampi = Contesto.Provider;
 
 const ATTESA_LAYOUT_MS = 50;
 
+export type ScorrimentoConTastiera = {
+  /** Da passare come `ref` al Reanimated.ScrollView del contenitore. */
+  riferimento: AnimatedRef<Reanimated.ScrollView>;
+  /** Stile dello spazio in fondo al contenuto (un Reanimated.View vuoto dopo i figli). */
+  stileSpazio: ReturnType<typeof useAnimatedStyle<ViewStyle>>;
+  /** Valore del contesto da fornire ai campi (FornitoreCampi). */
+  contesto: ContestoCampi;
+};
+
 /**
- * Per i contenitori scorrevoli: tiene il campo a fuoco sopra la tastiera. Restituisce il valore del contesto da
- * fornire ai campi e l'onScroll da collegare allo scorrimento (serve la posizione corrente).
+ * Per i contenitori scorrevoli. `spazioSotto` è quanto dello schermo sta sotto lo scorrimento (piede fisso + area
+ * sicura): la tastiera copre lo scorrimento solo per la parte che lo supera.
  */
-export function useGestoreCampi(scorrimento: RefObject<KeyboardAwareScrollViewRef | null>): { contesto: ContestoCampi; onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void } {
+export function useScorrimentoConTastiera(spazioSotto: number): ScorrimentoConTastiera {
   const { height: altezzaFinestra } = useWindowDimensions();
-  const posizione = useRef(0);
-  const tastiera = useRef(0);
+  const riferimento = useAnimatedRef<Reanimated.ScrollView>();
+  const posizione = useScrollOffset(riferimento);
+  /** Bordo inferiore del campo a fuoco nella finestra (−1 = nessun campo). */
+  const fondoCampo = useSharedValue(-1);
+  const inizio = useSharedValue(0);
+  const spostamento = useSharedValue(0);
+  /** Altezza della tastiera: quella corrente durante l'animazione e quella finale della comparsa in corso o conclusa. */
+  const tastiera = useSharedValue(0);
+  const tastieraFinale = useSharedValue(0);
   const campoAFuoco = useRef<RefObject<Vista | null> | null>(null);
 
-  const mostra = useCallback(() => {
+  // Tastiera già aperta (fuoco passato da un altro campo, campo cresciuto): misura e scorrimento animato dal JS.
+  const riporta = useCallback(() => {
     const campo = campoAFuoco.current?.current;
-    const scroll = scorrimento.current;
-    if (!campo || !scroll || tastiera.current <= 0) return;
+    if (!campo) return;
     campo.measureInWindow((_x, y, _w, h) => {
-      const limite = altezzaFinestra - tastiera.current - MARGINE_SOPRA_TASTIERA;
-      const eccesso = y + h - limite;
-      if (eccesso > 0) scroll.scrollTo({ y: posizione.current + eccesso, animated: true });
+      fondoCampo.value = y + h;
+      if (tastieraFinale.value <= 0) return;
+      const eccesso = y + h - (altezzaFinestra - tastieraFinale.value - MARGINE_SOPRA_TASTIERA);
+      if (eccesso > 0) riferimento.current?.scrollTo({ y: posizione.value + eccesso, animated: true });
     });
-  }, [scorrimento, altezzaFinestra]);
+  }, [riferimento, posizione, fondoCampo, tastieraFinale, altezzaFinestra]);
 
-  useEffect(() => {
-    const mostraTastiera = KeyboardEvents.addListener('keyboardDidShow', (e) => {
-      tastiera.current = e.height;
-      mostra();
-    });
-    const nascondiTastiera = KeyboardEvents.addListener('keyboardDidHide', () => {
-      tastiera.current = 0;
-    });
-    return () => {
-      mostraTastiera.remove();
-      nascondiTastiera.remove();
-    };
-  }, [mostra]);
+  useKeyboardHandler(
+    {
+      onStart: (e) => {
+        'worklet';
+        // I valori condivisi di Reanimated si aggiornano per `.value` anche dentro i worklet: la regola del React
+        // Compiler non li riconosce.
+        // eslint-disable-next-line react-hooks/immutability
+        tastieraFinale.value = e.height;
+        if (e.height > 0 && fondoCampo.value >= 0) {
+          inizio.value = posizione.value;
+          spostamento.value = Math.max(0, fondoCampo.value - (altezzaFinestra - e.height - MARGINE_SOPRA_TASTIERA));
+        } else {
+          spostamento.value = 0;
+        }
+      },
+      onMove: (e) => {
+        'worklet';
+        tastiera.value = e.height;
+        if (spostamento.value > 0) scrollTo(riferimento, 0, inizio.value + spostamento.value * e.progress, false);
+      },
+      onEnd: (e) => {
+        'worklet';
+        tastiera.value = e.height;
+        if (spostamento.value > 0) {
+          scrollTo(riferimento, 0, inizio.value + spostamento.value, false);
+          spostamento.value = 0;
+        }
+      },
+    },
+    [altezzaFinestra],
+  );
+
+  const stileSpazio = useAnimatedStyle<ViewStyle>(() => ({ height: Math.max(0, tastiera.value - spazioSotto) }), [spazioSotto]);
 
   const contesto = useMemo<ContestoCampi>(
     () => ({
       registra: (campo) => {
         campoAFuoco.current = campo;
-        // Tastiera già aperta (fuoco passato da un altro campo): si scorre appena il layout è assestato.
-        if (tastiera.current > 0) setTimeout(mostra, ATTESA_LAYOUT_MS);
+        riporta();
       },
       rimuovi: (campo) => {
-        if (campoAFuoco.current === campo) campoAFuoco.current = null;
+        if (campoAFuoco.current !== campo) return;
+        campoAFuoco.current = null;
+        // eslint-disable-next-line react-hooks/immutability
+        fondoCampo.value = -1;
       },
-      aggiorna: () => setTimeout(mostra, ATTESA_LAYOUT_MS),
+      aggiorna: () => setTimeout(riporta, ATTESA_LAYOUT_MS),
     }),
-    [mostra],
+    [riporta, fondoCampo],
   );
-  const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
-    posizione.current = e.nativeEvent.contentOffset.y;
-  }, []);
-  return { contesto, onScroll };
+
+  return { riferimento, stileSpazio, contesto };
 }
 
 /**

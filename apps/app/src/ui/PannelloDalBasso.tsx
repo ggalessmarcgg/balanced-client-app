@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Animated, BackHandler, PanResponder, Pressable, StyleSheet, View, useWindowDimensions, type PanResponderCallbacks } from 'react-native';
-import { KeyboardAwareScrollView, type KeyboardAwareScrollViewRef } from 'react-native-keyboard-controller';
+import Reanimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colori, margine, opacita, raggio, spazio } from '@/ui/theme';
-import { FornitoreCampi, MARGINE_SOPRA_TASTIERA, useGestoreCampi } from '@/ui/tastiera';
+import { FornitoreCampi, useScorrimentoConTastiera } from '@/ui/tastiera';
 
 export type PannelloDalBassoProps = {
   aperto: boolean;
@@ -51,8 +51,8 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
   const [altezzaArea, setAltezzaArea] = useState(0);
   const [altezzaPiede, setAltezzaPiede] = useState(0);
   const contenutoScorre = altezzaContenuto > altezzaArea + 1;
-  const scorrimentoInterno = useRef<KeyboardAwareScrollViewRef>(null);
-  const campi = useGestoreCampi(scorrimentoInterno);
+  // Sotto lo scorrimento c'è solo il piede (che include la sua area sicura); senza piede lo scorrimento arriva al bordo.
+  const { riferimento: scorrimentoInterno, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(piede ? altezzaPiede : 0);
   // Il pannello resta montato durante l'animazione di chiusura: stato derivato in render dal cambio di `aperto`.
   const [apertoPrecedente, setApertoPrecedente] = useState(aperto);
   const [inChiusura, setInChiusura] = useState(false);
@@ -156,7 +156,7 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
           <View style={stili.areaManiglia} {...gesti.maniglia.panHandlers} accessible={false}>
             <View style={stili.maniglia} />
           </View>
-          <KeyboardAwareScrollView
+          <Reanimated.ScrollView
             ref={scorrimentoInterno}
             style={riempie ? stili.scorrimentoPieno : stili.scorrimento}
             contentContainerStyle={[stili.contenuto, { paddingBottom: piede ? spazio[20] : paddingInferiore }]}
@@ -165,15 +165,12 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
             showsVerticalScrollIndicator={false}
             scrollEnabled={contenutoScorre}
             bounces={false}
-            bottomOffset={MARGINE_SOPRA_TASTIERA}
-            extraKeyboardSpace={piede ? -(altezzaPiede + paddingInferiore) : 0}
             onContentSizeChange={(_, h) => setAltezzaContenuto(h)}
             onLayout={(e) => setAltezzaArea(e.nativeEvent.layout.height)}
-            onScroll={campi.onScroll}
-            scrollEventThrottle={16}
           >
-            <FornitoreCampi value={campi.contesto}>{children}</FornitoreCampi>
-          </KeyboardAwareScrollView>
+            <FornitoreCampi value={campi}>{children}</FornitoreCampi>
+            <Reanimated.View style={spazioTastiera} />
+          </Reanimated.ScrollView>
           {piede && (
             <View style={[stili.piede, { paddingBottom: paddingInferiore }]} onLayout={(e) => setAltezzaPiede(e.nativeEvent.layout.height)}>
               {piede}

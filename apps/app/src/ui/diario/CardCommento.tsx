@@ -45,8 +45,9 @@ export function CardCommento({ testo, autore, nuovo }: CardCommentoProps) {
 }
 
 /**
- * Foto quadrata dell'autore con memoria su disco (expo-image): le iniziali restano visibili finché la foto non è pronta,
- * poi la foto compare in dissolvenza; dalla seconda apertura, anche dopo il riavvio, arriva subito dalla cache.
+ * Foto quadrata dell'autore con memoria su disco (expo-image): al primo scaricamento le iniziali restano visibili
+ * finché la foto non è pronta, poi la foto compare in dissolvenza; se è già in cache (fotoPronta) compare subito,
+ * senza dissolvenza, anche dopo il riavvio dell'app.
  */
 function Foto({ autore }: { autore: AutoreCommento | null }) {
   return (
@@ -62,7 +63,7 @@ function Foto({ autore }: { autore: AutoreCommento | null }) {
           style={StyleSheet.absoluteFill}
           contentFit="cover"
           cachePolicy="memory-disk"
-          transition={DISSOLVENZA_FOTO_MS}
+          transition={autore.fotoPronta ? 0 : DISSOLVENZA_FOTO_MS}
           recyclingKey={autore.foto}
           accessible={false}
         />

@@ -39,8 +39,11 @@ export function applicaLettureInAttesa<R extends { id: string; comment_acknowled
   return righe.map((r) => (ids.has(r.id) && r.comment_acknowledged !== true ? { ...r, comment_acknowledged: true } : r));
 }
 
-/** Autore mostrato nella Card commento: nome di battesimo e foto quadrata (o iniziali se manca la foto). */
-export type AutoreCommento = { nome: string; foto: string | null; iniziali: string };
+/**
+ * Autore mostrato nella Card commento: nome di battesimo e foto quadrata (o iniziali se manca la foto). `fotoPronta`
+ * = la foto è già in cache (lo decide chi apre il pannello): si mostra subito, senza dissolvenza.
+ */
+export type AutoreCommento = { nome: string; foto: string | null; iniziali: string; fotoPronta: boolean };
 
 /** Titoli professionali da togliere dal nome ("Dott.ssa Margherita Chiadò" → "Margherita Chiadò"). */
 const TITOLO = /^(dott\.?(ssa|\.)?|dr\.?(ssa)?|dottoressa|dottore)\s+/i;
@@ -67,11 +70,11 @@ export function iniziali(nomeCompleto: string): string {
 export function autoreCommento(profiloAutore: RigaAutore | null, nutrizionistaCliente: { nome: string; foto: string | null } | null): AutoreCommento | null {
   if (profiloAutore && nomeSenzaTitolo(profiloAutore.full_name)) {
     const nome = nomeSenzaTitolo(profiloAutore.full_name);
-    return { nome: primoNome(nome), foto: profiloAutore.app_square_photo_url, iniziali: iniziali(nome) };
+    return { nome: primoNome(nome), foto: profiloAutore.app_square_photo_url, iniziali: iniziali(nome), fotoPronta: false };
   }
   if (nutrizionistaCliente && nomeSenzaTitolo(nutrizionistaCliente.nome)) {
     const nome = nomeSenzaTitolo(nutrizionistaCliente.nome);
-    return { nome: primoNome(nome), foto: nutrizionistaCliente.foto, iniziali: iniziali(nome) };
+    return { nome: primoNome(nome), foto: nutrizionistaCliente.foto, iniziali: iniziali(nome), fotoPronta: false };
   }
   return null;
 }

@@ -36,6 +36,7 @@ import {
 } from '@/core/diario/letture';
 import { campiDaSalvare, DIARIO_VUOTO, diarioDaCampi } from '@/core/diario/modello';
 import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
+import { precaricaFoto } from '@/servizi/foto';
 import { supabase } from '@/servizi/supabase';
 
 export type DatiOggi = {
@@ -357,6 +358,18 @@ export async function leggiAutore(id: string): Promise<RigaAutore | null> {
   autoriInMemoria.set(id, data);
   scrivi(chiave, JSON.stringify({ riga: data, letto: new Date().toISOString() } satisfies CacheAutore)).catch(() => {});
   return data;
+}
+
+/**
+ * Dopo la lettura della settimana: porta in memoria i profili degli autori dei commenti (una lettura per autore, la
+ * prima volta) e precarica le loro foto e quella della nutrizionista del cliente, così il pannello non aspetta nulla.
+ */
+export async function precaricaAutori(autoriId: string[], altreFoto: (string | null | undefined)[]): Promise<void> {
+  const profili = await Promise.all([...new Set(autoriId)].map((id) => leggiAutore(id)));
+  const foto = new Set<string>();
+  for (const p of profili) if (p?.app_square_photo_url) foto.add(p.app_square_photo_url);
+  for (const f of altreFoto) if (f) foto.add(f);
+  await Promise.all([...foto].map((f) => precaricaFoto(f)));
 }
 
 /** All'uscita: dimentica i profili letti (la cache nel portachiavi resta: non contiene dati del cliente). */

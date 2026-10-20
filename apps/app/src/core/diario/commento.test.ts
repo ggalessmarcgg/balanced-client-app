@@ -42,11 +42,11 @@ describe('statoCommento e pianificaLetto', () => {
 describe('autore del commento', () => {
   const profilo = { id: 'n1', full_name: 'Margherita Chiadò', title: 'Dott.ssa', app_square_photo_url: 'https://foto/m.jpg' };
   it('dal profilo dell’autore: nome di battesimo, foto quadrata e iniziali', () => {
-    assert.deepEqual(autoreCommento(profilo, null), { nome: 'Margherita', foto: 'https://foto/m.jpg', iniziali: 'MC' });
+    assert.deepEqual(autoreCommento(profilo, null), { nome: 'Margherita', foto: 'https://foto/m.jpg', iniziali: 'MC', fotoPronta: false });
   });
   it('ripiego sulla nutrizionista del cliente se il profilo non è leggibile; iniziali se manca la foto', () => {
-    assert.deepEqual(autoreCommento(null, { nome: 'Dott.ssa Marta Veneziano', foto: null }), { nome: 'Marta', foto: null, iniziali: 'MV' });
-    assert.deepEqual(autoreCommento({ ...profilo, full_name: null }, { nome: 'Dr. Anna Nanni', foto: 'f' }), { nome: 'Anna', foto: 'f', iniziali: 'AN' });
+    assert.deepEqual(autoreCommento(null, { nome: 'Dott.ssa Marta Veneziano', foto: null }), { nome: 'Marta', foto: null, iniziali: 'MV', fotoPronta: false });
+    assert.deepEqual(autoreCommento({ ...profilo, full_name: null }, { nome: 'Dr. Anna Nanni', foto: 'f' }), { nome: 'Anna', foto: 'f', iniziali: 'AN', fotoPronta: false });
     assert.equal(autoreCommento(null, null), null);
   });
   it('titoli e iniziali', () => {
