@@ -3,11 +3,12 @@ import { describe, it } from 'node:test';
 
 import { giorniSettimana, type RigaPerSettimana } from './settimana.ts';
 
-const riga = (submission_date: string, status: string, commento: string | null = null, letto: boolean | null = null): RigaPerSettimana => ({
+const riga = (submission_date: string, status: string, commento: string | null = null, letto: boolean | null = null, review_status: string | null = 'positive'): RigaPerSettimana => ({
   submission_date,
   status,
   nutritionist_comment: commento,
   comment_acknowledged: letto,
+  review_status,
 });
 
 describe('giorniSettimana', () => {
@@ -52,5 +53,21 @@ describe('giorniSettimana', () => {
     assert.equal(letto[4]?.stato, 'oggiLetto');
     const senzaCommento = giorniSettimana('2026-10-09', [riga('2026-10-09', 'submitted')]);
     assert.equal(senzaCommento[4]?.stato, 'oggi');
+  });
+
+  it('valutazione della nutrizionista combinata con i pallini: approvata, da rivedere, in attesa (710:438 … 710:460)', () => {
+    const giorni = giorniSettimana('2026-10-09', [
+      riga('2026-10-05', 'submitted', null, null, 'positive'),
+      riga('2026-10-06', 'submitted', 'Bravo', false, 'needs_review'),
+      riga('2026-10-07', 'submitted', 'Bravo', true, null),
+      riga('2026-10-08', 'submitted', null, null, 'altro'), // valore sconosciuto: come in attesa
+      riga('2026-10-09', 'submitted', 'Bravo', false, 'needs_review'),
+    ]);
+    assert.deepEqual(
+      giorni.map((g) => `${g.stato}:${g.valutazione}:${g.commento}`),
+      ['condiviso:approvata:nessuno', 'condivisoDaLeggere:daRivedere:daLeggere', 'condivisoLetto:inAttesa:letto', 'condiviso:inAttesa:nessuno', 'oggiDaLeggere:daRivedere:daLeggere', 'futuro:null:nessuno', 'futuro:null:nessuno'],
+    );
+    const nonCondiviso = giorniSettimana('2026-10-09', [riga('2026-10-06', 'draft', null, null, 'positive')]);
+    assert.equal(nonCondiviso[1]?.valutazione, null);
   });
 });

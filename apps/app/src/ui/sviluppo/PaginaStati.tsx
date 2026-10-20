@@ -45,6 +45,7 @@ export const STATI_SVILUPPO = [
   ['oggi-7-condiviso', 'Oggi · 7 · Diario condiviso (446:3777)'],
   ['oggi-commento-da-leggere', 'Oggi condiviso con commento da leggere (Giorno della settimana 704:436)'],
   ['oggi-commento-letto', 'Oggi condiviso con commento letto (Giorno della settimana 704:442)'],
+  ['settimana-valutazioni', 'Settimana con le valutazioni: approvata, da rivedere, in attesa, con e senza commento (710:438 … 710:460)'],
   ['oggi-errore-salvataggio', 'Oggi in bozza con Notifica breve di errore (salvataggio non riuscito, Riprova)'],
   ['oggi-condiviso-notifica', 'Oggi condiviso con Notifica breve di conferma'],
   ['oggi-valori-vuoti', 'Oggi · 3 · Valori senza risposte (cursore sazietà Vuoto, 691:7467)'],
@@ -169,6 +170,8 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="oggiCommentoDaLeggere" />;
     case 'oggi-commento-letto':
       return <OggiSviluppo scenario="oggiCommentoLetto" />;
+    case 'settimana-valutazioni':
+      return <OggiSviluppo scenario="valutazioni" />;
     case 'oggi-errore-salvataggio':
       return <OggiSviluppo scenario="erroreSalvataggio" />;
     case 'oggi-condiviso-notifica':

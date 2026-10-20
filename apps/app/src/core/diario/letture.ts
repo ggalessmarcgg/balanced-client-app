@@ -1,6 +1,6 @@
 // Letture di daily_submissions per la pagina Oggi e il pannello della giornata: colonne esplicite, filtro per client_id
 // (indice idx_daily_submissions_client_date), mai select *. All'avvio una lettura per la settimana corrente (colonne
-// di stato e valori, più ciò che serve ai pallini del commento, senza i testi del cliente) e, se esiste, la riga di
+// di stato, valori e valutazione, più ciò che serve ai pallini del commento, senza i testi del cliente) e, se esiste, la riga di
 // oggi completa; al tocco di un giorno condiviso, se non è già in cache, la riga completa di quel giorno.
 import type { CampiDiarioDb } from './modello.ts';
 
@@ -28,6 +28,7 @@ export const SELEZIONE_SETTIMANA = [
   'nutritionist_comment',
   'comment_author_id',
   'comment_acknowledged',
+  'review_status',
 ].join(',');
 
 export type RigaSettimana = {
@@ -43,6 +44,8 @@ export type RigaSettimana = {
   nutritionist_comment: string | null;
   comment_author_id: string | null;
   comment_acknowledged: boolean | null;
+  /** Valutazione della nutrizionista: positive | needs_review | null (in attesa). */
+  review_status: string | null;
 };
 
 /** Colonne della riga completa di un giorno (oggi o una giornata aperta nel pannello): i campi scritti dal cliente più lo stato. */

@@ -1,5 +1,5 @@
 // GENERATO da scripts/tokens/genera-token.mjs a partire da src/ui/theme/figma-tokens.json
-// (file Figma gEx2IMz69sIuUnOYkLBjcf, modalità Chiaro, lettura del 2026-10-18).
+// (file Figma gEx2IMz69sIuUnOYkLBjcf, modalità Chiaro, lettura del 2026-10-21).
 // NON MODIFICARE A MANO: rileggere Figma e rigenerare con `npm run tokens` (vedi CLAUDE.md).
 /* eslint-disable */
 
@@ -15,6 +15,7 @@ export const colori = {
     lightGreen: '#79D4BD',
     cremaScuro: '#F4F0E8',
     rossoRegistrazione: '#FF3B30',
+    senape: '#E0B13E',
   },
   sfondo: {
     pagina: '#FFFFFF',
@@ -45,6 +46,7 @@ export const colori = {
     errore: '#B4534B',
     registrazione: '#FF3B30',
     notifica: '#FF3B30',
+    daRivedere: '#E0B13E',
   },
   badge: {
     sfondo: '#79D4BD',

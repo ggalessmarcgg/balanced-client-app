@@ -293,8 +293,8 @@ export async function scriviCommentoLetto(modifica: ModificaLetto): Promise<bool
 }
 
 /** Una giornata fuori dalla settimana corrente (rotta diretta, step 6): riga completa più commento e "letto", per (client_id, data). */
-export type RigaGiornataConCommento = RigaGiornata & Pick<RigaSettimana, 'nutritionist_comment' | 'comment_author_id' | 'comment_acknowledged'>;
-const SELEZIONE_GIORNATA_CON_COMMENTO = `${SELEZIONE_GIORNATA},nutritionist_comment,comment_author_id,comment_acknowledged`;
+export type RigaGiornataConCommento = RigaGiornata & Pick<RigaSettimana, 'nutritionist_comment' | 'comment_author_id' | 'comment_acknowledged' | 'review_status'>;
+const SELEZIONE_GIORNATA_CON_COMMENTO = `${SELEZIONE_GIORNATA},nutritionist_comment,comment_author_id,comment_acknowledged,review_status`;
 export async function leggiGiornataPerData(clientId: string, data: string): Promise<EsitoLettura<RigaGiornataConCommento | null>> {
   const { data: riga, error } = await supabase
     .from(TABELLA_DIARIO)

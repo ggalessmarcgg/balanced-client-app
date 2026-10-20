@@ -14,8 +14,14 @@ const OGGI = '2026-10-09';
 const NON_CONDIVISI_SETTEMBRE = new Set([6, 13, 19, 20, 27]);
 const CONDIVISI_OTTOBRE = [1, 2, 3, 5, 6, 8];
 
+/** Valutazione finta: in ottobre il 2 è da rivedere e il 3 in attesa; a settembre il 7 e il 21 da rivedere, il 14 in attesa. */
+const DA_RIVEDERE = new Set(['2026-10-02', '2026-09-07', '2026-09-21']);
+const IN_ATTESA = new Set(['2026-10-03', '2026-09-14']);
 function righe(mese: Mese, giorni: number[]): RigaStorico[] {
-  return giorni.map((g) => ({ submission_date: `${mese}-${String(g).padStart(2, '0')}`, status: 'submitted' }));
+  return giorni.map((g) => {
+    const data = `${mese}-${String(g).padStart(2, '0')}`;
+    return { submission_date: data, status: 'submitted', review_status: DA_RIVEDERE.has(data) ? 'needs_review' : IN_ATTESA.has(data) ? null : 'positive' };
+  });
 }
 
 const RIGHE: Record<Mese, RigaStorico[]> = {

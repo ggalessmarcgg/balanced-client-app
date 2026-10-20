@@ -4,10 +4,11 @@
 // Date sempre in ora italiana, nel formato YYYY-MM-DD di submission_date.
 import { aggiungiGiorni, confrontaDate, lunediDellaSettimana } from './data.ts';
 import { statoRiga } from './letture.ts';
+import { valutazioneDi, type Valutazione } from './valutazione.ts';
 
-/** Colonne lette per lo storico: solo data e stato. */
-export const SELEZIONE_STORICO = ['submission_date', 'status'].join(',');
-export type RigaStorico = { submission_date: string; status: string };
+/** Colonne lette per lo storico: data, stato e valutazione della nutrizionista. */
+export const SELEZIONE_STORICO = ['submission_date', 'status', 'review_status'].join(',');
+export type RigaStorico = { submission_date: string; status: string; review_status: string | null };
 
 /** Mese nel formato YYYY-MM. */
 export type Mese = string;
@@ -82,18 +83,29 @@ export function settimaneDelMese(mese: Mese): string[][] {
 }
 
 export type StatoGiornoCalendario = 'condiviso' | 'nonCondiviso' | 'oggi' | 'futuro';
-export type GiornoCalendario = { data: string; numero: number; stato: StatoGiornoCalendario; /** Riga condivisa: si può aprire il pannello (anche oggi). */ condiviso: boolean };
+export type GiornoCalendario = {
+  data: string;
+  numero: number;
+  stato: StatoGiornoCalendario;
+  /** Riga condivisa: si può aprire il pannello (anche oggi). */
+  condiviso: boolean;
+  /** Valutazione della nutrizionista, solo per i giorni condivisi (Giorno calendario 710:7507 da rivedere, 710:7509 in attesa). */
+  valutazione: Valutazione | null;
+};
 export type MeseCalendario = { settimane: GiornoCalendario[][]; condivise: number };
 
-/** Giorni del mese con lo stato: condiviso (riga submitted), oggi, futuro, altrimenti non condiviso (una bozza non conta). */
+/**
+ * Giorni del mese con lo stato: condiviso (riga submitted, con la valutazione), oggi, futuro, altrimenti non
+ * condiviso (una bozza non conta). Oggi resta "oggi" anche se condiviso.
+ */
 export function giorniMese(mese: Mese, righe: RigaStorico[], oggi: string): MeseCalendario {
-  const condivise = new Set(righe.filter((r) => statoRiga(r.status) === 'submitted' && meseDi(r.submission_date) === mese).map((r) => r.submission_date));
+  const condivise = new Map(righe.filter((r) => statoRiga(r.status) === 'submitted' && meseDi(r.submission_date) === mese).map((r) => [r.submission_date, r] as const));
   const settimane = settimaneDelMese(mese).map((settimana) =>
     settimana.map((data) => {
       const c = confrontaDate(data, oggi);
-      const condiviso = condivise.has(data);
-      const stato: StatoGiornoCalendario = c === 0 ? 'oggi' : c > 0 ? 'futuro' : condiviso ? 'condiviso' : 'nonCondiviso';
-      return { data, numero: Number(data.slice(8, 10)), stato, condiviso };
+      const riga = condivise.get(data);
+      const stato: StatoGiornoCalendario = c === 0 ? 'oggi' : c > 0 ? 'futuro' : riga ? 'condiviso' : 'nonCondiviso';
+      return { data, numero: Number(data.slice(8, 10)), stato, condiviso: riga !== undefined, valutazione: riga ? valutazioneDi(riga.review_status) : null };
     }),
   );
   return { settimane, condivise: condivise.size };

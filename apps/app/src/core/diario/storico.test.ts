@@ -50,12 +50,12 @@ describe('settimane del mese allineate a sinistra', () => {
 describe('giorni del mese', () => {
   it('condiviso, non condiviso (una bozza non conta), oggi e futuro; conteggio delle condivise', () => {
     const righe = [
-      { submission_date: '2026-10-01', status: 'submitted' },
-      { submission_date: '2026-10-02', status: 'submitted' },
-      { submission_date: '2026-10-04', status: 'draft' },
-      { submission_date: '2026-10-08', status: 'submitted' },
-      { submission_date: '2026-10-09', status: 'submitted' },
-      { submission_date: '2026-09-30', status: 'submitted' }, // altro mese: ignorata
+      { submission_date: '2026-10-01', status: 'submitted', review_status: 'positive' },
+      { submission_date: '2026-10-02', status: 'submitted', review_status: 'needs_review' },
+      { submission_date: '2026-10-04', status: 'draft', review_status: null },
+      { submission_date: '2026-10-08', status: 'submitted', review_status: null },
+      { submission_date: '2026-10-09', status: 'submitted', review_status: 'positive' },
+      { submission_date: '2026-09-30', status: 'submitted', review_status: 'positive' }, // altro mese: ignorata
     ];
     const mese = giorniMese('2026-10', righe, '2026-10-09');
     const stati = mese.settimane.flat().map((g) => `${g.numero}:${g.stato}`);
@@ -63,6 +63,11 @@ describe('giorni del mese', () => {
     assert.equal(mese.condivise, 4);
     assert.equal(mese.settimane[1]?.[4]?.condiviso, true); // oggi condiviso: apribile
     assert.equal(mese.settimane[1]?.[5]?.condiviso, false);
+    // valutazione: approvata (1), da rivedere (2), in attesa (8), oggi condiviso approvato (9), null per gli altri
+    assert.deepEqual(
+      mese.settimane.flat().slice(0, 9).map((g) => g.valutazione),
+      ['approvata', 'daRivedere', null, null, null, null, null, 'inAttesa', 'approvata'],
+    );
   });
   it('etichette', () => {
     assert.equal(etichettaMese('2026-10'), 'Ottobre 2026');

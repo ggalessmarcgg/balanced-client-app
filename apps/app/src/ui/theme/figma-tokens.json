@@ -1,6 +1,6 @@
 {
   "_nota": "Fotografia in sola lettura del file Figma (design system dell'app). Generata con apps/app/scripts/figma/01-variabili-stili.js e 02-icone.js tramite il connettore Figma; da qui scripts/tokens/genera-token.mjs produce src/ui/theme/tokens.generated.ts. Non modificare a mano: rileggere da Figma. Icone rilette il 18/10/2026 sera dopo il ridisegno con Lucide 1.59 e il tratto 1,67 sulle 20.",
-  "letturaDel": "2026-10-18",
+  "letturaDel": "2026-10-21",
   "fileKey": "gEx2IMz69sIuUnOYkLBjcf",
   "fileName": "Clients App",
   "mode": "Chiaro",
@@ -87,6 +87,13 @@
       "name": "colore/rosso-registrazione",
       "type": "COLOR",
       "hex": "#FF3B30",
+      "alpha": 1
+    },
+    {
+      "collection": "App · Primitivi",
+      "name": "colore/senape",
+      "type": "COLOR",
+      "hex": "#E0B13E",
       "alpha": 1
     },
     {
@@ -332,6 +339,15 @@
       "type": "COLOR",
       "hex": "#FAF8F5",
       "alpha": 0.8
+    },
+    {
+      "collection": "App · Colori",
+      "name": "stato/da-rivedere",
+      "type": "COLOR",
+      "hex": "#E0B13E",
+      "alpha": 1,
+      "alias": "colore/senape",
+      "description": "Giornata valutata dalla nutrizionista come \"da rivedere\" (review_status = needs_review)."
     },
     {
       "collection": "App · Misure",

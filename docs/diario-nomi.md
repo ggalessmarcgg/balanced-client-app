@@ -48,6 +48,10 @@ a schermo. In codice: `apps/app/src/core/diario/nomi.ts` (`SCHERMATE_DIARIO`, `A
   sulla sola settimana corrente, lunedì–domenica in ora italiana (colonne: `id, submission_date, status, updated_at,
   energy_level, satiety_level, hydration_level, sport_type, sport_duration, nutritionist_comment, comment_author_id,
   comment_acknowledged`). Nessuna rilettura dopo un salvataggio.
+- Valutazione della nutrizionista (`review_status`, scritta dal CRM: `positive` approvata, `needs_review` da rivedere,
+  null in attesa): letta nelle stesse letture della settimana e dei mesi dello storico, nessuna lettura in più; i giorni
+  condivisi prendono il colore della valutazione (verde, senape, bianco) e il pallino del commento si combina come
+  prima; oggi resta con le varianti "Oggi". Si aggiorna con la rilettura all'apertura e al ritorno in primo piano.
 - Storico (lotto 3): all'apertura una lettura minima del primo diario del cliente (`submission_date`, ordinata, un
   solo risultato, per `client_id`), poi in memoria e nel portachiavi con la cache del diario; una lettura per mese
   (`submission_date, status` per `client_id` e intervallo del mese) solo quando il mese entra, o sta per entrare, nello

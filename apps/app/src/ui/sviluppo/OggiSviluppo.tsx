@@ -16,7 +16,7 @@ import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
 const OGGI = '2026-10-09';
 const CLIENT = 'finto';
 const COMMENTO = 'Ottima giornata Giulia! Bene la colazione proteica e la camminata serale. A cena prova ad aggiungere una porzione di cereali integrali, così arrivi più sazia al mattino.';
-const riga = (data: string, status: string, commento: string | null = null, letto: boolean | null = null): RigaSettimana => ({
+const riga = (data: string, status: string, commento: string | null = null, letto: boolean | null = null, review_status: string | null = 'positive'): RigaSettimana => ({
   id: data,
   submission_date: data,
   status,
@@ -29,7 +29,16 @@ const riga = (data: string, status: string, commento: string | null = null, lett
   nutritionist_comment: commento,
   comment_author_id: commento ? 'autrice' : null,
   comment_acknowledged: letto,
+  review_status,
 });
+/** Valutazioni: L approvata, M da rivedere con commento da leggere, M in attesa con commento letto, G in attesa, V oggi da rivedere con commento letto. */
+const SETTIMANA_VALUTAZIONI: RigaSettimana[] = [
+  riga('2026-10-05', 'submitted', null, null, 'positive'),
+  riga('2026-10-06', 'submitted', COMMENTO, false, 'needs_review'),
+  riga('2026-10-07', 'submitted', COMMENTO, true, null),
+  riga('2026-10-08', 'submitted', null, null, null),
+  riga('2026-10-09', 'submitted', COMMENTO, true, 'needs_review'),
+];
 const SETTIMANA: RigaSettimana[] = [riga('2026-10-05', 'submitted'), riga('2026-10-06', 'submitted'), riga('2026-10-08', 'submitted')];
 /** Giornate · 1 (474:1328): lunedì con commento letto, giovedì con commento da leggere. */
 const SETTIMANA_COMMENTI: RigaSettimana[] = [riga('2026-10-05', 'submitted', COMMENTO, true), riga('2026-10-06', 'submitted'), riga('2026-10-08', 'submitted', COMMENTO, false)];
@@ -76,7 +85,8 @@ export type ScenarioOggi =
   | 'pastiSpuntini'
   | 'commentoTastiera'
   | 'oggiCommentoDaLeggere'
-  | 'oggiCommentoLetto';
+  | 'oggiCommentoLetto'
+  | 'valutazioni';
 
 // Scenario "avanzamento": i blocchi cambiano da soli ogni 3 s (avanti e poi indietro) per verificare l'indicatore.
 const CICLO_BLOCCHI: Blocco[] = ['pasti', 'valori', 'sport', 'commento', 'sport', 'valori', 'pasti'];
@@ -113,6 +123,12 @@ function iniziale(scenario: ScenarioOggi): Iniziale {
       return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_PASTI, bozza(DIARIO_PASTI)), blocco: 'pasti', pasto: 'snacks' };
     case 'commentoTastiera':
       return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'commento', commentoAFuoco: true };
+    case 'valutazioni':
+      return {
+        ...base,
+        locale: dopoCondivisione(diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), OGGI, '2026-10-09T19:12:00.000Z'),
+        settimana: SETTIMANA_VALUTAZIONI,
+      };
     case 'oggiCommentoDaLeggere':
     case 'oggiCommentoLetto': {
       // Oggi condiviso e commentato: Giorno della settimana "Oggi con commento da leggere / letto" (704:436, 704:442).

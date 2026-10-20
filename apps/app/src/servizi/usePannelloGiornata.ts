@@ -105,8 +105,8 @@ export function usePannelloGiornata(clientId: string, nutrizionista: Nutrizionis
           if (pannelloRef.current?.data !== data) return;
           if (esito.tipo !== 'ok') return impostaPannello({ data, fase: { tipo: esito.tipo }, modifica: null });
           if (!esito.dati || statoRiga(esito.dati.status) !== 'submitted') return impostaPannello(null);
-          const { nutritionist_comment, comment_author_id, comment_acknowledged, ...completa } = esito.dati;
-          riga = { ...completa, nutritionist_comment, comment_author_id, comment_acknowledged };
+          const { nutritionist_comment, comment_author_id, comment_acknowledged, review_status, ...completa } = esito.dati;
+          riga = { ...completa, nutritionist_comment, comment_author_id, comment_acknowledged, review_status };
           ricordaRigaFuoriSettimana(riga);
           aggiornaMemoria({ giornate: { ...memoriaDiario().giornate, [data]: giornataDaRiga(completa) } });
         }

@@ -240,6 +240,7 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
           nutritionist_comment: precedente?.nutritionist_comment ?? null,
           comment_author_id: precedente?.comment_author_id ?? null,
           comment_acknowledged: precedente?.comment_acknowledged ?? null,
+          review_status: precedente?.review_status ?? null,
         };
         const { [dopo.data]: _vecchia, ...giornate } = m.giornate;
         aggiornaMemoria({
