@@ -5,7 +5,7 @@ import { aggiornaGiornata, type GiornataLocale } from '@/core/diario/giornata';
 import type { RigaSettimana } from '@/core/diario/letture';
 import { BLOCCHI, bloccoSuccessivo, campiDaSalvare, DIARIO_VUOTO, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
 import { giorniSettimana } from '@/core/diario/settimana';
-import type { StatoPannello } from '@/servizi/useDiario';
+import type { StatoPannello } from '@/servizi/usePannelloGiornata';
 import type { NotificaBreveProps } from '@/ui/NotificaBreve';
 import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
 
@@ -179,6 +179,16 @@ function iniziale(scenario: ScenarioOggi): Iniziale {
     case 'pannelloErrore':
       return { ...base, locale: daIniziare, settimana: SETTIMANA_COMMENTI, pannello: { data: '2026-10-08', fase: { tipo: 'rete' }, modifica: null } };
   }
+}
+
+/** Pannello finto per lo storico di sviluppo: giornata completa con commento letto (giovedì 8) o breve senza commento. */
+export function pannelloDiProva(data: string): StatoPannello {
+  const completa = data === '2026-10-08';
+  return {
+    data,
+    fase: { tipo: 'pronto', giornata: giornata(data, completa ? GIORNATA_COMPLETA : GIORNATA_BREVE), commento: completa ? { testo: COMMENTO, nuovo: false, autore: AUTRICE } : null },
+    modifica: null,
+  };
 }
 
 /** Pannello finto: la giornata si apre dalla settimana con i dati di Figma (commento da leggere su giovedì, letto su lunedì). */

@@ -4,7 +4,7 @@ import { PanResponder, Pressable, StyleSheet, View } from 'react-native';
 import { etichettaData } from '@/core/diario/data';
 import { riassuntoGiornata, type GiornataLocale } from '@/core/diario/giornata';
 import { BLOCCHI, TITOLI_BLOCCHI, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
-import type { CommentoPannello, StatoPannello } from '@/servizi/useDiario';
+import type { CommentoPannello, StatoPannello } from '@/servizi/usePannelloGiornata';
 import { useAreaToccabile } from '@/ui/areaToccabile';
 import { BloccoCommento, BloccoPasti, BloccoSport, BloccoValori } from '@/ui/diario/Blocchi';
 import { CardCommento } from '@/ui/diario/CardCommento';

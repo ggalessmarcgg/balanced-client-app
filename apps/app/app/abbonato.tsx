@@ -6,6 +6,7 @@ import { giorniSettimana } from '@/core/diario/settimana';
 import type { Profilo } from '@/core/stato/stato';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useDiario } from '@/servizi/useDiario';
+import { usePannelloGiornata } from '@/servizi/usePannelloGiornata';
 import type { VoceNavigazione } from '@/ui/BarraNavigazione';
 import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
@@ -26,14 +27,16 @@ function Oggi({ profilo }: { profilo: Profilo }) {
   const router = useRouter();
   const { giornata: giornataRichiesta } = useLocalSearchParams<{ giornata?: string }>();
   const diario = useDiario(profilo.clientId, profilo.nutrizionista);
+  const pannello = usePannelloGiornata(profilo.clientId, profilo.nutrizionista, diario.mostraNotifica);
 
   // Rotta diretta: appena la pagina è pronta si apre il pannello della data richiesta, una volta per valore.
   const giornataAperta = useRef<string | null>(null);
+  const { apriGiornata } = pannello;
   useEffect(() => {
     if (diario.fase.tipo !== 'pronto' || !giornataRichiesta || !dataValida(giornataRichiesta) || giornataAperta.current === giornataRichiesta) return;
     giornataAperta.current = giornataRichiesta;
-    diario.apriGiornata(giornataRichiesta);
-  }, [diario, giornataRichiesta]);
+    apriGiornata(giornataRichiesta);
+  }, [diario.fase.tipo, giornataRichiesta, apriGiornata]);
 
   const onNavigazione = useCallback(
     (voce: VoceNavigazione) => {
@@ -43,12 +46,13 @@ function Oggi({ profilo }: { profilo: Profilo }) {
     [router],
   );
   const onRacconta = useCallback(() => router.push('/racconta'), [router]);
-  const onRiprovaPannello = useCallback(() => {
-    const data = diario.pannello?.data;
-    if (!data) return;
-    diario.chiudiPannello();
-    diario.apriGiornata(data);
-  }, [diario]);
+  const onApriStorico = useCallback(() => router.push('/storico'), [router]);
+  const { riprova: riprovaBozza } = diario;
+  const { salvaModifiche } = pannello;
+  const onRiprova = useCallback(() => {
+    riprovaBozza();
+    salvaModifiche(true);
+  }, [riprovaBozza, salvaModifiche]);
 
   if (diario.fase.tipo === 'caricamento' || !diario.locale) {
     if (diario.fase.tipo === 'rete') return <SchermataSenzaConnessione onRiprova={diario.carica} {...STRUTTURA} />;
@@ -61,7 +65,7 @@ function Oggi({ profilo }: { profilo: Profilo }) {
         chiave: diario.notifica.testo,
         tipo: diario.notifica.tipo,
         testo: diario.notifica.testo,
-        onRiprova: diario.notifica.tipo === 'errore' && diario.notifica.riprova ? diario.riprova : undefined,
+        onRiprova: diario.notifica.tipo === 'errore' && diario.notifica.riprova ? onRiprova : undefined,
         onScomparsa: diario.notifica.tipo === 'conferma' ? diario.nascondiNotifica : undefined,
       }
     : undefined;
@@ -82,18 +86,19 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       onAggiorna={diario.aggiorna}
       onCondividi={diario.condividi}
       onNavigazione={onNavigazione}
+      onApriStorico={onApriStorico}
       notifica={notifica}
       giornata={{
-        pannello: diario.pannello,
-        onApriGiorno: diario.apriGiornata,
-        onChiudiPannello: diario.chiudiPannello,
-        onRiprovaPannello,
-        onModifica: diario.modificaGiornata,
-        onChiudiModifica: diario.chiudiModifica,
-        onAvantiModifica: diario.avantiModifica,
-        onIndietroModifica: diario.indietroModifica,
-        onVaiAModifica: diario.vaiAModifica,
-        onAggiornaGiornata: diario.aggiornaGiornata,
+        pannello: pannello.pannello,
+        onApriGiorno: pannello.apriGiornata,
+        onChiudiPannello: pannello.chiudiPannello,
+        onRiprovaPannello: pannello.riprovaPannello,
+        onModifica: pannello.modificaGiornata,
+        onChiudiModifica: pannello.chiudiModifica,
+        onAvantiModifica: pannello.avantiModifica,
+        onIndietroModifica: pannello.indietroModifica,
+        onVaiAModifica: pannello.vaiAModifica,
+        onAggiornaGiornata: pannello.aggiornaGiornata,
       }}
     />
   );

@@ -5,7 +5,7 @@ import type { DiarioLocale } from '@/core/diario/bozza';
 import { etichettaData } from '@/core/diario/data';
 import { BLOCCHI, haContenuto, TITOLI_BLOCCHI, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
 import type { GiornoSettimana } from '@/core/diario/settimana';
-import type { StatoPannello } from '@/servizi/useDiario';
+import type { StatoPannello } from '@/servizi/usePannelloGiornata';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import type { VoceNavigazione } from '@/ui/BarraNavigazione';
 import { BloccoCommento, BloccoPasti, BloccoSport, BloccoValori } from '@/ui/diario/Blocchi';
@@ -56,6 +56,8 @@ export type SchermataOggiProps = {
   onAggiorna: (diario: Diario) => void;
   onCondividi: () => void;
   onNavigazione?: (voce: VoceNavigazione) => void;
+  /** Icona Calendario della Card settimana: apre lo storico delle giornate. */
+  onApriStorico?: () => void;
   onNotifiche?: () => void;
   onMenu?: () => void;
   /** Pasto aperto all'avvio (pagina di sviluppo). */
@@ -89,6 +91,7 @@ export function SchermataOggi({
   onAggiorna,
   onCondividi,
   onNavigazione,
+  onApriStorico,
   onNotifiche,
   onMenu,
   pastoApertoIniziale = null,
@@ -201,7 +204,7 @@ export function SchermataOggi({
             </CardDiario>
           </View>
         )}
-        <CardSettimana giorni={giorni} onApriGiorno={giornata?.onApriGiorno} />
+        <CardSettimana giorni={giorni} onApriGiorno={giornata?.onApriGiorno} onApriStorico={onApriStorico} />
       </View>
     </Pagina>
   );

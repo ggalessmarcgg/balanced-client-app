@@ -35,6 +35,7 @@ import {
   type RigaSettimana,
 } from '@/core/diario/letture';
 import { campiDaSalvare, DIARIO_VUOTO, diarioDaCampi } from '@/core/diario/modello';
+import { SELEZIONE_STORICO, type RigaStorico } from '@/core/diario/storico';
 import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
 import { precaricaFoto } from '@/servizi/foto';
 import { supabase } from '@/servizi/supabase';
@@ -47,6 +48,8 @@ export type DatiOggi = {
   giornate: Record<string, GiornataLocale>;
   /** Righe il cui "letto" è stato mostrato ma non ancora confermato dal server: si riprova alla prossima apertura. */
   lettureInAttesa: string[];
+  /** Data del primo diario del cliente (storico): null se non ne ha, undefined se non ancora letta. */
+  primoDiario?: string | null;
 };
 export const DATI_VUOTI: Pick<DatiOggi, 'giornate' | 'lettureInAttesa'> = { giornate: {}, lettureInAttesa: [] };
 export type EsitoLetturaDiario = { tipo: 'ok'; dati: DatiOggi; daCache: boolean } | { tipo: 'nonAutenticato' } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string };
@@ -65,7 +68,7 @@ async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null>
     if (!testo) return null;
     const cache = JSON.parse(testo) as Partial<Cache>;
     if (!copiaValida(cache.locale, clientId, data)) return null;
-    return { locale: cache.locale, settimana: cache.settimana ?? [], giornate: cache.giornate ?? {}, lettureInAttesa: cache.lettureInAttesa ?? [] };
+    return { locale: cache.locale, settimana: cache.settimana ?? [], giornate: cache.giornate ?? {}, lettureInAttesa: cache.lettureInAttesa ?? [], primoDiario: cache.primoDiario };
   } catch {
     return null;
   }
@@ -170,7 +173,7 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
     return { tipo: 'errore', messaggio: err.message ?? 'Errore di lettura' };
   }
 
-  const dati: DatiOggi = { locale, settimana, giornate: cache?.giornate ?? {}, lettureInAttesa };
+  const dati: DatiOggi = { locale, settimana, giornate: cache?.giornate ?? {}, lettureInAttesa, primoDiario: cache?.primoDiario };
   salvaCache(dati);
   return { tipo: 'ok', dati, daCache: false };
 }
@@ -375,4 +378,33 @@ export async function precaricaAutori(autoriId: string[], altreFoto: (string | n
 /** All'uscita: dimentica i profili letti (la cache nel portachiavi resta: non contiene dati del cliente). */
 export function svuotaAutoriInMemoria(): void {
   autoriInMemoria.clear();
+}
+
+// ---- Lotto 3: storico delle giornate ---------------------------------------------------------------------------
+
+/** Data del primo diario del cliente (qualunque stato): una lettura minima, un solo risultato. null se non ha diari. */
+export async function leggiPrimoDiario(clientId: string): Promise<EsitoLettura<string | null>> {
+  const { data, error } = await supabase
+    .from(TABELLA_DIARIO)
+    .select('submission_date')
+    .eq('client_id', clientId)
+    .order('submission_date', { ascending: true })
+    .limit(1)
+    .maybeSingle<{ submission_date: string }>();
+  if (error) return erroreDiRete(error) ? { tipo: 'rete' } : { tipo: 'errore', messaggio: error.message };
+  return { tipo: 'ok', dati: data?.submission_date ?? null };
+}
+
+/** Le righe di un intervallo di date (un mese, o la parte del mese corrente prima della settimana): solo data e stato. */
+export async function leggiMese(clientId: string, da: string, a: string): Promise<EsitoLettura<RigaStorico[]>> {
+  const { data, error } = await supabase
+    .from(TABELLA_DIARIO)
+    .select(SELEZIONE_STORICO)
+    .eq('client_id', clientId)
+    .gte('submission_date', da)
+    .lte('submission_date', a)
+    .order('submission_date', { ascending: true })
+    .returns<RigaStorico[]>();
+  if (error) return erroreDiRete(error) ? { tipo: 'rete' } : { tipo: 'errore', messaggio: error.message };
+  return { tipo: 'ok', dati: data ?? [] };
 }

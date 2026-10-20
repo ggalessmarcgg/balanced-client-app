@@ -12,6 +12,7 @@ import { SchermataRaccontaSegnaposto, SchermataSegnapostoPrenotazione } from '@/
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
+import { StoricoSviluppo } from '@/ui/sviluppo/StoricoSviluppo';
 import { colori, margine, spazio, testi, tocco } from '@/ui/theme';
 
 // Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3 e 5 con dati finti, per i
@@ -53,6 +54,9 @@ export const STATI_SVILUPPO = [
   ['giornate-3-pannello-pieno', 'Giornate · 3 · Pannello a schermo pieno · commento letto (475:1337)'],
   ['giornate-4-senza-commento', 'Giornate · 4 · Pannello · senza commento (475:1409)'],
   ['giornate-5-modifica', 'Giornate · 5 · Pannello · modifica della giornata (475:1459)'],
+  ['giornate-6-storico', 'Giornate · 6 · Storico delle giornate (475:1917)'],
+  ['giornate-6-storico-nuovo', 'Giornate · 6 · Storico di un cliente senza diari (solo il mese corrente)'],
+  ['giornate-6-storico-caricamento', 'Giornate · 6 · Storico con un mese in caricamento'],
   ['giornate-caricamento', 'Giornate · pannello in caricamento (segnaposti)'],
   ['giornate-errore', 'Giornate · pannello senza connessione (Riprova)'],
   ['racconta', 'Racconta (segnaposto fino allo step 10)'],
@@ -183,6 +187,12 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="pannelloSenzaCommento" />;
     case 'giornate-5-modifica':
       return <OggiSviluppo scenario="pannelloModifica" />;
+    case 'giornate-6-storico':
+      return <StoricoSviluppo scenario="mesi" />;
+    case 'giornate-6-storico-nuovo':
+      return <StoricoSviluppo scenario="nuovo" />;
+    case 'giornate-6-storico-caricamento':
+      return <StoricoSviluppo scenario="caricamento" />;
     case 'giornate-caricamento':
       return <OggiSviluppo scenario="pannelloCaricamento" />;
     case 'giornate-errore':

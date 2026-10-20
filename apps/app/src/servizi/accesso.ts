@@ -3,6 +3,7 @@
 import { ATTESA_REINVIO_SECONDI, URL_CONFERMA_EMAIL, URL_RECUPERO_PASSWORD } from '@/core/accesso/costanti';
 import { classificaErrore, normalizzaEmail, type TipoErroreAccesso } from '@/core/accesso/errori';
 import { svuotaAutoriInMemoria } from '@/servizi/diario';
+import { svuotaMemoriaDiario } from '@/servizi/memoriaDiario';
 import { svuotaCacheStato, svuotaStatoInMemoria } from '@/servizi/statoCliente';
 import { supabase } from '@/servizi/supabase';
 
@@ -58,6 +59,7 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   if (!revocaGlobale) await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
   await svuotaCacheStato();
   svuotaAutoriInMemoria();
+  svuotaMemoriaDiario();
   return { revocaGlobale };
 }
 
