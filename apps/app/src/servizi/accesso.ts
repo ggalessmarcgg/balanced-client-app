@@ -2,6 +2,7 @@
 // GoTrue vengono classificati in src/core/accesso/errori.ts: le schermate mostrano messaggi dedicati.
 import { ATTESA_REINVIO_SECONDI, URL_CONFERMA_EMAIL, URL_RECUPERO_PASSWORD } from '@/core/accesso/costanti';
 import { classificaErrore, normalizzaEmail, type TipoErroreAccesso } from '@/core/accesso/errori';
+import { svuotaAutoriInMemoria } from '@/servizi/diario';
 import { svuotaCacheStato, svuotaStatoInMemoria } from '@/servizi/statoCliente';
 import { supabase } from '@/servizi/supabase';
 
@@ -56,6 +57,7 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   }
   if (!revocaGlobale) await supabase.auth.signOut({ scope: 'local' }).catch(() => {});
   await svuotaCacheStato();
+  svuotaAutoriInMemoria();
   return { revocaGlobale };
 }
 

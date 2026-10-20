@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { etichettaData } from '@/core/diario/data';
 import type { GiornoSettimana as Giorno, StatoGiorno } from '@/core/diario/settimana';
 import { Icona } from '@/ui/icone';
 import { Testo } from '@/ui/Testo';
@@ -8,7 +9,9 @@ import { Vetro } from '@/ui/Vetro';
 
 export type CardSettimanaProps = {
   giorni: Giorno[];
-  /** "Apri storico" (icona Calendario in alto a destra): arriva con il lotto 2; senza callback resta decorativa. */
+  /** Tocco su un giorno condiviso: apre il pannello della giornata. I giorni non condivisi non aprono nulla. */
+  onApriGiorno?: (data: string) => void;
+  /** "Apri storico" (icona Calendario in alto a destra): arriva con il lotto 3; senza callback resta decorativa. */
   onApriStorico?: () => void;
 };
 
@@ -17,7 +20,7 @@ export type CardSettimanaProps = {
 const DISTANZA_APRI_STORICO = 14;
 
 /** Costanza della settimana: l'unica card con l'effetto vetro insieme alla barra di navigazione. */
-export function CardSettimana({ giorni, onApriStorico }: CardSettimanaProps) {
+export function CardSettimana({ giorni, onApriGiorno, onApriStorico }: CardSettimanaProps) {
   return (
     <Vetro style={stili.card}>
       <View style={stili.contenuto}>
@@ -26,7 +29,7 @@ export function CardSettimana({ giorni, onApriStorico }: CardSettimanaProps) {
         </Testo>
         <View style={stili.settimana} accessibilityRole="list">
           {giorni.map((g) => (
-            <GiornoSettimana key={g.data} iniziale={g.iniziale} stato={g.stato} data={g.data} />
+            <GiornoSettimana key={g.data} giorno={g} onPress={onApriGiorno && g.condiviso ? () => onApriGiorno(g.data) : undefined} />
           ))}
         </View>
       </View>
@@ -46,26 +49,46 @@ export function CardSettimana({ giorni, onApriStorico }: CardSettimanaProps) {
 
 const DESCRIZIONE_STATO: Record<StatoGiorno, string> = {
   condiviso: 'condiviso',
+  condivisoDaLeggere: 'condiviso, commento da leggere',
+  condivisoLetto: 'condiviso, commento letto',
   oggi: 'oggi',
   futuro: 'giorno futuro',
   nonCondiviso: 'non condiviso',
 };
 
 // Giorno della settimana (Figma 439:112): cerchio 32 e lettera Caption. Oggi: cerchio badge/sfondo raggio 16 con alone
-// sfumato dello stesso colore (sfocatura 6,4); non condiviso: trattino 8,89 × 1,78 al 30 %.
+// sfumato dello stesso colore (sfocatura 6,4); non condiviso: trattino 8,89 × 1,78 al 30 %. Con commento (474:169, 474:173):
+// pallino in alto a destra che sporge di 3 dal cerchio, con bordo bianco 2: rosso (stato/notifica) da 14 se da leggere,
+// verde scuro da 12 se letto.
 const CERCHIO = 32;
 const TRATTINO = { larghezza: 8.89, altezza: 1.78 };
 const SFOCATURA_OGGI = 6.4;
+const PALLINO = { daLeggere: 14, letto: 12, bordo: 2, sporgenza: 3 };
 
-function GiornoSettimana({ iniziale, stato, data }: { iniziale: string; stato: StatoGiorno; data: string }) {
-  const letteraPrimaria = stato === 'condiviso' || stato === 'oggi';
+function GiornoSettimana({ giorno, onPress }: { giorno: Giorno; onPress?: () => void }) {
+  const { iniziale, stato, data, commento } = giorno;
+  const letteraPrimaria = stato !== 'nonCondiviso' && stato !== 'futuro';
+  const cerchio = stato === 'condivisoDaLeggere' || stato === 'condivisoLetto' ? 'condiviso' : stato;
+  const pallino = stato === 'condivisoDaLeggere' ? 'daLeggere' : stato === 'condivisoLetto' ? 'letto' : null;
   return (
-    <View style={stili.giorno} accessible accessibilityLabel={`${data}: ${DESCRIZIONE_STATO[stato]}`}>
-      <View style={[stili.cerchio, stili[stato]]}>{stato === 'nonCondiviso' && <View style={stili.trattino} />}</View>
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
+      hitSlop={spazio[4] / 2}
+      style={({ pressed }) => [stili.giorno, pressed && stili.premuto]}
+      accessible
+      accessibilityRole={onPress ? 'button' : undefined}
+      accessibilityLabel={`${etichettaData(data)}: ${DESCRIZIONE_STATO[stato]}${stato === 'oggi' && commento === 'daLeggere' ? ', commento da leggere' : ''}`}
+      accessibilityHint={onPress ? 'Apre la giornata' : undefined}
+    >
+      <View style={[stili.cerchio, stili[cerchio]]}>
+        {stato === 'nonCondiviso' && <View style={stili.trattino} />}
+        {pallino && <View style={[stili.pallino, pallino === 'daLeggere' ? stili.pallinoDaLeggere : stili.pallinoLetto]} />}
+      </View>
       <Testo stile="caption" colore={letteraPrimaria ? colori.testo.primario : colori.testo.terziario}>
         {iniziale}
       </Testo>
-    </View>
+    </Pressable>
   );
 }
 
@@ -75,6 +98,7 @@ const stili = StyleSheet.create({
   titolo: { alignSelf: 'stretch', textAlign: 'center' },
   settimana: { flexDirection: 'row', justifyContent: 'center', gap: spazio[4], paddingTop: spazio[8] },
   giorno: { alignItems: 'center', gap: spazio[4] },
+  premuto: { opacity: opacita.pulsantePremuto },
   cerchio: { width: CERCHIO, height: CERCHIO, borderRadius: raggio.pieno, alignItems: 'center', justifyContent: 'center' },
   condiviso: { backgroundColor: colori.azione.primaria },
   oggi: {
@@ -88,6 +112,9 @@ const stili = StyleSheet.create({
   futuro: { backgroundColor: colori.sfondo.campo },
   nonCondiviso: {},
   trattino: { width: TRATTINO.larghezza, height: TRATTINO.altezza, borderRadius: raggio.pieno, backgroundColor: colori.testo.primario, opacity: opacita.trattinoOggi },
+  pallino: { position: 'absolute', top: -PALLINO.sporgenza, right: -PALLINO.sporgenza, borderRadius: raggio.pieno, borderWidth: PALLINO.bordo, borderColor: colori.sfondo.pagina },
+  pallinoDaLeggere: { width: PALLINO.daLeggere, height: PALLINO.daLeggere, backgroundColor: colori.stato.notifica },
+  pallinoLetto: { width: PALLINO.letto, height: PALLINO.letto, backgroundColor: colori.azione.primaria },
   apriStorico: {
     position: 'absolute',
     top: DISTANZA_APRI_STORICO,

@@ -43,6 +43,13 @@ export const STATI_SVILUPPO = [
   ['oggi-condiviso-notifica', 'Oggi condiviso con Notifica breve di conferma'],
   ['oggi-valori-vuoti', 'Oggi · 3 · Valori senza risposte (cursore sazietà Vuoto, 691:7467)'],
   ['oggi-avanzamento', 'Oggi · indicatore di avanzamento: i blocchi cambiano da soli ogni 3 s'],
+  ['giornate-1-settimana', 'Giornate · 1 · Settimana con commento da leggere (474:1328)'],
+  ['giornate-2-pannello', 'Giornate · 2 · Pannello · commento da leggere (474:1430)'],
+  ['giornate-3-pannello-pieno', 'Giornate · 3 · Pannello a schermo pieno · commento letto (475:1337)'],
+  ['giornate-4-senza-commento', 'Giornate · 4 · Pannello · senza commento (475:1409)'],
+  ['giornate-5-modifica', 'Giornate · 5 · Pannello · modifica della giornata (475:1459)'],
+  ['giornate-caricamento', 'Giornate · pannello in caricamento (segnaposti)'],
+  ['giornate-errore', 'Giornate · pannello senza connessione (Riprova)'],
   ['racconta', 'Racconta (segnaposto fino allo step 10)'],
   ['K', 'K · Stati 7 · Percorso concluso (558:4260)'],
   ['L', 'L · Stati 11 · Account non collegato (558:4316)'],
@@ -150,6 +157,20 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="valoriVuoti" />;
     case 'oggi-avanzamento':
       return <OggiSviluppo scenario="avanzamento" />;
+    case 'giornate-1-settimana':
+      return <OggiSviluppo scenario="settimanaCommento" />;
+    case 'giornate-2-pannello':
+      return <OggiSviluppo scenario="pannelloDaLeggere" />;
+    case 'giornate-3-pannello-pieno':
+      return <OggiSviluppo scenario="pannelloPienoLetto" />;
+    case 'giornate-4-senza-commento':
+      return <OggiSviluppo scenario="pannelloSenzaCommento" />;
+    case 'giornate-5-modifica':
+      return <OggiSviluppo scenario="pannelloModifica" />;
+    case 'giornate-caricamento':
+      return <OggiSviluppo scenario="pannelloCaricamento" />;
+    case 'giornate-errore':
+      return <OggiSviluppo scenario="pannelloErrore" />;
     case 'racconta':
       return <SchermataRaccontaSegnaposto onIndietro={nulla} />;
     case 'K':

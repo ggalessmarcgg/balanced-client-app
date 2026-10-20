@@ -26,10 +26,13 @@ import { Pulsante } from '@/ui/Pulsante';
 import { Testo } from '@/ui/Testo';
 import { colori, opacita, raggio, spazio, testi } from '@/ui/theme';
 
-/** Blocco di un passaggio della Card diario (Figma "Pasti" 449:680 e omologhi): padding verticale 32, titolo Heading, gap 36. */
-export function BloccoDiario({ blocco, children }: { blocco: Blocco; children: ReactNode }) {
+/**
+ * Blocco di un passaggio della Card diario (Figma "Pasti" 449:680 e omologhi): padding verticale 32, titolo Heading,
+ * gap 36. Nel pannello della giornata (475:1459): nessun padding, gap 20.
+ */
+export function BloccoDiario({ blocco, children, nelPannello = false }: { blocco: Blocco; children: ReactNode; nelPannello?: boolean }) {
   return (
-    <View style={stili.blocco}>
+    <View style={nelPannello ? stili.bloccoPannello : stili.blocco}>
       <Testo stile="heading" accessibilityRole="header">
         {TITOLI_BLOCCHI[blocco]}
       </Testo>
@@ -48,14 +51,14 @@ function Domanda({ etichetta, children }: { etichetta: string; children: ReactNo
   );
 }
 
-type PropsBlocco = { diario: Diario; onChange: (diario: Diario) => void };
+type PropsBlocco = { diario: Diario; onChange: (diario: Diario) => void; /** Dentro il pannello della giornata (spaziature compatte). */ nelPannello?: boolean };
 
 export type BloccoPastiProps = PropsBlocco & { pastoAperto: Pasto | null; onApri: (pasto: Pasto | null) => void };
 
 /** Passaggio 1 · Pasti (Figma 449:696): le quattro righe pasto con gap 16, una sola aperta per volta. */
-export function BloccoPasti({ diario, onChange, pastoAperto, onApri }: BloccoPastiProps) {
+export function BloccoPasti({ diario, onChange, pastoAperto, onApri, nelPannello }: BloccoPastiProps) {
   return (
-    <BloccoDiario blocco="pasti">
+    <BloccoDiario blocco="pasti" nelPannello={nelPannello}>
       <View style={stili.righe}>
         {PASTI.map((pasto) => (
           <RigaPasto
@@ -73,9 +76,9 @@ export function BloccoPasti({ diario, onChange, pastoAperto, onApri }: BloccoPas
 }
 
 /** Passaggio 2 · Valori (Figma 449:866): energia (2 × 2, Opzione compatta), sazietà (cursore), idratazione (4 in riga). */
-export function BloccoValori({ diario, onChange }: PropsBlocco) {
+export function BloccoValori({ diario, onChange, nelPannello }: PropsBlocco) {
   return (
-    <BloccoDiario blocco="valori">
+    <BloccoDiario blocco="valori" nelPannello={nelPannello}>
       <Domanda etichetta="Energia">
         <View style={stili.griglia}>
           {[LIVELLI_ENERGIA.slice(0, 2), LIVELLI_ENERGIA.slice(2)].map((riga, i) => (
@@ -130,14 +133,14 @@ const RIGHE_DURATA: DurataSport[][] = [DURATE_SPORT.slice(0, 3), DURATE_SPORT.sl
  * resta al 50 % e non toccabile; toccando di nuovo "Oggi riposo" si deseleziona. Il database riceve tipo e durata
  * sempre insieme, altrimenti entrambi null.
  */
-export function BloccoSport({ diario, onChange }: PropsBlocco) {
+export function BloccoSport({ diario, onChange, nelPannello }: PropsBlocco) {
   const riposo = diario.riposo;
   const scegliSport = (tipo: TipoSport | 'riposo') => {
     if (tipo === 'riposo') onChange(riposo ? { ...diario, riposo: false } : { ...diario, riposo: true, sport_type: null, sport_duration: null });
     else onChange({ ...diario, riposo: false, sport_type: tipo });
   };
   return (
-    <BloccoDiario blocco="sport">
+    <BloccoDiario blocco="sport" nelPannello={nelPannello}>
       <Domanda etichetta="Cosa hai fatto oggi?">
         <View style={stili.griglia}>
           {RIGHE_SPORT.map((riga, i) => (
@@ -179,7 +182,8 @@ export function BloccoSport({ diario, onChange }: PropsBlocco) {
   );
 }
 
-export type BloccoCommentoProps = PropsBlocco & { onCondividi: () => void; inviando: boolean };
+/** Senza onCondividi (modifica di una giornata già condivisa) il blocco ha la sola nota. */
+export type BloccoCommentoProps = PropsBlocco & { onCondividi?: () => void; inviando?: boolean };
 
 // Campo nota (Figma 449:961): alto 96 su sfondo/card, raggio foto, padding 16, segnaposto in Caption.
 const ALTEZZA_NOTA = 96;
@@ -189,10 +193,10 @@ const ALTEZZA_NOTA = 96;
  * "Invia" è disattivato finché il diario non ha almeno un contenuto (un pasto, un valore, lo sport o il commento):
  * nessuna condivisione di diari vuoti.
  */
-export function BloccoCommento({ diario, onChange, onCondividi, inviando }: BloccoCommentoProps) {
+export function BloccoCommento({ diario, onChange, onCondividi, inviando = false, nelPannello }: BloccoCommentoProps) {
   const statoInvio = inviando ? 'caricamento' : haContenuto(diario) ? 'normale' : 'disabilitato';
   return (
-    <BloccoDiario blocco="commento">
+    <BloccoDiario blocco="commento" nelPannello={nelPannello}>
       <View style={stili.commento}>
         <TextInput
           value={diario.day_comment}
@@ -206,12 +210,14 @@ export function BloccoCommento({ diario, onChange, onCondividi, inviando }: Bloc
           accessibilityLabel="Commento per la nutrizionista"
           style={stili.nota}
         />
-        <Pulsante
-          etichetta="Invia alla nutrizionista"
-          onPress={onCondividi}
-          stato={statoInvio}
-          accessibilityHint={statoInvio === 'disabilitato' ? 'Compila almeno un pasto, un valore, lo sport o il commento' : 'Condivide la giornata: non si può annullare'}
-        />
+        {onCondividi && (
+          <Pulsante
+            etichetta="Invia alla nutrizionista"
+            onPress={onCondividi}
+            stato={statoInvio}
+            accessibilityHint={statoInvio === 'disabilitato' ? 'Compila almeno un pasto, un valore, lo sport o il commento' : 'Condivide la giornata: non si può annullare'}
+          />
+        )}
       </View>
     </BloccoDiario>
   );
@@ -219,6 +225,7 @@ export function BloccoCommento({ diario, onChange, onCondividi, inviando }: Bloc
 
 const stili = StyleSheet.create({
   blocco: { alignSelf: 'stretch', paddingVertical: spazio[32], gap: spazio[36] },
+  bloccoPannello: { alignSelf: 'stretch', gap: spazio[20] },
   domanda: { alignSelf: 'stretch', gap: spazio[10] },
   righe: { alignSelf: 'stretch', gap: spazio[16] },
   griglia: { alignSelf: 'stretch', gap: spazio[4] },

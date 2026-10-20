@@ -1,16 +1,19 @@
-import { Redirect, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useRef } from 'react';
 
+import { dataValida } from '@/core/diario/data';
 import { giorniSettimana } from '@/core/diario/settimana';
 import type { Profilo } from '@/core/stato/stato';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useDiario } from '@/servizi/useDiario';
 import type { VoceNavigazione } from '@/ui/BarraNavigazione';
-import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
-import { INGOMBRO_BARRA_NAVIGAZIONE, SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
+import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 
-/** Stato J: app dell'abbonato, pagina Oggi (step 5, lotto 1). Piano, Revisioni, campanella e menu restano segnaposti. */
+/**
+ * Stato J: app dell'abbonato, pagina Oggi (step 5). Piano, Revisioni, campanella e menu restano segnaposti.
+ * `/abbonato?giornata=YYYY-MM-DD` apre direttamente il pannello di quella giornata (per la push del commento, step 6).
+ */
 export default function RottaAbbonato() {
   const stato = statoCorrente();
   if (stato?.codice !== 'J') return <Redirect href="/" />;
@@ -21,7 +24,16 @@ const STRUTTURA = { barraSuperiore: 'completa', barraNavigazione: 'oggi' } as co
 
 function Oggi({ profilo }: { profilo: Profilo }) {
   const router = useRouter();
-  const diario = useDiario(profilo.clientId);
+  const { giornata: giornataRichiesta } = useLocalSearchParams<{ giornata?: string }>();
+  const diario = useDiario(profilo.clientId, profilo.nutrizionista);
+
+  // Rotta diretta: appena la pagina è pronta si apre il pannello della data richiesta, una volta per valore.
+  const giornataAperta = useRef<string | null>(null);
+  useEffect(() => {
+    if (diario.fase.tipo !== 'pronto' || !giornataRichiesta || !dataValida(giornataRichiesta) || giornataAperta.current === giornataRichiesta) return;
+    giornataAperta.current = giornataRichiesta;
+    diario.apriGiornata(giornataRichiesta);
+  }, [diario, giornataRichiesta]);
 
   const onNavigazione = useCallback(
     (voce: VoceNavigazione) => {
@@ -31,6 +43,12 @@ function Oggi({ profilo }: { profilo: Profilo }) {
     [router],
   );
   const onRacconta = useCallback(() => router.push('/racconta'), [router]);
+  const onRiprovaPannello = useCallback(() => {
+    const data = diario.pannello?.data;
+    if (!data) return;
+    diario.chiudiPannello();
+    diario.apriGiornata(data);
+  }, [diario]);
 
   if (diario.fase.tipo === 'caricamento' || !diario.locale) {
     if (diario.fase.tipo === 'rete') return <SchermataSenzaConnessione onRiprova={diario.carica} {...STRUTTURA} />;
@@ -38,16 +56,15 @@ function Oggi({ profilo }: { profilo: Profilo }) {
     return <SchermataCaricamento {...STRUTTURA} />;
   }
 
-  const notifica = diario.notifica ? (
-    <NotificaInBasso
-      key={diario.notifica.testo}
-      tipo={diario.notifica.tipo}
-      testo={diario.notifica.testo}
-      sopra={INGOMBRO_BARRA_NAVIGAZIONE}
-      onRiprova={diario.notifica.tipo === 'errore' && diario.notifica.riprova ? diario.riprova : undefined}
-      onScomparsa={diario.notifica.tipo === 'conferma' ? diario.nascondiNotifica : undefined}
-    />
-  ) : null;
+  const notifica = diario.notifica
+    ? {
+        chiave: diario.notifica.testo,
+        tipo: diario.notifica.tipo,
+        testo: diario.notifica.testo,
+        onRiprova: diario.notifica.tipo === 'errore' && diario.notifica.riprova ? diario.riprova : undefined,
+        onScomparsa: diario.notifica.tipo === 'conferma' ? diario.nascondiNotifica : undefined,
+      }
+    : undefined;
 
   return (
     <SchermataOggi
@@ -65,7 +82,19 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       onAggiorna={diario.aggiorna}
       onCondividi={diario.condividi}
       onNavigazione={onNavigazione}
-      sovrapposti={notifica}
+      notifica={notifica}
+      giornata={{
+        pannello: diario.pannello,
+        onApriGiorno: diario.apriGiornata,
+        onChiudiPannello: diario.chiudiPannello,
+        onRiprovaPannello,
+        onModifica: diario.modificaGiornata,
+        onChiudiModifica: diario.chiudiModifica,
+        onAvantiModifica: diario.avantiModifica,
+        onIndietroModifica: diario.indietroModifica,
+        onVaiAModifica: diario.vaiAModifica,
+        onAggiornaGiornata: diario.aggiornaGiornata,
+      }}
     />
   );
 }

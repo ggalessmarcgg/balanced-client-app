@@ -8,6 +8,8 @@ export const SCHERMATE_DIARIO = {
   sport: 'diario · sport',
   commento: 'diario · commento',
   racconta: 'racconta · segnaposto',
+  giornataPannello: 'giornata · pannello',
+  giornataModifica: 'giornata · modifica',
 } as const;
 
 export const AZIONI_DIARIO = {
@@ -21,6 +23,13 @@ export const AZIONI_DIARIO = {
   condividi: 'diario · condividi',
   riprova: 'diario · riprova salvataggio',
   apriStorico: 'settimana · apri storico',
+  settimanaGiorno: 'settimana · giorno',
+  giornataChiudi: 'giornata · chiudi',
+  giornataSchermoPieno: 'giornata · schermo pieno',
+  giornataModifica: 'giornata · modifica',
+  giornataSalva: 'giornata · salva modifica',
+  giornataFineModifica: 'giornata · fine modifica',
+  commentoLetto: 'commento · letto',
 } as const;
 
 export type SchermataDiario = (typeof SCHERMATE_DIARIO)[keyof typeof SCHERMATE_DIARIO];

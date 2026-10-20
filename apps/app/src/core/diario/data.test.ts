@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { aggiungiGiorni, dataOggiRoma, dataValida, etichettaData, giorniDellaSettimana, intervalloLetture, lunediDellaSettimana } from './data.ts';
+import { aggiungiGiorni, dataOggiRoma, dataValida, etichettaData, giorniDellaSettimana, intervalloSettimana, lunediDellaSettimana } from './data.ts';
 
 describe('dataOggiRoma', () => {
   it('a mezzanotte italiana si passa al giorno nuovo anche se in UTC è ancora il giorno prima (ora legale)', () => {
@@ -27,13 +27,11 @@ describe('settimana e intervallo', () => {
   it('i sette giorni da lunedì a domenica', () => {
     assert.deepEqual(giorniDellaSettimana('2026-10-21'), ['2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25']);
   });
-  it("l'intervallo copre la settimana corrente e gli ultimi 7 giorni", () => {
-    // mercoledì: oggi − 6 = giovedì scorso, prima del lunedì
-    assert.deepEqual(intervalloLetture('2026-10-21'), { da: '2026-10-15', a: '2026-10-25' });
-    // domenica: oggi − 6 = lunedì stesso
-    assert.deepEqual(intervalloLetture('2026-10-25'), { da: '2026-10-19', a: '2026-10-25' });
-    // lunedì: 6 giorni indietro
-    assert.deepEqual(intervalloLetture('2026-10-19'), { da: '2026-10-13', a: '2026-10-25' });
+  it("l'intervallo copre solo la settimana corrente, da lunedì a domenica, qualunque sia il giorno", () => {
+    assert.deepEqual(intervalloSettimana('2026-10-21'), { da: '2026-10-19', a: '2026-10-25' }); // mercoledì
+    assert.deepEqual(intervalloSettimana('2026-10-25'), { da: '2026-10-19', a: '2026-10-25' }); // domenica
+    assert.deepEqual(intervalloSettimana('2026-10-19'), { da: '2026-10-19', a: '2026-10-25' }); // lunedì
+    assert.deepEqual(intervalloSettimana('2027-01-01'), { da: '2026-12-28', a: '2027-01-03' }); // a cavallo dell'anno
   });
   it('aggiungiGiorni attraversa mesi e anni', () => {
     assert.equal(aggiungiGiorni('2026-12-30', 3), '2027-01-02');

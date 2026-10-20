@@ -59,13 +59,12 @@ export function giorniDellaSettimana(oggi: string): string[] {
 }
 
 /**
- * Intervallo dell'unica lettura della pagina Oggi: copre la settimana corrente (lunedì–domenica) e gli ultimi
- * 7 giorni (per l'Andamento), quindi da min(lunedì, oggi − 6) a domenica. Al massimo 13 giorni.
+ * Intervallo dell'unica lettura della pagina Oggi: la sola settimana corrente, da lunedì a domenica (decisione del
+ * 12/10/2026: anche l'Andamento usa la stessa settimana; correzione del lotto 2, prima copriva anche gli ultimi 7 giorni).
  */
-export function intervalloLetture(oggi: string): { da: string; a: string } {
+export function intervalloSettimana(oggi: string): { da: string; a: string } {
   const lunedi = lunediDellaSettimana(oggi);
-  const seiGiorniFa = aggiungiGiorni(oggi, -6);
-  return { da: confrontaDate(seiGiorniFa, lunedi) < 0 ? seiGiorniFa : lunedi, a: aggiungiGiorni(lunedi, 6) };
+  return { da: lunedi, a: aggiungiGiorni(lunedi, 6) };
 }
 
 /** "Venerdì 9 ottobre": sottotitolo della Card diario. */

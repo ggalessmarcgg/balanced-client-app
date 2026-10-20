@@ -5,18 +5,39 @@ import type { DiarioLocale } from '@/core/diario/bozza';
 import { etichettaData } from '@/core/diario/data';
 import { BLOCCHI, haContenuto, TITOLI_BLOCCHI, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
 import type { GiornoSettimana } from '@/core/diario/settimana';
+import type { StatoPannello } from '@/servizi/useDiario';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import type { VoceNavigazione } from '@/ui/BarraNavigazione';
 import { BloccoCommento, BloccoPasti, BloccoSport, BloccoValori } from '@/ui/diario/Blocchi';
 import { CardDiario, ComandiDiario, SalutoDiario } from '@/ui/diario/CardDiario';
 import { CardSettimana } from '@/ui/diario/CardSettimana';
 import { IndicatoreAvanzamento } from '@/ui/diario/IndicatoreAvanzamento';
+import { PannelloGiornata } from '@/ui/diario/PannelloGiornata';
 import { PulsanteTondo } from '@/ui/diario/PulsanteTondo';
 import { TransizioneBlocco } from '@/ui/diario/TransizioneBlocco';
 import { Icona } from '@/ui/icone';
+import type { NotificaBreveProps } from '@/ui/NotificaBreve';
+import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { Pagina } from '@/ui/schermate/Pagina';
 import { BarraNavigazioneFissa, INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
 import { colori, margine, spazio } from '@/ui/theme';
+
+/** Azioni del pannello della giornata (tutte opzionali: senza, i giorni della settimana non si aprono). */
+export type AzioniPannelloGiornata = {
+  pannello: StatoPannello | null;
+  onApriGiorno: (data: string) => void;
+  onChiudiPannello: () => void;
+  onRiprovaPannello: () => void;
+  onModifica: () => void;
+  onChiudiModifica: () => void;
+  onAvantiModifica: () => void;
+  onIndietroModifica: () => void;
+  onVaiAModifica: (blocco: Blocco) => void;
+  onAggiornaGiornata: (diario: Diario) => void;
+  /** Solo per la pagina di sviluppo. */
+  schermoPieno?: boolean;
+  pastoApertoIniziale?: Pasto | null;
+};
 
 export type SchermataOggiProps = {
   nome: string;
@@ -39,13 +60,17 @@ export type SchermataOggiProps = {
   onMenu?: () => void;
   /** Pasto aperto all'avvio (pagina di sviluppo). */
   pastoApertoIniziale?: Pasto | null;
-  /** Notifica breve e altri elementi sopra la pagina. */
+  /** Notifica breve: sopra la barra di navigazione, o dentro il pannello se è aperto. */
+  notifica?: NotificaBreveProps & { chiave?: string };
+  /** Altri elementi sopra la pagina. */
   sovrapposti?: ReactNode;
+  giornata?: AzioniPannelloGiornata;
 };
 
 /**
  * Oggi (Figma 444:1103 … 446:3777): barra superiore completa, Card diario (chiusa, aperta su un passaggio, in bozza o
  * condivisa), Card settimana, barra di navigazione con Oggi attiva. Contenuto: 16 sopra, margini 20, gap 12.
+ * Dal lotto 2 i giorni condivisi della Card settimana aprono il pannello della giornata.
  */
 export function SchermataOggi({
   nome,
@@ -65,7 +90,9 @@ export function SchermataOggi({
   onNotifiche,
   onMenu,
   pastoApertoIniziale = null,
+  notifica,
   sovrapposti,
+  giornata,
 }: SchermataOggiProps) {
   const [pastoAperto, setPastoAperto] = useState<Pasto | null>(pastoApertoIniziale);
   // Cambiando blocco si richiude l'eventuale pasto aperto (stato derivato in render dal cambio di `blocco`).
@@ -94,12 +121,17 @@ export function SchermataOggi({
   const condiviso = locale.riga.tipo === 'condiviso';
   // In bozza (Figma 451:758): c'è una riga draft o un contenuto locale non ancora salvato → "Continua" in verde.
   const inBozza = locale.riga.tipo === 'bozza' || haContenuto(locale.diario);
+  const pannelloAperto = giornata?.pannello !== null && giornata?.pannello !== undefined;
+  const { chiave: chiaveNotifica, ...propsNotifica } = notifica ?? { chiave: undefined, testo: '', tipo: 'conferma' as const };
+  const notificaPagina = notifica && !pannelloAperto ? <NotificaInBasso key={chiaveNotifica ?? notifica.testo} {...propsNotifica} sopra={INGOMBRO_BARRA_NAVIGAZIONE} /> : null;
+  const notificaPannello = notifica && pannelloAperto ? <NotificaInBasso key={chiaveNotifica ?? notifica.testo} {...propsNotifica} /> : null;
 
   return (
     <Pagina
       sovrapposti={
         <>
           <BarraNavigazioneFissa attiva="oggi" onSeleziona={onNavigazione} />
+          {notificaPagina}
           {sovrapposti}
         </>
       }
@@ -151,8 +183,24 @@ export function SchermataOggi({
             </CardDiario>
           </View>
         )}
-        <CardSettimana giorni={giorni} />
+        <CardSettimana giorni={giorni} onApriGiorno={giornata?.onApriGiorno} />
       </View>
+      {giornata && (
+        <PannelloGiornata
+          pannello={giornata.pannello}
+          onChiudi={giornata.onChiudiPannello}
+          onRiprova={giornata.onRiprovaPannello}
+          onModifica={giornata.onModifica}
+          onChiudiModifica={giornata.onChiudiModifica}
+          onAvanti={giornata.onAvantiModifica}
+          onIndietro={giornata.onIndietroModifica}
+          onVaiA={giornata.onVaiAModifica}
+          onAggiorna={giornata.onAggiornaGiornata}
+          sovrapposti={notificaPannello}
+          schermoPieno={giornata.schermoPieno}
+          pastoApertoIniziale={giornata.pastoApertoIniziale}
+        />
+      )}
     </Pagina>
   );
 }

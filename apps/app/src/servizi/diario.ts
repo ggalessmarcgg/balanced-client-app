@@ -1,6 +1,9 @@
-// Diario di oggi: letture mirate su daily_submissions, copia locale nel portachiavi finché il server non conferma,
-// salvataggio della bozza senza status e condivisione in una sola modifica (logica pura in src/core/diario).
-// client_id viene dallo stato letto una volta per sessione (statoCliente.ts); user_id dalla sessione locale.
+// Diario di oggi e giornate della settimana: letture mirate su daily_submissions, copia locale nel portachiavi
+// finché il server non conferma, salvataggio della bozza senza status e condivisione in una sola modifica (logica
+// pura in src/core/diario). Lotto 2: la settimana corrente (lunedì–domenica) porta anche commento e "letto" per i
+// pallini; la giornata completa si legge al tocco (o viene dalla cache); "letto" e modifica di una giornata
+// condivisa scrivono solo le colonne del cliente. client_id viene dallo stato letto una volta per sessione
+// (statoCliente.ts); user_id dalla sessione locale.
 import { classificaErrore } from '@/core/accesso/errori';
 import {
   copiaLocalePiuRecente,
@@ -15,13 +18,36 @@ import {
   type DiarioLocale,
   type StatoRiga,
 } from '@/core/diario/bozza';
-import { dataOggiRoma, intervalloLetture } from '@/core/diario/data';
-import { SELEZIONE_OGGI, SELEZIONE_SETTIMANA, statoRiga, TABELLA_DIARIO, type RigaOggi, type RigaSettimana } from '@/core/diario/letture';
+import { applicaLettureInAttesa, type ModificaLetto } from '@/core/diario/commento';
+import { dataOggiRoma, intervalloSettimana } from '@/core/diario/data';
+import { dopoErroreModifica, dopoModifica, pianificaModifica, type GiornataLocale } from '@/core/diario/giornata';
+import {
+  SELEZIONE_AUTORE,
+  SELEZIONE_GIORNATA,
+  SELEZIONE_OGGI,
+  SELEZIONE_SETTIMANA,
+  statoRiga,
+  TABELLA_AUTORI,
+  TABELLA_DIARIO,
+  type RigaAutore,
+  type RigaGiornata,
+  type RigaOggi,
+  type RigaSettimana,
+} from '@/core/diario/letture';
 import { campiDaSalvare, DIARIO_VUOTO, diarioDaCampi } from '@/core/diario/modello';
 import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
 import { supabase } from '@/servizi/supabase';
 
-export type DatiOggi = { locale: DiarioLocale; settimana: RigaSettimana[] };
+export type DatiOggi = {
+  locale: DiarioLocale;
+  /** Righe della settimana corrente (lunedì–domenica), senza i testi del cliente. */
+  settimana: RigaSettimana[];
+  /** Giornate complete già lette (chiave: data YYYY-MM-DD), con le eventuali modifiche in attesa. */
+  giornate: Record<string, GiornataLocale>;
+  /** Righe il cui "letto" è stato mostrato ma non ancora confermato dal server: si riprova alla prossima apertura. */
+  lettureInAttesa: string[];
+};
+export const DATI_VUOTI: Pick<DatiOggi, 'giornate' | 'lettureInAttesa'> = { giornate: {}, lettureInAttesa: [] };
 export type EsitoLetturaDiario = { tipo: 'ok'; dati: DatiOggi; daCache: boolean } | { tipo: 'nonAutenticato' } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string };
 export type EsitoScrittura = { tipo: 'ok' } | { tipo: 'giaCondiviso' } | { tipo: 'errore'; errore: 'rete' | 'altro' };
 
@@ -36,8 +62,9 @@ async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null>
   try {
     const testo = await leggi(chiaveCache(clientId, data));
     if (!testo) return null;
-    const cache = JSON.parse(testo) as Cache;
-    return copiaValida(cache.locale, clientId, data) ? { locale: cache.locale, settimana: cache.settimana ?? [] } : null;
+    const cache = JSON.parse(testo) as Partial<Cache>;
+    if (!copiaValida(cache.locale, clientId, data)) return null;
+    return { locale: cache.locale, settimana: cache.settimana ?? [], giornate: cache.giornate ?? {}, lettureInAttesa: cache.lettureInAttesa ?? [] };
   } catch {
     return null;
   }
@@ -48,7 +75,7 @@ async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null>
 let scritturaCache: Promise<void> = Promise.resolve();
 let cacheInCoda: Cache | null = null;
 
-/** Salva la copia locale (diario di oggi + settimana). Non blocca: gli errori del portachiavi si ignorano. */
+/** Salva la copia locale (diario di oggi, settimana, giornate aperte, letture in attesa). Non blocca: gli errori del portachiavi si ignorano. */
 export function salvaCache(dati: DatiOggi): void {
   const cache: Cache = { ...dati, letto: new Date().toISOString() };
   const primaInCoda = cacheInCoda === null;
@@ -94,8 +121,8 @@ async function leggiRigaOggi(id: string): Promise<RigaOggi | null> {
 }
 
 /**
- * Lettura della pagina Oggi: una query per l'intervallo (settimana corrente + ultimi 7 giorni, per client_id, senza
- * testi) e, se oggi ha già una riga, una seconda per la riga completa. Il contenuto locale in attesa vince sul
+ * Lettura della pagina Oggi: una query per la settimana corrente (lunedì–domenica, per client_id, senza i testi del
+ * cliente ma con commento e "letto") e, se oggi ha già una riga, una seconda per la riga completa. Il contenuto locale in attesa vince sul
  * server se è più recente di updated_at (app chiusa in modo improvviso prima del salvataggio: la bozza riparte dalla
  * copia locale e viene salvata); lo stato della riga (bozza/condivisa) viene sempre dal server.
  * Senza rete si usa la copia locale se c'è.
@@ -106,7 +133,7 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
   if (!userId) return { tipo: 'nonAutenticato' };
 
   const cache = await cacheDi(clientId, data);
-  const { da, a } = intervalloLetture(data);
+  const { da, a } = intervalloSettimana(data);
   const lettura = await supabase
     .from(TABELLA_DIARIO)
     .select(SELEZIONE_SETTIMANA)
@@ -119,7 +146,9 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
     if (erroreDiRete(lettura.error)) return cache ? { tipo: 'ok', dati: cache, daCache: true } : { tipo: 'rete' };
     return { tipo: 'errore', messaggio: lettura.error.message };
   }
-  const settimana = lettura.data ?? [];
+  // I "letto" non ancora confermati restano letti in locale (si riprovano alla prossima apertura del pannello).
+  const lettureInAttesa = cache?.lettureInAttesa ?? [];
+  const settimana = applicaLettureInAttesa(lettura.data ?? [], lettureInAttesa);
   const oggiInElenco = settimana.find((r) => r.submission_date === data);
 
   let locale: DiarioLocale;
@@ -140,13 +169,13 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
     return { tipo: 'errore', messaggio: err.message ?? 'Errore di lettura' };
   }
 
-  const dati = { locale, settimana };
+  const dati: DatiOggi = { locale, settimana, giornate: cache?.giornate ?? {}, lettureInAttesa };
   salvaCache(dati);
   return { tipo: 'ok', dati, daCache: false };
 }
 
-/** La riga di oggi letta per (client_id, data) quando un inserimento trova la riga già creata altrove. */
-async function leggiRigaPerData(clientId: string, data: string): Promise<RigaOggi | null> {
+/** La riga di un giorno letta per (client_id, data): oggi, quando un inserimento trova la riga già creata altrove; una giornata fuori settimana aperta dalla rotta. */
+export async function leggiRigaPerData(clientId: string, data: string): Promise<RigaOggi | null> {
   const { data: riga, error } = await supabase.from(TABELLA_DIARIO).select(SELEZIONE_OGGI).eq('client_id', clientId).eq('submission_date', data).maybeSingle<RigaOggi>();
   if (error) throw error;
   return riga;
@@ -231,4 +260,106 @@ export async function condividiDiario(locale: DiarioLocale, adesso: Date = new D
     const errore = tipoErroreScrittura(e);
     return { locale: dopoErrore(locale, errore), esito: { tipo: 'errore', errore } };
   }
+}
+
+// ---- Lotto 2: pannello della giornata ---------------------------------------------------------------------------
+
+export type EsitoLettura<T> = { tipo: 'ok'; dati: T } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string };
+
+/** La riga completa di una giornata (colonne esplicite). null se non esiste o non è leggibile. */
+export async function leggiGiornata(id: string): Promise<EsitoLettura<RigaGiornata | null>> {
+  const { data, error } = await supabase.from(TABELLA_DIARIO).select(SELEZIONE_GIORNATA).eq('id', id).maybeSingle<RigaGiornata>();
+  if (error) return erroreDiRete(error) ? { tipo: 'rete' } : { tipo: 'errore', messaggio: error.message };
+  return { tipo: 'ok', dati: data };
+}
+
+/**
+ * Segna letto il commento: una sola modifica comment_acknowledged = true su quella riga (policy "acknowledge comments
+ * on submitted entries"); nessun'altra colonna. Decidere se scriverla spetta a pianificaLetto (core/diario/commento).
+ * Restituisce false se la scrittura non è andata a buon fine (si riprova in silenzio alla prossima apertura).
+ */
+export async function scriviCommentoLetto(modifica: ModificaLetto): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.from(TABELLA_DIARIO).update(modifica.campi).eq('id', modifica.id).select('id').returns<{ id: string }[]>();
+    if (error) return false;
+    return Boolean(data && data.length > 0);
+  } catch {
+    return false;
+  }
+}
+
+/** Una giornata fuori dalla settimana corrente (rotta diretta, step 6): riga completa più commento e "letto", per (client_id, data). */
+export type RigaGiornataConCommento = RigaGiornata & Pick<RigaSettimana, 'nutritionist_comment' | 'comment_author_id' | 'comment_acknowledged'>;
+const SELEZIONE_GIORNATA_CON_COMMENTO = `${SELEZIONE_GIORNATA},nutritionist_comment,comment_author_id,comment_acknowledged`;
+export async function leggiGiornataPerData(clientId: string, data: string): Promise<EsitoLettura<RigaGiornataConCommento | null>> {
+  const { data: riga, error } = await supabase
+    .from(TABELLA_DIARIO)
+    .select(SELEZIONE_GIORNATA_CON_COMMENTO)
+    .eq('client_id', clientId)
+    .eq('submission_date', data)
+    .maybeSingle<RigaGiornataConCommento>();
+  if (error) return erroreDiRete(error) ? { tipo: 'rete' } : { tipo: 'errore', messaggio: error.message };
+  return { tipo: 'ok', dati: riga };
+}
+
+/**
+ * Salva le modifiche di una giornata condivisa secondo pianificaModifica: niente se i campi sono quelli del server;
+ * altrimenti una modifica dei soli dieci campi del cliente, filtrata su status = submitted (la giornata resta condivisa;
+ * status, submitted_at, submission_date, submission_number e le colonne della nutrizionista non si toccano mai).
+ */
+export async function salvaGiornata(giornata: GiornataLocale): Promise<{ giornata: GiornataLocale; esito: EsitoScrittura }> {
+  const op = pianificaModifica(giornata);
+  if (op.tipo === 'nessuna') return { giornata: { ...giornata, inAttesa: false, errore: null }, esito: { tipo: 'ok' } };
+  try {
+    const { data, error } = await supabase
+      .from(TABELLA_DIARIO)
+      .update(op.modifica.campi)
+      .eq('id', op.modifica.id)
+      .eq('status', 'submitted')
+      .select('id,updated_at')
+      .returns<{ id: string; updated_at: string | null }[]>();
+    if (error) throw error;
+    const riga = data?.[0];
+    if (!riga) return { giornata: dopoErroreModifica(giornata, 'altro'), esito: { tipo: 'errore', errore: 'altro' } };
+    return { giornata: dopoModifica(giornata, op.modifica.campi, riga.updated_at), esito: { tipo: 'ok' } };
+  } catch (e) {
+    const errore = tipoErroreScrittura(e);
+    return { giornata: dopoErroreModifica(giornata, errore), esito: { tipo: 'errore', errore } };
+  }
+}
+
+// Profilo dell'autore del commento: una lettura per autore, tenuta in memoria per la sessione e nel portachiavi a
+// lungo (i profili cambiano di rado). I profili inattivi non sono leggibili dal cliente: si ripiega sulla
+// nutrizionista assegnata (core/diario/commento.ts, autoreCommento).
+const PREFISSO_AUTORE = 'balanced.autore';
+const DURATA_CACHE_AUTORE_MS = 30 * 24 * 60 * 60 * 1000;
+type CacheAutore = { riga: RigaAutore | null; letto: string };
+const autoriInMemoria = new Map<string, RigaAutore | null>();
+
+export async function leggiAutore(id: string): Promise<RigaAutore | null> {
+  const inMemoria = autoriInMemoria.get(id);
+  if (inMemoria !== undefined) return inMemoria;
+  const chiave = `${PREFISSO_AUTORE}.${id}`;
+  try {
+    const testo = await leggi(chiave);
+    if (testo) {
+      const cache = JSON.parse(testo) as CacheAutore;
+      if (Date.now() - Date.parse(cache.letto) < DURATA_CACHE_AUTORE_MS) {
+        autoriInMemoria.set(id, cache.riga);
+        return cache.riga;
+      }
+    }
+  } catch {
+    // cache illeggibile: si rilegge dal server
+  }
+  const { data, error } = await supabase.from(TABELLA_AUTORI).select(SELEZIONE_AUTORE).eq('id', id).maybeSingle<RigaAutore>();
+  if (error) return null; // senza rete o non leggibile: ripiego sulla nutrizionista del cliente, niente in cache
+  autoriInMemoria.set(id, data);
+  scrivi(chiave, JSON.stringify({ riga: data, letto: new Date().toISOString() } satisfies CacheAutore)).catch(() => {});
+  return data;
+}
+
+/** All'uscita: dimentica i profili letti (la cache nel portachiavi resta: non contiene dati del cliente). */
+export function svuotaAutoriInMemoria(): void {
+  autoriInMemoria.clear();
 }
