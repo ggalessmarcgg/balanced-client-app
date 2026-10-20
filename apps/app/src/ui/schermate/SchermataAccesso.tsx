@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useRef, type ComponentRef } from 'react';
+import { StyleSheet, Text, View, type TextInput } from 'react-native';
 
 import { messaggioLinkInviato, MESSAGGI_ERRORE, type TipoErroreAccesso } from '@/core/accesso/errori';
 import { CampoPassword } from '@/ui/CampoPassword';
@@ -36,9 +37,12 @@ export type SchermataAccessoProps = {
   inCorso?: 'accesso' | 'reinvio' | false;
   /** Elementi sopra la pagina (notifica breve). */
   sovrapposti?: React.ReactNode;
+  /** Campo email a fuoco all'avvio (pagina di sviluppo: verifica della tastiera). */
+  emailAFuoco?: boolean;
 };
 
-export function SchermataAccesso({ email, password, onEmail, onPassword, onAccedi, onPasswordDimenticata, onReinvia, variante, inCorso = false, sovrapposti }: SchermataAccessoProps) {
+export function SchermataAccesso({ email, password, onEmail, onPassword, onAccedi, onPasswordDimenticata, onReinvia, variante, inCorso = false, sovrapposti, emailAFuoco = false }: SchermataAccessoProps) {
+  const campoPassword = useRef<ComponentRef<typeof TextInput>>(null);
   const conferma = variante.tipo === 'emailNonConfermata' || variante.tipo === 'linkInviato';
   const puoAccedere = email.trim().length > 0 && password.length > 0;
   const erroreCampo = variante.tipo === 'errore' && variante.errore === 'credenzialiErrate';
@@ -84,6 +88,9 @@ export function SchermataAccesso({ email, password, onEmail, onPassword, onAcced
             autoComplete="email"
             textContentType="emailAddress"
             returnKeyType="next"
+            submitBehavior="submit"
+            onSubmitEditing={() => campoPassword.current?.focus()}
+            autoFocus={emailAFuoco}
             testID="accesso-email"
           />
           <CampoPassword
@@ -93,6 +100,7 @@ export function SchermataAccesso({ email, password, onEmail, onPassword, onAcced
             segnaposto="La tua password"
             stato={erroreCampo ? 'errore' : undefined}
             autoComplete="current-password"
+            inputRef={campoPassword}
             returnKeyType="go"
             onSubmitEditing={puoAccedere ? onAccedi : undefined}
             testID="accesso-password"

@@ -23,6 +23,7 @@ import { CursoreSazieta } from '@/ui/diario/CursoreSazieta';
 import { RigaPasto } from '@/ui/diario/RigaPasto';
 import { Opzione } from '@/ui/Opzione';
 import { Pulsante } from '@/ui/Pulsante';
+import { PROPRIETA_CAMPO, useCampoSopraTastiera } from '@/ui/tastiera';
 import { Testo } from '@/ui/Testo';
 import { colori, opacita, raggio, spazio, testi } from '@/ui/theme';
 
@@ -183,7 +184,7 @@ export function BloccoSport({ diario, onChange, nelPannello }: PropsBlocco) {
 }
 
 /** Senza onCondividi (modifica di una giornata già condivisa) il blocco ha la sola nota. */
-export type BloccoCommentoProps = PropsBlocco & { onCondividi?: () => void; inviando?: boolean };
+export type BloccoCommentoProps = PropsBlocco & { onCondividi?: () => void; inviando?: boolean; /** Nota a fuoco all'avvio (pagina di sviluppo). */ aFuoco?: boolean };
 
 // Campo nota (Figma 449:961): alto 96 su sfondo/card, raggio foto, padding 16, segnaposto in Caption.
 const ALTEZZA_NOTA = 96;
@@ -193,20 +194,23 @@ const ALTEZZA_NOTA = 96;
  * "Invia" è disattivato finché il diario non ha almeno un contenuto (un pasto, un valore, lo sport o il commento):
  * nessuna condivisione di diari vuoti.
  */
-export function BloccoCommento({ diario, onChange, onCondividi, inviando = false, nelPannello }: BloccoCommentoProps) {
+export function BloccoCommento({ diario, onChange, onCondividi, inviando = false, nelPannello, aFuoco = false }: BloccoCommentoProps) {
   const statoInvio = inviando ? 'caricamento' : haContenuto(diario) ? 'normale' : 'disabilitato';
+  const { ref: contenitore, onFocus: fuocoTastiera, onBlur: sfuocoTastiera, onContentSizeChange: crescitaTastiera } = useCampoSopraTastiera();
   return (
     <BloccoDiario blocco="commento" nelPannello={nelPannello}>
-      <View style={stili.commento}>
+      <View style={stili.commento} ref={contenitore}>
         <TextInput
+          {...PROPRIETA_CAMPO}
           value={diario.day_comment}
           onChangeText={(testo) => onChange({ ...diario, day_comment: testo })}
           placeholder="C'è qualcosa che vuoi raccontare alla tua nutrizionista?"
-          placeholderTextColor={colori.testo.segnaposto}
           multiline
+          autoFocus={aFuoco}
           textAlignVertical="top"
-          selectionColor={colori.azione.primaria}
-          cursorColor={colori.azione.primaria}
+          onFocus={fuocoTastiera}
+          onBlur={sfuocoTastiera}
+          onContentSizeChange={crescitaTastiera}
           accessibilityLabel="Commento per la nutrizionista"
           style={stili.nota}
         />

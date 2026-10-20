@@ -1,4 +1,5 @@
-import { Image, StyleSheet, View } from 'react-native';
+import { Image } from 'expo-image';
+import { StyleSheet, View } from 'react-native';
 
 import type { AutoreCommento } from '@/core/diario/commento';
 import { Testo } from '@/ui/Testo';
@@ -17,6 +18,7 @@ export type CardCommentoProps = {
 // testo Body. Senza foto: cerchio sfondo/foto con le iniziali in Caption su azione.
 const FOTO = 35;
 const PALLINO_NUOVO = 8;
+const DISSOLVENZA_FOTO_MS = 200;
 
 /** Commento della nutrizionista nel pannello della giornata: foto, nome, "Nuovo" se da leggere, testo. */
 export function CardCommento({ testo, autore, nuovo }: CardCommentoProps) {
@@ -42,15 +44,29 @@ export function CardCommento({ testo, autore, nuovo }: CardCommentoProps) {
   );
 }
 
+/**
+ * Foto quadrata dell'autore con memoria su disco (expo-image): le iniziali restano visibili finché la foto non è pronta,
+ * poi la foto compare in dissolvenza; dalla seconda apertura, anche dopo il riavvio, arriva subito dalla cache.
+ */
 function Foto({ autore }: { autore: AutoreCommento | null }) {
-  if (autore?.foto) return <Image source={{ uri: autore.foto }} style={stili.foto} accessible={false} />;
   return (
-    <View style={[stili.foto, stili.fotoIniziali]}>
+    <View style={stili.foto}>
       {autore?.iniziali ? (
         <Testo stile="captionSemiBold" colore={colori.testo.suAzione}>
           {autore.iniziali}
         </Testo>
       ) : null}
+      {autore?.foto && (
+        <Image
+          source={{ uri: autore.foto }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          cachePolicy="memory-disk"
+          transition={DISSOLVENZA_FOTO_MS}
+          recyclingKey={autore.foto}
+          accessible={false}
+        />
+      )}
     </View>
   );
 }
@@ -58,8 +74,7 @@ function Foto({ autore }: { autore: AutoreCommento | null }) {
 const stili = StyleSheet.create({
   card: { alignSelf: 'stretch', padding: spazio[20], gap: spazio[8], backgroundColor: colori.sfondo.card, borderRadius: raggio.card },
   intestazione: { alignSelf: 'stretch', gap: spazio[4] },
-  foto: { width: FOTO, height: FOTO, borderRadius: raggio.pieno, backgroundColor: colori.sfondo.foto },
-  fotoIniziali: { alignItems: 'center', justifyContent: 'center' },
+  foto: { width: FOTO, height: FOTO, borderRadius: raggio.pieno, backgroundColor: colori.sfondo.foto, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   titolo: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: spazio[8] },
   nuovo: { flexDirection: 'row', alignItems: 'center', gap: spazio[4] },
   pallinoNuovo: { width: PALLINO_NUOVO, height: PALLINO_NUOVO, borderRadius: raggio.pieno, backgroundColor: colori.stato.notifica },

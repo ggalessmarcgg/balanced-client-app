@@ -1,8 +1,9 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentRef, type ReactNode, type Ref } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Icona } from '@/ui/icone';
 import { Testo } from '@/ui/Testo';
+import { PROPRIETA_CAMPO, useCampoSopraTastiera } from '@/ui/tastiera';
 import { colori, opacita, raggio, spazio, testi } from '@/ui/theme';
 
 /** Stato del Campo di testo (Figma 418:182, proprietà "Stato"). Se omesso si ricava da valore, focus, messaggio e disabilitato. */
@@ -20,6 +21,8 @@ export type CampoTestoProps = {
   stato?: StatoCampo;
   /** Elemento a destra del valore (es. l'occhio del Campo password). */
   accessorio?: ReactNode;
+  /** Riferimento al TextInput (per passare il fuoco al campo successivo con Invio). */
+  inputRef?: Ref<ComponentRef<typeof TextInput>>;
 } & Pick<
   TextInputProps,
   | 'secureTextEntry'
@@ -29,6 +32,7 @@ export type CampoTestoProps = {
   | 'autoCorrect'
   | 'textContentType'
   | 'returnKeyType'
+  | 'submitBehavior'
   | 'onSubmitEditing'
   | 'onFocus'
   | 'onBlur'
@@ -51,17 +55,20 @@ export function CampoTesto({
   disabilitato = false,
   stato,
   accessorio,
+  inputRef,
   onFocus,
   onBlur,
   ...input
 }: CampoTestoProps) {
   const [attivo, setAttivo] = useState(false);
+  const { ref: contenitore, onFocus: fuocoTastiera, onBlur: sfuocoTastiera } = useCampoSopraTastiera();
   const statoEffettivo: StatoCampo =
     stato ?? (disabilitato ? 'disabilitato' : messaggio ? 'errore' : attivo ? 'attivo' : valore ? 'compilato' : 'vuoto');
   const conBordo = statoEffettivo === 'attivo' || statoEffettivo === 'errore';
   const mostraMessaggio = statoEffettivo === 'errore' && Boolean(messaggio);
   return (
     <View
+      ref={contenitore}
       style={[stili.contenitore, statoEffettivo === 'disabilitato' && stili.contenitoreDisabilitato]}
       accessibilityState={{ disabled: statoEffettivo === 'disabilitato' }}
     >
@@ -75,20 +82,21 @@ export function CampoTesto({
         ]}
       >
         <TextInput
+          {...PROPRIETA_CAMPO}
           {...input}
+          ref={inputRef}
           value={valore}
           onChangeText={onChangeText}
           placeholder={segnaposto}
-          placeholderTextColor={colori.testo.segnaposto}
           editable={statoEffettivo !== 'disabilitato'}
-          selectionColor={colori.azione.primaria}
-          cursorColor={colori.azione.primaria}
           onFocus={(e) => {
             setAttivo(true);
+            fuocoTastiera();
             onFocus?.(e);
           }}
           onBlur={(e) => {
             setAttivo(false);
+            sfuocoTastiera();
             onBlur?.(e);
           }}
           accessibilityLabel={etichetta}

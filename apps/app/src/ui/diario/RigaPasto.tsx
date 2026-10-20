@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Icona } from '@/ui/icone';
+import { PROPRIETA_CAMPO, useCampoSopraTastiera } from '@/ui/tastiera';
 import { Testo } from '@/ui/Testo';
 import { colori, raggio, spazio, testi, tocco } from '@/ui/theme';
 
@@ -30,8 +31,9 @@ const ALTEZZA_CAMPO = 64;
  */
 export function RigaPasto({ etichetta, valore, stato, onToggle, onChangeText, segnaposto = 'Cosa hai mangiato?' }: RigaPastoProps) {
   const aperta = stato === 'aperta';
+  const { ref: contenitore, onFocus: fuocoTastiera, onBlur: sfuocoTastiera, onContentSizeChange: crescitaTastiera } = useCampoSopraTastiera();
   return (
-    <View style={[stili.riga, aperta && stili.rigaAperta]}>
+    <View ref={contenitore} style={[stili.riga, aperta && stili.rigaAperta]}>
       <Pressable
         onPress={onToggle}
         hitSlop={HIT_SLOP}
@@ -54,15 +56,16 @@ export function RigaPasto({ etichetta, valore, stato, onToggle, onChangeText, se
       </Pressable>
       {aperta && (
         <TextInput
+          {...PROPRIETA_CAMPO}
           value={valore}
           onChangeText={onChangeText}
           placeholder={segnaposto}
-          placeholderTextColor={colori.testo.segnaposto}
           multiline
           autoFocus
           textAlignVertical="top"
-          selectionColor={colori.azione.primaria}
-          cursorColor={colori.azione.primaria}
+          onFocus={fuocoTastiera}
+          onBlur={sfuocoTastiera}
+          onContentSizeChange={crescitaTastiera}
           accessibilityLabel={`${etichetta}, testo`}
           style={stili.campo}
         />

@@ -1,11 +1,12 @@
 // Stato dei giorni della Card settimana (Figma 449:253, componente Giorno della settimana 439:112) a partire dalle
 // righe lette per la settimana corrente. Varianti: condiviso, condiviso con commento da leggere (pallino rosso),
-// condiviso con commento letto (pallino verde scuro), oggi, futuro, non condiviso.
+// condiviso con commento letto (pallino verde scuro), oggi, oggi con commento da leggere / letto (704:436, 704:442),
+// futuro, non condiviso.
 import { statoCommento, type StatoCommento } from './commento.ts';
 import { confrontaDate, giorniDellaSettimana, INIZIALI_SETTIMANA } from './data.ts';
 import { statoRiga } from './letture.ts';
 
-export type StatoGiorno = 'condiviso' | 'condivisoDaLeggere' | 'condivisoLetto' | 'oggi' | 'futuro' | 'nonCondiviso';
+export type StatoGiorno = 'condiviso' | 'condivisoDaLeggere' | 'condivisoLetto' | 'oggi' | 'oggiDaLeggere' | 'oggiLetto' | 'futuro' | 'nonCondiviso';
 export type GiornoSettimana = {
   data: string;
   iniziale: string;
@@ -19,7 +20,7 @@ export type RigaPerSettimana = { submission_date: string; status: string; nutrit
 
 /**
  * Per ogni giorno da lunedì a domenica: oggi → "oggi" (anche se già condiviso: il disegno evidenzia sempre il
- * giorno corrente, senza pallino); giorni passati → condiviso se esiste una riga submitted (con il pallino del
+ * giorno corrente), con il pallino del commento se la giornata di oggi è condivisa e commentata; giorni passati → condiviso se esiste una riga submitted (con il pallino del
  * commento se c'è), altrimenti non condiviso (una bozza non conta); giorni futuri → futuro.
  */
 export function giorniSettimana(oggi: string, righe: RigaPerSettimana[]): GiornoSettimana[] {
@@ -29,7 +30,7 @@ export function giorniSettimana(oggi: string, righe: RigaPerSettimana[]): Giorno
     const riga = condivise.get(data);
     const commento: StatoCommento = riga ? statoCommento(riga) : 'nessuno';
     let stato: StatoGiorno;
-    if (c === 0) stato = 'oggi';
+    if (c === 0) stato = commento === 'daLeggere' ? 'oggiDaLeggere' : commento === 'letto' ? 'oggiLetto' : 'oggi';
     else if (c > 0) stato = 'futuro';
     else if (!riga) stato = 'nonCondiviso';
     else stato = commento === 'daLeggere' ? 'condivisoDaLeggere' : commento === 'letto' ? 'condivisoLetto' : 'condiviso';

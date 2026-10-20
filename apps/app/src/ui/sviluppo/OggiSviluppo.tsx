@@ -72,7 +72,11 @@ export type ScenarioOggi =
   | 'pannelloSenzaCommento'
   | 'pannelloModifica'
   | 'pannelloCaricamento'
-  | 'pannelloErrore';
+  | 'pannelloErrore'
+  | 'pastiSpuntini'
+  | 'commentoTastiera'
+  | 'oggiCommentoDaLeggere'
+  | 'oggiCommentoLetto';
 
 // Scenario "avanzamento": i blocchi cambiano da soli ogni 3 s (avanti e poi indietro) per verificare l'indicatore.
 const CICLO_BLOCCHI: Blocco[] = ['pasti', 'valori', 'sport', 'commento', 'sport', 'valori', 'pasti'];
@@ -82,7 +86,15 @@ function giornata(data: string, diario: Diario): GiornataLocale {
   return { id: data, data, diario, salvato: campiDaSalvare(diario), updatedAt: null, inAttesa: false, errore: null, modificatoAlle: null };
 }
 
-type Iniziale = { locale: DiarioLocale; blocco: Blocco | null; pasto: Pasto | null; settimana: RigaSettimana[]; pannello: StatoPannello | null; schermoPieno?: boolean };
+type Iniziale = {
+  locale: DiarioLocale;
+  blocco: Blocco | null;
+  pasto: Pasto | null;
+  settimana: RigaSettimana[];
+  pannello: StatoPannello | null;
+  schermoPieno?: boolean;
+  commentoAFuoco?: boolean;
+};
 
 function iniziale(scenario: ScenarioOggi): Iniziale {
   const bozza = (diario: Diario): StatoRiga => ({ tipo: 'bozza', id: 'riga-finta', salvato: campiDaSalvare(diario) });
@@ -97,6 +109,20 @@ function iniziale(scenario: ScenarioOggi): Iniziale {
       return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'pasti' };
     case 'pasti':
       return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_PASTI, bozza(DIARIO_PASTI)), blocco: 'pasti', pasto: 'dinner' };
+    case 'pastiSpuntini':
+      return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_PASTI, bozza(DIARIO_PASTI)), blocco: 'pasti', pasto: 'snacks' };
+    case 'commentoTastiera':
+      return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'commento', commentoAFuoco: true };
+    case 'oggiCommentoDaLeggere':
+    case 'oggiCommentoLetto': {
+      // Oggi condiviso e commentato: Giorno della settimana "Oggi con commento da leggere / letto" (704:436, 704:442).
+      const letto = scenario === 'oggiCommentoLetto';
+      return {
+        ...base,
+        locale: dopoCondivisione(diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), OGGI, '2026-10-09T19:12:00.000Z'),
+        settimana: [...SETTIMANA_COMMENTI, riga(OGGI, 'submitted', COMMENTO, letto)],
+      };
+    }
     case 'valori':
       return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'valori' };
     case 'sport':
@@ -224,6 +250,7 @@ export function OggiSviluppo({ scenario }: { scenario: ScenarioOggi }) {
       onAggiorna={aggiorna}
       onCondividi={condividi}
       pastoApertoIniziale={stato.pannello ? null : stato.pasto}
+      commentoAFuoco={stato.commentoAFuoco}
       notifica={propsNotifica}
       giornata={{
         pannello,

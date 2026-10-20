@@ -28,8 +28,6 @@ export type PannelloGiornataProps = {
   onIndietro: () => void;
   onVaiA: (blocco: Blocco) => void;
   onAggiorna: (diario: Diario) => void;
-  /** Notifica breve e altri elementi sopra il pannello. */
-  sovrapposti?: React.ReactNode;
   /** Solo per la pagina di sviluppo: pannello già a schermo pieno e pasto aperto nella modifica. */
   schermoPieno?: boolean;
   pastoApertoIniziale?: Pasto | null;
@@ -38,7 +36,8 @@ export type PannelloGiornataProps = {
 /**
  * Pannello della giornata (Figma 474:1430, 475:1337, 475:1409, 475:1459): si apre dal basso toccando un giorno
  * condiviso della Card settimana, si porta a schermo pieno trascinando la maniglia; "Modifica" riapre i passaggi del
- * diario dentro il pannello, a schermo pieno, con "Chiudi" / "Avanti" fissi in fondo.
+ * diario dentro il pannello, a schermo pieno, con "Chiudi" / "Avanti" fissi in fondo (coperti dalla tastiera quando è
+ * aperta, come ogni piede dell'app). Va passato a Pagina tra i `sovrapposti`, sopra la barra di navigazione.
  */
 export function PannelloGiornata({
   pannello,
@@ -50,7 +49,6 @@ export function PannelloGiornata({
   onIndietro,
   onVaiA,
   onAggiorna,
-  sovrapposti,
   schermoPieno = false,
   pastoApertoIniziale = null,
 }: PannelloGiornataProps) {
@@ -67,7 +65,6 @@ export function PannelloGiornata({
       espandibile
       pieno={inModifica || schermoPieno}
       piede={mostrato && inModifica ? <ComandiDiario onChiudi={onChiudiModifica} onAvanti={mostrato.modifica === 'commento' ? undefined : onAvanti} /> : undefined}
-      sovrapposti={sovrapposti}
     >
       {mostrato && (mostrato.fase.tipo === 'pronto' && mostrato.modifica ? (
         <ModificaGiornata

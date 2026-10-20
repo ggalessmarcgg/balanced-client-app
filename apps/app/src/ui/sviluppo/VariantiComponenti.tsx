@@ -266,7 +266,8 @@ export function variantiDi(componente: NomeComponente): GruppoVarianti {
         figma: '474:1430 (schermata Giornate 2)',
         varianti: [
           { nome: 'Pannello aperto (anteprima statica: velo e foglio)', elemento: <AnteprimaPannello />, larghezza: 'schermo' as const },
-          { nome: 'Pannello vero (modale, chiusura con velo o trascinamento)', elemento: <ProvaPannello /> },
+          // Il pannello è uno strato assoluto sopra il suo contenitore: qui copre solo il riquadro della variante.
+          { nome: 'Pannello vero (strato sopra la pagina, chiusura con velo o trascinamento)', elemento: <ProvaPannello /> },
         ],
       };
   }

@@ -3,6 +3,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Appearance } from 'react-native';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { colori, useFontTema } from '@/ui/theme';
 
@@ -20,8 +21,9 @@ export default function RootLayout() {
 
   if (!fontPronti && !erroreFont) return null;
 
+  // KeyboardProvider: regola unica della tastiera (CLAUDE.md), usata da Pagina e dal Pannello dal basso.
   return (
-    <>
+    <KeyboardProvider>
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colori.sfondo.pagina }, animation: 'none' }}>
         {/* Avvio: legge sessione e stato e smista. */}
         <Stack.Screen name="index" />
@@ -50,6 +52,6 @@ export default function RootLayout() {
         </Stack.Protected>
       </Stack>
       <StatusBar style="dark" />
-    </>
+    </KeyboardProvider>
   );
 }

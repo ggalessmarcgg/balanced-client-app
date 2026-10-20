@@ -24,6 +24,7 @@ export const STATI_SVILUPPO = [
   ['link-inviato', 'Accesso · Email non confermata · link inviato (562:4319)'],
   ['recupero', 'Accesso · Recupero password · Email (425:286)'],
   ['notifica', 'Login con Notifica breve · conferma (563:5122)'],
+  ['login-tastiera', 'Login con il campo email a fuoco (verifica della tastiera: Accedi resta coperto)'],
   ['C', 'C · Consulenza da confermare (segnaposto)'],
   ['D', 'D · Orario passato senza conferma (segnaposto)'],
   ['E', 'E · Orario non più disponibile (segnaposto)'],
@@ -33,12 +34,16 @@ export const STATI_SVILUPPO = [
   ['I', 'I · Stati 12 · Consulenza non svolta (562:4195)'],
   ['J', 'J · Oggi · 1 · Diario da iniziare (444:1103)'],
   ['oggi-2-pasti', 'Oggi · 2 · Diario aperto · Pasti (444:1539)'],
+  ['oggi-2-pasti-spuntini', 'Oggi · 2 · Pasti con Spuntini aperto (verifica della tastiera: il campo sta sopra la tastiera)'],
   ['oggi-3-valori', 'Oggi · 3 · Diario aperto · Valori (444:2624)'],
   ['oggi-4-sport', 'Oggi · 4 · Diario aperto · Sport (444:2962)'],
   ['oggi-4-sport-riposo', 'Oggi · 4 · Sport con "Oggi riposo" (Card diario · Sport riposo 696:416)'],
   ['oggi-5-commento', 'Oggi · 5 · Diario aperto · Commento (444:3247)'],
+  ['oggi-5-commento-tastiera', 'Oggi · 5 · Commento con la nota a fuoco (verifica della tastiera)'],
   ['oggi-6-bozza', 'Oggi · 6 · Diario in bozza (446:3703)'],
   ['oggi-7-condiviso', 'Oggi · 7 · Diario condiviso (446:3777)'],
+  ['oggi-commento-da-leggere', 'Oggi condiviso con commento da leggere (Giorno della settimana 704:436)'],
+  ['oggi-commento-letto', 'Oggi condiviso con commento letto (Giorno della settimana 704:442)'],
   ['oggi-errore-salvataggio', 'Oggi in bozza con Notifica breve di errore (salvataggio non riuscito, Riprova)'],
   ['oggi-condiviso-notifica', 'Oggi condiviso con Notifica breve di conferma'],
   ['oggi-valori-vuoti', 'Oggi · 3 · Valori senza risposte (cursore sazietà Vuoto, 691:7467)'],
@@ -74,7 +79,7 @@ const PROFILO: Profilo = {
 const SLOT = { data: '2026-10-28', ora: '10:00', istante: new Date('2026-10-28T09:00:00.000Z') };
 const APPUNTAMENTO = { ...SLOT, id: 'finto', stato: 'scheduled' as const, linkVideochiamata: null };
 
-function Accesso({ variante, password = '••••••••••', notifica = false }: { variante: VarianteAccesso; password?: string; notifica?: boolean }) {
+function Accesso({ variante, password = '••••••••••', notifica = false, emailAFuoco = false }: { variante: VarianteAccesso; password?: string; notifica?: boolean; emailAFuoco?: boolean }) {
   const [email, setEmail] = useState(EMAIL);
   const [pwd, setPwd] = useState(password);
   return (
@@ -88,6 +93,7 @@ function Accesso({ variante, password = '••••••••••', notifi
       onReinvia={nulla}
       variante={variante}
       sovrapposti={notifica ? <NotificaBreveInBasso /> : undefined}
+      emailAFuoco={emailAFuoco}
     />
   );
 }
@@ -119,6 +125,8 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <Recupero />;
     case 'notifica':
       return <Accesso variante={{ tipo: 'normale' }} password="" notifica />;
+    case 'login-tastiera':
+      return <Accesso variante={{ tipo: 'normale' }} password="" emailAFuoco />;
     case 'C':
       return <SchermataSegnapostoPrenotazione stato={{ codice: 'C', profilo: PROFILO, slot: SLOT }} nome={PROFILO.nome} onEsci={nulla} />;
     case 'D':
@@ -137,6 +145,8 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="daIniziare" />;
     case 'oggi-2-pasti':
       return <OggiSviluppo scenario="pasti" />;
+    case 'oggi-2-pasti-spuntini':
+      return <OggiSviluppo scenario="pastiSpuntini" />;
     case 'oggi-3-valori':
       return <OggiSviluppo scenario="valori" />;
     case 'oggi-4-sport':
@@ -145,10 +155,16 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="sportRiposo" />;
     case 'oggi-5-commento':
       return <OggiSviluppo scenario="commento" />;
+    case 'oggi-5-commento-tastiera':
+      return <OggiSviluppo scenario="commentoTastiera" />;
     case 'oggi-6-bozza':
       return <OggiSviluppo scenario="bozza" />;
     case 'oggi-7-condiviso':
       return <OggiSviluppo scenario="condiviso" />;
+    case 'oggi-commento-da-leggere':
+      return <OggiSviluppo scenario="oggiCommentoDaLeggere" />;
+    case 'oggi-commento-letto':
+      return <OggiSviluppo scenario="oggiCommentoLetto" />;
     case 'oggi-errore-salvataggio':
       return <OggiSviluppo scenario="erroreSalvataggio" />;
     case 'oggi-condiviso-notifica':

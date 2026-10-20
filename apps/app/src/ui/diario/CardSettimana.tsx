@@ -52,24 +52,26 @@ const DESCRIZIONE_STATO: Record<StatoGiorno, string> = {
   condivisoDaLeggere: 'condiviso, commento da leggere',
   condivisoLetto: 'condiviso, commento letto',
   oggi: 'oggi',
+  oggiDaLeggere: 'oggi, condiviso, commento da leggere',
+  oggiLetto: 'oggi, condiviso, commento letto',
   futuro: 'giorno futuro',
   nonCondiviso: 'non condiviso',
 };
 
 // Giorno della settimana (Figma 439:112): cerchio 32 e lettera Caption. Oggi: cerchio badge/sfondo raggio 16 con alone
-// sfumato dello stesso colore (sfocatura 6,4); non condiviso: trattino 8,89 × 1,78 al 30 %. Con commento (474:169, 474:173):
-// pallino in alto a destra che sporge di 3 dal cerchio, con bordo bianco 2: rosso (stato/notifica) da 14 se da leggere,
-// verde scuro da 12 se letto.
+// sfumato dello stesso colore (sfocatura 6,4); non condiviso: trattino 8,89 × 1,78 al 30 %. Con commento (474:169, 474:173
+// per i giorni condivisi; 704:436, 704:442 per oggi): pallino in alto a destra che sporge di 3 dal cerchio, con bordo
+// bianco 2: rosso (stato/notifica) da 14 se da leggere, verde scuro da 12 se letto.
 const CERCHIO = 32;
 const TRATTINO = { larghezza: 8.89, altezza: 1.78 };
 const SFOCATURA_OGGI = 6.4;
 const PALLINO = { daLeggere: 14, letto: 12, bordo: 2, sporgenza: 3 };
 
 function GiornoSettimana({ giorno, onPress }: { giorno: Giorno; onPress?: () => void }) {
-  const { iniziale, stato, data, commento } = giorno;
+  const { iniziale, stato, data } = giorno;
   const letteraPrimaria = stato !== 'nonCondiviso' && stato !== 'futuro';
-  const cerchio = stato === 'condivisoDaLeggere' || stato === 'condivisoLetto' ? 'condiviso' : stato;
-  const pallino = stato === 'condivisoDaLeggere' ? 'daLeggere' : stato === 'condivisoLetto' ? 'letto' : null;
+  const cerchio = stato === 'condivisoDaLeggere' || stato === 'condivisoLetto' ? 'condiviso' : stato === 'oggiDaLeggere' || stato === 'oggiLetto' ? 'oggi' : stato;
+  const pallino = stato === 'condivisoDaLeggere' || stato === 'oggiDaLeggere' ? 'daLeggere' : stato === 'condivisoLetto' || stato === 'oggiLetto' ? 'letto' : null;
   return (
     <Pressable
       onPress={onPress}
@@ -78,7 +80,7 @@ function GiornoSettimana({ giorno, onPress }: { giorno: Giorno; onPress?: () => 
       style={({ pressed }) => [stili.giorno, pressed && stili.premuto]}
       accessible
       accessibilityRole={onPress ? 'button' : undefined}
-      accessibilityLabel={`${etichettaData(data)}: ${DESCRIZIONE_STATO[stato]}${stato === 'oggi' && commento === 'daLeggere' ? ', commento da leggere' : ''}`}
+      accessibilityLabel={`${etichettaData(data)}: ${DESCRIZIONE_STATO[stato]}`}
       accessibilityHint={onPress ? 'Apre la giornata' : undefined}
     >
       <View style={[stili.cerchio, stili[cerchio]]}>

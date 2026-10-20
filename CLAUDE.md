@@ -113,6 +113,37 @@ Compatibili sui dati, efficienti nel resto.
   su Android e dove il vetro non è disponibile fondo `sfondo/card` al 90 % senza
   sfocatura (`coloriCodice.sfondoBarraAndroid`). Decisione del 19/10/2026.
 
+## Tastiera (regola unica per tutta l'app)
+
+Vale per diario, pannello di modifica, login, recupero password, email non confermata e
+ogni schermata futura con campi di testo (decisione del 20/10/2026). In codice:
+`react-native-keyboard-controller` (`KeyboardProvider` in `app/_layout.tsx`,
+`KeyboardAwareScrollView` in `Pagina` e nel `PannelloDalBasso`), costanti e proprietà
+comuni dei campi in `src/ui/tastiera.ts`.
+
+- **Il campo a fuoco sta subito sopra la tastiera** con un piccolo margine
+  (`MARGINE_SOPRA_TASTIERA`, 16): la pagina o il pannello scorrono da soli; mentre
+  si scrive e il campo si allunga, lo scorrimento segue il cursore.
+- **Lo scorrimento non chiude la tastiera** (`keyboardDismissMode="none"`).
+- **La tastiera si chiude solo** toccando fuori dai campi
+  (`keyboardShouldPersistTaps="handled"`) oppure con "Avanti", "Chiudi", "Invia" o il
+  tasto Invio dove previsto. Nei moduli Invio passa al campo successivo
+  (`returnKeyType="next"`, `submitBehavior="submit"`, `inputRef`) e dall'ultimo campo
+  esegue l'azione (nel Login da email a password, dalla password "Accedi").
+- **I piedi fissi non salgono sopra la tastiera**: i pulsanti in fondo a una schermata
+  o a un pannello restano al loro posto, coperti, e tornano visibili quando si chiude.
+  Mai `KeyboardAvoidingView`. Lo scorrimento tiene conto del piede con
+  `extraKeyboardSpace` negativo (altezza del piede + area sicura).
+- **Aspetto chiaro** (`keyboardAppearance="light"`, l'app è solo in tema chiaro) e
+  nessuna zona scura tra contenuto e tastiera: lo sfondo sopra e dietro la tastiera è
+  quello della schermata o del pannello (per questo il pannello dal basso è uno strato
+  sopra la pagina, non un Modal).
+- I campi usano sempre `PROPRIETA_CAMPO` (tastiera chiara, cursore e selezione nel
+  colore dell'azione, segnaposto). Verifica con la tastiera software del simulatore
+  (Device Hub › Dispositivo › Tastiera) sulle rotte di sviluppo `login-tastiera`,
+  `oggi-2-pasti`, `oggi-2-pasti-spuntini`, `oggi-5-commento-tastiera`,
+  `giornate-5-modifica`.
+
 ## Stati trasversali (Caricamento, Senza connessione, Errore di caricamento, Notifica breve)
 
 - Compaiono **dentro la pagina in cui si trova il cliente** e ne rispettano la
@@ -264,6 +295,14 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Elenco e avvio manuale dei simulatori: `xcrun simctl list devices
   available`, `xcrun simctl boot "iPhone 17"`.
 - Screenshot del simulatore: `xcrun simctl io booted screenshot <file.png>`.
+- **Tastiera software dell'iPhone:** in Device Hub si attiva dal menu Dispositivo ›
+  Tastiera (disattivando "Simulate Hardware Keyboard"; "Toggle Software Keyboard"
+  è ⌥⌘K, "Keyboard Capture" ⌘K). Non esiste più `defaults write
+  com.apple.iphonesimulator ConnectHardwareKeyboard` e Device Hub non si pilota
+  con AppleScript. Il controllo accanto a "Capturing keyboard" blocca lo schermo
+  (schermo nero sfocato): si ripristina con `xcrun simctl shutdown` e `boot`.
+- Per riportare l'app al Login senza signOut globale: `xcrun simctl keychain
+  booted reset` (toglie sessione e cache locale dal simulatore).
 - Expo CLI punta sempre all'ultimo simulatore aperto: con più simulatori
   accesi usare `--device`.
 - Requisiti SDK 58: Xcode 26.4+, Node 22.13+/24.3+/26+, iOS 16.4+ a runtime.

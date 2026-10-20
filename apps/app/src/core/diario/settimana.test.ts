@@ -40,13 +40,17 @@ describe('giorniSettimana', () => {
     );
   });
 
-  it('solo i giorni con una riga condivisa si possono aprire; oggi resta "oggi" ma è apribile se già condiviso', () => {
+  it('solo i giorni con una riga condivisa si possono aprire; oggi con un commento ha la variante "oggi con commento" (704:436, 704:442)', () => {
     const giorni = giorniSettimana('2026-10-09', [riga('2026-10-05', 'submitted'), riga('2026-10-06', 'draft'), riga('2026-10-09', 'submitted', 'Bravo', false)]);
     assert.deepEqual(
       giorni.map((g) => `${g.iniziale}:${g.condiviso}`),
       ['L:true', 'M:false', 'M:false', 'G:false', 'V:true', 'S:false', 'D:false'],
     );
-    assert.equal(giorni[4]?.stato, 'oggi');
+    assert.equal(giorni[4]?.stato, 'oggiDaLeggere');
     assert.equal(giorni[4]?.commento, 'daLeggere');
+    const letto = giorniSettimana('2026-10-09', [riga('2026-10-09', 'submitted', 'Bravo', true)]);
+    assert.equal(letto[4]?.stato, 'oggiLetto');
+    const senzaCommento = giorniSettimana('2026-10-09', [riga('2026-10-09', 'submitted')]);
+    assert.equal(senzaCommento[4]?.stato, 'oggi');
   });
 });

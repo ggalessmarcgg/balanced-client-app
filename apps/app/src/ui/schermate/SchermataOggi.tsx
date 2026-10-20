@@ -60,6 +60,8 @@ export type SchermataOggiProps = {
   onMenu?: () => void;
   /** Pasto aperto all'avvio (pagina di sviluppo). */
   pastoApertoIniziale?: Pasto | null;
+  /** Nota del Commento a fuoco all'avvio (pagina di sviluppo: verifica della tastiera). */
+  commentoAFuoco?: boolean;
   /** Notifica breve: sopra la barra di navigazione, o dentro il pannello se è aperto. */
   notifica?: NotificaBreveProps & { chiave?: string };
   /** Altri elementi sopra la pagina. */
@@ -90,6 +92,7 @@ export function SchermataOggi({
   onNotifiche,
   onMenu,
   pastoApertoIniziale = null,
+  commentoAFuoco = false,
   notifica,
   sovrapposti,
   giornata,
@@ -123,15 +126,30 @@ export function SchermataOggi({
   const inBozza = locale.riga.tipo === 'bozza' || haContenuto(locale.diario);
   const pannelloAperto = giornata?.pannello !== null && giornata?.pannello !== undefined;
   const { chiave: chiaveNotifica, ...propsNotifica } = notifica ?? { chiave: undefined, testo: '', tipo: 'conferma' as const };
-  const notificaPagina = notifica && !pannelloAperto ? <NotificaInBasso key={chiaveNotifica ?? notifica.testo} {...propsNotifica} sopra={INGOMBRO_BARRA_NAVIGAZIONE} /> : null;
-  const notificaPannello = notifica && pannelloAperto ? <NotificaInBasso key={chiaveNotifica ?? notifica.testo} {...propsNotifica} /> : null;
+  // Con il pannello aperto la notifica sta sopra il pannello (strato successivo) e non deve evitare la barra di navigazione.
+  const elementoNotifica = notifica ? <NotificaInBasso key={chiaveNotifica ?? notifica.testo} {...propsNotifica} sopra={pannelloAperto ? 0 : INGOMBRO_BARRA_NAVIGAZIONE} /> : null;
 
   return (
     <Pagina
       sovrapposti={
         <>
           <BarraNavigazioneFissa attiva="oggi" onSeleziona={onNavigazione} />
-          {notificaPagina}
+          {giornata && (
+            <PannelloGiornata
+              pannello={giornata.pannello}
+              onChiudi={giornata.onChiudiPannello}
+              onRiprova={giornata.onRiprovaPannello}
+              onModifica={giornata.onModifica}
+              onChiudiModifica={giornata.onChiudiModifica}
+              onAvanti={giornata.onAvantiModifica}
+              onIndietro={giornata.onIndietroModifica}
+              onVaiA={giornata.onVaiAModifica}
+              onAggiorna={giornata.onAggiornaGiornata}
+              schermoPieno={giornata.schermoPieno}
+              pastoApertoIniziale={giornata.pastoApertoIniziale}
+            />
+          )}
+          {elementoNotifica}
           {sovrapposti}
         </>
       }
@@ -177,7 +195,7 @@ export function SchermataOggi({
                 {blocco === 'pasti' && <BloccoPasti diario={locale.diario} onChange={onAggiorna} pastoAperto={pastoAperto} onApri={setPastoAperto} />}
                 {blocco === 'valori' && <BloccoValori diario={locale.diario} onChange={onAggiorna} />}
                 {blocco === 'sport' && <BloccoSport diario={locale.diario} onChange={onAggiorna} />}
-                {blocco === 'commento' && <BloccoCommento diario={locale.diario} onChange={onAggiorna} onCondividi={onCondividi} inviando={inviando} />}
+                {blocco === 'commento' && <BloccoCommento diario={locale.diario} onChange={onAggiorna} onCondividi={onCondividi} inviando={inviando} aFuoco={commentoAFuoco} />}
               </TransizioneBlocco>
               <ComandiDiario onChiudi={onChiudi} onAvanti={blocco === 'commento' ? undefined : onAvanti} />
             </CardDiario>
@@ -185,22 +203,6 @@ export function SchermataOggi({
         )}
         <CardSettimana giorni={giorni} onApriGiorno={giornata?.onApriGiorno} />
       </View>
-      {giornata && (
-        <PannelloGiornata
-          pannello={giornata.pannello}
-          onChiudi={giornata.onChiudiPannello}
-          onRiprova={giornata.onRiprovaPannello}
-          onModifica={giornata.onModifica}
-          onChiudiModifica={giornata.onChiudiModifica}
-          onAvanti={giornata.onAvantiModifica}
-          onIndietro={giornata.onIndietroModifica}
-          onVaiA={giornata.onVaiAModifica}
-          onAggiorna={giornata.onAggiornaGiornata}
-          sovrapposti={notificaPannello}
-          schermoPieno={giornata.schermoPieno}
-          pastoApertoIniziale={giornata.pastoApertoIniziale}
-        />
-      )}
     </Pagina>
   );
 }
