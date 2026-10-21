@@ -1,4 +1,6 @@
-import { TESTI_ELIMINAZIONE } from '@/core/account/account';
+import { useEffect, useState } from 'react';
+
+import { cambiaPromemoria, TESTI_ELIMINAZIONE, type Promemoria } from '@/core/account/account';
 import { elencoNotifiche, type RigaNotifica } from '@/core/notifiche/notifiche';
 import { PannelloEliminaAccount } from '@/ui/account/PannelloEliminaAccount';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
@@ -47,12 +49,14 @@ const CONTESTO = {
 };
 const ELENCO = elencoNotifiche(RIGHE, CONTESTO, ADESSO);
 
-export type ScenarioAccount = 'account' | 'accountSenzaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaNotifica' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
+export type ScenarioAccount = 'account' | 'accountInterruttori' | 'accountSenzaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaNotifica' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
 
 export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
   switch (scenario) {
     case 'account':
       return <SchermataAccount {...ACCOUNT} />;
+    case 'accountInterruttori':
+      return <AccountInterruttori />;
     case 'accountSenzaAbbonamento':
       return <SchermataAccount {...ACCOUNT} abbonamento={{ tipo: 'pronto', abbonamento: null }} />;
     case 'accountCaricamento':
@@ -78,4 +82,27 @@ export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
     case 'notificheErrore':
       return <SchermataNotifiche fase={{ tipo: 'rete', onRiprova: nulla }} onIndietro={nulla} />;
   }
+}
+
+const PASSO_INTERRUTTORI_MS = 2000;
+
+/** I promemoria cambiano da soli ogni 2 s (weekend off → diario off, che spegne anche il weekend → diario on → weekend on): per vedere l'animazione degli interruttori. */
+function AccountInterruttori() {
+  const [promemoria, setPromemoria] = useState<Promemoria>({ diario: true, weekend: true });
+  const [passo, setPasso] = useState(0);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const sequenza: [keyof Promemoria, boolean][] = [
+        ['weekend', false],
+        ['diario', false],
+        ['diario', true],
+        ['weekend', true],
+      ];
+      const [campo, valore] = sequenza[passo % sequenza.length]!;
+      setPromemoria((p) => cambiaPromemoria(p, campo, valore).promemoria);
+      setPasso((n) => n + 1);
+    }, PASSO_INTERRUTTORI_MS);
+    return () => clearTimeout(timer);
+  }, [passo]);
+  return <SchermataAccount {...ACCOUNT} promemoria={promemoria} onPromemoria={(campo, valore) => setPromemoria((p) => cambiaPromemoria(p, campo, valore).promemoria)} />;
 }

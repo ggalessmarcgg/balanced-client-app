@@ -119,6 +119,7 @@ export const STATI_SVILUPPO = [
   ['menu-5.1-contenuto', 'Menu · 5.1 · Contenuto (520:3086)'],
   ['menu-5-caricamento', 'Contenuti in caricamento'],
   ['account-1', 'Account · 1 · Profilo (499:2145)'],
+  ['account-interruttori', 'Account: i promemoria cambiano da soli ogni 2 s (pomello che scorre, fondo in dissolvenza; diario → weekend in cascata)'],
   ['account-1-senza-abbonamento', 'Account senza abbonamento Stripe leggibile (solo "Stato · Attivo" e il testo di riserva)'],
   ['account-1-caricamento', 'Account con l\'abbonamento in caricamento'],
   ['account-1-promemoria-spenti', 'Account con i promemoria spenti (weekend disabilitato)'],
@@ -371,6 +372,8 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <Lotto2Sviluppo scenario="contenutiCaricamento" />;
     case 'account-1':
       return <AccountSviluppo scenario="account" />;
+    case 'account-interruttori':
+      return <AccountSviluppo scenario="accountInterruttori" />;
     case 'account-1-senza-abbonamento':
       return <AccountSviluppo scenario="accountSenzaAbbonamento" />;
     case 'account-1-caricamento':

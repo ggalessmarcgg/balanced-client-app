@@ -372,8 +372,14 @@ npx expo install --fix                   # riallinea versioni alla SDK
   dell'elenco, `segnaCliccataNotifica` al tocco), hook `useNotifiche.ts`; schermate `SchermataAccount`,
   `SchermataNotifiche`, pannello `src/ui/account/PannelloEliminaAccount.tsx`; rotte `app/(abbonato)/account.tsx`
   (con la barra solo per l'abbonato; dagli stati H e K senza) e `app/notifiche.tsx`. L'eliminazione dell'account
-  è solo il percorso di interfaccia (avviso e conferma): nessun sistema la esegue (censimento §7), l'azione
-  finale mostra la Notifica breve "disponibile a breve". Privacy e termini si aprono nel browser interno
+  ha già le schermate definitive (avviso e conferma, disegno Figma invariato): oggi l'azione finale mostra la
+  Notifica breve "disponibile a breve" perché nessun sistema la esegue (censimento §7); **prima della
+  pubblicazione** va implementata quella vera, con la verifica della password lato server (funzione con chiave di
+  servizio, opzioni nel §7), senza rifare le schermate.
+- **Interruttore** (`src/ui/Interruttore.tsx`): al cambio di stato, anche quando lo spegne un altro interruttore
+  (diario → weekend), il pomello scorre e il fondo cambia in dissolvenza in 300 ms ease-out
+  (`TRANSIZIONI.tacchetteMs`, come selettore grafico/tabella e barra); con "Riduci movimento" solo la dissolvenza
+  breve. Verifica: `/sviluppo/stati?stato=account-interruttori`. Privacy e termini si aprono nel browser interno
   (`expo-web-browser` 58.0.6, approvato il 21/10/2026, `apriPaginaWeb` in `src/servizi/account.ts`).
 - **Memoria delle revisioni senza cicli** (bug del 21/10/2026: l'Account rileggeva lo stato quando le righe
   mancavano, ogni lettura rimetteva in memoria la cache vuota e notificava, la schermata rileggeva): la fusione
