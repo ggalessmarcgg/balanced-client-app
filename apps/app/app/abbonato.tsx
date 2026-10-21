@@ -1,6 +1,7 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
 
+import { andamentoSettimana } from '@/core/diario/andamento';
 import { dataValida } from '@/core/diario/data';
 import { giorniSettimana } from '@/core/diario/settimana';
 import type { Profilo } from '@/core/stato/stato';
@@ -75,6 +76,7 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       nome={profilo.nome}
       locale={diario.locale}
       giorni={giorniSettimana(diario.locale.data, diario.settimana)}
+      andamento={andamentoSettimana(diario.locale.data, diario.settimana, { diario: diario.locale.diario, condiviso: diario.locale.riga.tipo === 'condiviso' })}
       blocco={diario.blocco}
       inviando={diario.inviando}
       onScrivi={diario.scrivi}

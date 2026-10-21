@@ -1,5 +1,7 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
+import { andamentoSettimana } from '@/core/diario/andamento';
 import { aggiornaDiario, diarioLocaleIniziale, dopoCondivisione, type DiarioLocale, type StatoRiga } from '@/core/diario/bozza';
 import { aggiornaGiornata, type GiornataLocale } from '@/core/diario/giornata';
 import type { RigaSettimana } from '@/core/diario/letture';
@@ -16,7 +18,8 @@ import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
 const OGGI = '2026-10-09';
 const CLIENT = 'finto';
 const COMMENTO = 'Ottima giornata Giulia! Bene la colazione proteica e la camminata serale. A cena prova ad aggiungere una porzione di cereali integrali, così arrivi più sazia al mattino.';
-const riga = (data: string, status: string, commento: string | null = null, letto: boolean | null = null, review_status: string | null = 'positive'): RigaSettimana => ({
+type ValoriRiga = Partial<Pick<RigaSettimana, 'energy_level' | 'hydration_level' | 'sport_type' | 'sport_duration'>>;
+const riga = (data: string, status: string, commento: string | null = null, letto: boolean | null = null, review_status: string | null = 'positive', valori: ValoriRiga = {}): RigaSettimana => ({
   id: data,
   submission_date: data,
   status,
@@ -26,6 +29,7 @@ const riga = (data: string, status: string, commento: string | null = null, lett
   hydration_level: null,
   sport_type: null,
   sport_duration: null,
+  ...valori,
   nutritionist_comment: commento,
   comment_author_id: commento ? 'autrice' : null,
   comment_acknowledged: letto,
@@ -40,13 +44,35 @@ const SETTIMANA_VALUTAZIONI: RigaSettimana[] = [
   riga('2026-10-09', 'submitted', COMMENTO, true, 'needs_review'),
 ];
 const SETTIMANA: RigaSettimana[] = [riga('2026-10-05', 'submitted'), riga('2026-10-06', 'submitted'), riga('2026-10-08', 'submitted')];
+/**
+ * Andamento · 1 (479:1908): energia L 3, M 4, G 3; idratazione L 2 L, M 2 L, G +2,5 L; sport L riposo, M 30 min – 1 ora,
+ * G meno di 30 min; mercoledì non condiviso; venerdì (oggi) in bozza con energia 4, idratazione +2,5 L e sport più di 1,5 ore.
+ */
+const SETTIMANA_ANDAMENTO: RigaSettimana[] = [
+  riga('2026-10-05', 'submitted', null, null, 'positive', { energy_level: 3, hydration_level: 3 }),
+  riga('2026-10-06', 'submitted', null, null, 'positive', { energy_level: 4, hydration_level: 3, sport_type: 'camminata', sport_duration: '30m-1h' }),
+  riga('2026-10-08', 'submitted', null, null, 'positive', { energy_level: 3, hydration_level: 4, sport_type: 'corsa', sport_duration: '<30m' }),
+];
+const DIARIO_ANDAMENTO: Diario = { ...DIARIO_VUOTO, energy_level: 4, hydration_level: 4, sport_type: 'pesi', sport_duration: '>1.5h' };
+/**
+ * Casi limite dell'andamento: L con la sola energia (idratazione vuota, sport riposo), M con la durata storica "<20m"
+ * (primo gradino) e idratazione <1 L, M condiviso con una durata non riconosciuta ("45 min": nessuna colonna),
+ * G in bozza non condivisa (trattino), oggi con "Oggi riposo" in bozza e sola idratazione.
+ */
+const SETTIMANA_ANDAMENTO_CASI: RigaSettimana[] = [
+  riga('2026-10-05', 'submitted', null, null, 'positive', { energy_level: 2 }),
+  riga('2026-10-06', 'submitted', null, null, 'positive', { energy_level: 1, hydration_level: 1, sport_type: 'bici', sport_duration: '<20m' }),
+  riga('2026-10-07', 'submitted', null, null, 'positive', { energy_level: 3, hydration_level: 2, sport_type: 'corsa', sport_duration: '45 min' }),
+  riga('2026-10-08', 'draft', null, null, null, { energy_level: 4, hydration_level: 4 }),
+];
+const DIARIO_ANDAMENTO_CASI: Diario = { ...DIARIO_VUOTO, hydration_level: 2, riposo: true };
 /** Giornate · 1 (474:1328): lunedì con commento letto, giovedì con commento da leggere. */
 const SETTIMANA_COMMENTI: RigaSettimana[] = [riga('2026-10-05', 'submitted', COMMENTO, true), riga('2026-10-06', 'submitted'), riga('2026-10-08', 'submitted', COMMENTO, false)];
 
 /** Diario della schermata Oggi · 2: colazione, pranzo e spuntini compilati, cena da scrivere. */
 const DIARIO_PASTI: Diario = { ...DIARIO_VUOTO, breakfast: 'Yogurt greco, fiocchi d’avena e mirtilli', lunch: 'Insalata di farro con ceci e verdure', snacks: 'Una mela e qualche mandorla' };
-/** Diario delle schermate Oggi · 3 e 4: energia Buona, sazietà 7, idratazione 2 L, camminata 30 min. */
-const DIARIO_VALORI: Diario = { ...DIARIO_PASTI, dinner: 'Pesce al forno con patate', energy_level: 3, satiety_level: 7, hydration_level: 3, sport_type: 'camminata', sport_duration: '30 min' };
+/** Diario delle schermate Oggi · 3 e 4: energia Buona, sazietà 7, idratazione 2 L, camminata 30 min – 1 ora. */
+const DIARIO_VALORI: Diario = { ...DIARIO_PASTI, dinner: 'Pesce al forno con patate', energy_level: 3, satiety_level: 7, hydration_level: 3, sport_type: 'camminata', sport_duration: '30m-1h' };
 /** Giornata di giovedì 8 ottobre nelle schermate Giornate · 2 e 4 (solo colazione e pranzo) e · 3 (completa). */
 const GIORNATA_BREVE: Diario = { ...DIARIO_VUOTO, breakfast: 'Yogurt greco con frutti di bosco e un caffè', lunch: 'Pasta al pomodoro e insalata mista' };
 const GIORNATA_COMPLETA: Diario = {
@@ -58,7 +84,7 @@ const GIORNATA_COMPLETA: Diario = {
   satiety_level: 7,
   hydration_level: 3,
   sport_type: 'camminata',
-  sport_duration: '30 min',
+  sport_duration: '30m-1h',
 };
 const AUTRICE = { nome: 'Margherita', foto: null, iniziali: 'MC', fotoPronta: false };
 
@@ -86,7 +112,11 @@ export type ScenarioOggi =
   | 'commentoTastiera'
   | 'oggiCommentoDaLeggere'
   | 'oggiCommentoLetto'
-  | 'valutazioni';
+  | 'valutazioni'
+  | 'andamento'
+  | 'andamentoPochiDati'
+  | 'andamentoCasi'
+  | 'andamentoOggiCondiviso';
 
 // Scenario "avanzamento": i blocchi cambiano da soli ogni 3 s (avanti e poi indietro) per verificare l'indicatore.
 const CICLO_BLOCCHI: Blocco[] = ['pasti', 'valori', 'sport', 'commento', 'sport', 'valori', 'pasti'];
@@ -139,6 +169,20 @@ function iniziale(scenario: ScenarioOggi): Iniziale {
         settimana: [...SETTIMANA_COMMENTI, riga(OGGI, 'submitted', COMMENTO, letto)],
       };
     }
+    case 'andamento':
+      return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_ANDAMENTO, bozza(DIARIO_ANDAMENTO)), settimana: SETTIMANA_ANDAMENTO };
+    case 'andamentoPochiDati':
+      // Andamento · 2 (479:2100): giorni condivisi senza alcun valore e nessuna bozza.
+      return { ...base, locale: daIniziare };
+    case 'andamentoCasi':
+      return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_ANDAMENTO_CASI, { tipo: 'assente' }), settimana: SETTIMANA_ANDAMENTO_CASI };
+    case 'andamentoOggiCondiviso':
+      // Oggi condiviso: la colonna di venerdì è piena, con i valori della riga della settimana.
+      return {
+        ...base,
+        locale: dopoCondivisione(diarioLocaleIniziale(CLIENT, OGGI, DIARIO_ANDAMENTO, bozza(DIARIO_ANDAMENTO)), OGGI, '2026-10-09T19:12:00.000Z'),
+        settimana: [...SETTIMANA_ANDAMENTO, riga(OGGI, 'submitted', null, null, null, { energy_level: 2, hydration_level: 2, sport_type: 'nuoto', sport_duration: '1h-1.5h' })],
+      };
     case 'valori':
       return { ...base, locale: diarioLocaleIniziale(CLIENT, OGGI, DIARIO_VALORI, bozza(DIARIO_VALORI)), blocco: 'valori' };
     case 'sport':
@@ -215,6 +259,8 @@ function pannelloFinto(data: string, righe: RigaSettimana[]): StatoPannello {
 }
 
 export function OggiSviluppo({ scenario }: { scenario: ScenarioOggi }) {
+  // ?scorri=fondo: la pagina parte scorsa in fondo (screenshot delle card dell'andamento, sotto la piega).
+  const { scorri } = useLocalSearchParams<{ scorri?: string }>();
   const [stato] = useState(() => iniziale(scenario));
   const [locale, setLocale] = useState(stato.locale);
   const [settimana, setSettimana] = useState(stato.settimana);
@@ -265,6 +311,7 @@ export function OggiSviluppo({ scenario }: { scenario: ScenarioOggi }) {
       nome="Giulia"
       locale={locale}
       giorni={giorniSettimana(OGGI, settimana)}
+      andamento={andamentoSettimana(OGGI, settimana, { diario: locale.diario, condiviso: locale.riga.tipo === 'condiviso' })}
       blocco={blocco}
       inviando={false}
       onScrivi={() => setBlocco('pasti')}
@@ -277,6 +324,7 @@ export function OggiSviluppo({ scenario }: { scenario: ScenarioOggi }) {
       onCondividi={condividi}
       pastoApertoIniziale={stato.pannello ? null : stato.pasto}
       commentoAFuoco={stato.commentoAFuoco}
+      scorriInFondoAllAvvio={scorri === 'fondo'}
       notifica={propsNotifica}
       giornata={{
         pannello,

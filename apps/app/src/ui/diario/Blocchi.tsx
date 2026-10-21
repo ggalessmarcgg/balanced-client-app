@@ -119,20 +119,21 @@ export function BloccoValori({ diario, onChange, nelPannello }: PropsBlocco) {
   );
 }
 
-// Disposizione delle opzioni sport come in Figma (449:894): riposo e camminata, poi 3, 2, 2; durate 3 + 2.
+// Disposizione delle opzioni sport come in Figma (449:894): riposo e camminata, poi 3, 2, 2; durate 2 + 2 (449:910).
 const RIGHE_SPORT: (TipoSport | 'riposo')[][] = [
   ['riposo', 'camminata'],
   ['corsa', 'pesi', 'bici'],
   ['nuoto', 'corpo-libero'],
   ['danza', 'altro'],
 ];
-const RIGHE_DURATA: DurataSport[][] = [DURATE_SPORT.slice(0, 3), DURATE_SPORT.slice(3)];
+const RIGHE_DURATA: DurataSport[][] = [DURATE_SPORT.slice(0, 2), DURATE_SPORT.slice(2)];
 
 /**
  * Passaggio 3 · Sport (Figma 449:921; con riposo 696:416). Scelta singola tra "Oggi riposo" e gli sport: con riposo
  * selezionato gli sport restano attivi (toccarne uno lo seleziona e deseleziona il riposo) e solo "Per quanto tempo?"
  * resta al 50 % e non toccabile; toccando di nuovo "Oggi riposo" si deseleziona. Il database riceve tipo e durata
- * sempre insieme, altrimenti entrambi null.
+ * sempre insieme, altrimenti entrambi null. Una giornata storica con la durata "<20m" non ha nessuna durata
+ * selezionata: il valore resta finché non se ne sceglie un'altra.
  */
 export function BloccoSport({ diario, onChange, nelPannello }: PropsBlocco) {
   const riposo = diario.riposo;

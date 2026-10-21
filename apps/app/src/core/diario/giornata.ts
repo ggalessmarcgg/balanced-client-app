@@ -7,6 +7,8 @@ import type { RigaGiornata, RigaSettimana } from './letture.ts';
 import {
   campiDaSalvare,
   diarioDaCampi,
+  durataSportValida,
+  ETICHETTE_DURATA,
   ETICHETTE_ENERGIA,
   ETICHETTE_IDRATAZIONE,
   ETICHETTE_PASTI,
@@ -16,7 +18,6 @@ import {
   tipoSportValido,
   type CampiDiarioDb,
   type Diario,
-  type DurataSport,
 } from './modello.ts';
 
 /** Copia locale di una giornata condivisa (persistita sul telefono con la settimana). */
@@ -105,14 +106,16 @@ export type SezioneRiassunto = { titolo: string; tipo: 'testo'; testo: string } 
 
 export const TITOLI_RIASSUNTO = { valori: 'Valori', sport: 'Sport', commento: 'Commento personale' } as const;
 
-/** "Camminata · 30 minuti": tipo e durata della giornata; le durate storiche della web app ("30m-1h") restano tali quali. */
-const DURATE_ESTESE: Record<DurataSport, string> = { '15 min': '15 minuti', '30 min': '30 minuti', '45 min': '45 minuti', '60 min': '1 ora', 'più di 60 min': 'più di 1 ora' };
+/**
+ * "Camminata · meno di 30 min": tipo e durata della giornata con le etichette del diario (iniziale minuscola dopo il
+ * punto); la durata storica "<20m" diventa "meno di 20 min"; una durata non riconosciuta resta tale quale.
+ */
 export function etichettaSport(tipo: string | null, durata: string | null): string | null {
   if (!tipoSportValido(tipo)) return null;
   const nome = ETICHETTE_SPORT[tipo];
   if (!durata) return nome;
-  const estesa = (DURATE_ESTESE as Record<string, string | undefined>)[durata] ?? durata;
-  return `${nome} · ${estesa}`;
+  const etichetta = durataSportValida(durata) ? ETICHETTE_DURATA[durata] : durata;
+  return `${nome} · ${etichetta.charAt(0).toLowerCase()}${etichetta.slice(1)}`;
 }
 
 export function riassuntoGiornata(diario: Diario): SezioneRiassunto[] {

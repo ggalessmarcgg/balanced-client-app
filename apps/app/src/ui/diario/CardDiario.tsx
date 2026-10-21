@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { StyleSheet, View, type LayoutChangeEvent, type StyleProp, type ViewStyle } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { Pulsante } from '@/ui/Pulsante';
@@ -14,11 +14,19 @@ export type CardDiarioProps = {
 };
 
 /**
- * Card del diario (Figma 449:979, proprietà "Passaggio"): l'unica card con la sfumatura App/Gradiente card diario
- * (sfondo/card → sfondo/campo al 30 %, dall'alto in basso), padding 32, raggio card. La sfumatura è disegnata con
- * react-native-svg dai token del gradiente (nessuna dipendenza nuova).
+ * Card del diario (Figma 449:979, proprietà "Passaggio"): la sfumatura App/Gradiente card diario (sfondo/card →
+ * sfondo/campo al 30 %, dall'alto in basso), padding 32, raggio card. Dal lotto 4 la stessa sfumatura avvolge
+ * anche le tre card dell'andamento (`CardSfumata`).
  */
 export function CardDiario({ children, aperta = false }: CardDiarioProps) {
+  return <CardSfumata style={aperta ? stili.gapAperta : stili.gapChiusa}>{children}</CardSfumata>;
+}
+
+/**
+ * Card con la sfumatura App/Gradiente card diario, padding 32 e raggio card; la sfumatura è disegnata con
+ * react-native-svg dai token del gradiente (nessuna dipendenza nuova).
+ */
+export function CardSfumata({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
   // La sfumatura SVG ha bisogno delle misure in punti: si misura la card e si ridisegna al cambio di misura.
   const [misura, setMisura] = useState({ larghezza: 0, altezza: 0 });
   const onLayout = (e: LayoutChangeEvent) => {
@@ -26,7 +34,7 @@ export function CardDiario({ children, aperta = false }: CardDiarioProps) {
     setMisura((m) => (m.larghezza === width && m.altezza === height ? m : { larghezza: width, altezza: height }));
   };
   return (
-    <View style={[stili.card, aperta ? stili.gapAperta : stili.gapChiusa]} onLayout={onLayout}>
+    <View style={[stili.card, style]} onLayout={onLayout}>
       {misura.larghezza > 0 && <Sfumatura larghezza={misura.larghezza} altezza={misura.altezza} />}
       {children}
     </View>

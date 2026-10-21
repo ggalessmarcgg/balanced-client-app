@@ -46,6 +46,10 @@ export const STATI_SVILUPPO = [
   ['oggi-commento-da-leggere', 'Oggi condiviso con commento da leggere (Giorno della settimana 704:436)'],
   ['oggi-commento-letto', 'Oggi condiviso con commento letto (Giorno della settimana 704:442)'],
   ['settimana-valutazioni', 'Settimana con le valutazioni: approvata, da rivedere, in attesa, con e senza commento (710:438 … 710:460)'],
+  ['andamento-1', 'Andamento · 1 · Oggi con la settimana in corso (479:1908)'],
+  ['andamento-2-pochi-dati', 'Andamento · 2 · Oggi con pochi dati (479:2100)'],
+  ['andamento-casi', 'Andamento · casi limite: categoria vuota, "<20m" sul primo gradino, durata non riconosciuta, bozza di ieri, oggi riposo in bozza'],
+  ['andamento-oggi-condiviso', 'Andamento · oggi già condiviso (colonna piena di venerdì)'],
   ['oggi-errore-salvataggio', 'Oggi in bozza con Notifica breve di errore (salvataggio non riuscito, Riprova)'],
   ['oggi-condiviso-notifica', 'Oggi condiviso con Notifica breve di conferma'],
   ['oggi-valori-vuoti', 'Oggi · 3 · Valori senza risposte (cursore sazietà Vuoto, 691:7467)'],
@@ -172,6 +176,14 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="oggiCommentoLetto" />;
     case 'settimana-valutazioni':
       return <OggiSviluppo scenario="valutazioni" />;
+    case 'andamento-1':
+      return <OggiSviluppo scenario="andamento" />;
+    case 'andamento-2-pochi-dati':
+      return <OggiSviluppo scenario="andamentoPochiDati" />;
+    case 'andamento-casi':
+      return <OggiSviluppo scenario="andamentoCasi" />;
+    case 'andamento-oggi-condiviso':
+      return <OggiSviluppo scenario="andamentoOggiCondiviso" />;
     case 'oggi-errore-salvataggio':
       return <OggiSviluppo scenario="erroreSalvataggio" />;
     case 'oggi-condiviso-notifica':

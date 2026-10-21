@@ -5,9 +5,17 @@
 export const TIPI_SPORT = ['corsa', 'camminata', 'pesi', 'bici', 'nuoto', 'corpo-libero', 'danza', 'altro'] as const;
 export type TipoSport = (typeof TIPI_SPORT)[number];
 
-/** Nuovi valori di sport_duration (decisione step 5): contengono "min", così il CRM li mostra tali quali. */
-export const DURATE_SPORT = ['15 min', '30 min', '45 min', '60 min', 'più di 60 min'] as const;
+/**
+ * Valori di sport_duration scritti dall'app (decisione del 21/10/2026): il formato storico della web app con un solo
+ * valore nuovo, "<30m", al posto di "<20m" (così non resta il buco tra 20 e 30 minuti). Il CRM mostra la durata come
+ * testo e aggiunge " min" solo se manca: nessuna traduzione da fare.
+ */
+export const DURATE_SPORT = ['<30m', '30m-1h', '1h-1.5h', '>1.5h'] as const;
 export type DurataSport = (typeof DURATE_SPORT)[number];
+/** Durata storica della web app: si legge e si mostra ("Meno di 20 min"), non si propone più tra le opzioni. */
+export const DURATA_STORICA = '<20m';
+/** Durate che l'app riconosce leggendo una riga: le quattro attuali più quella storica. Qualunque altro testo è ignorato. */
+export type DurataSportLetta = DurataSport | typeof DURATA_STORICA;
 
 /** Etichette del passaggio Sport (Figma 449:921). */
 export const ETICHETTE_SPORT: Record<TipoSport, string> = {
@@ -20,12 +28,12 @@ export const ETICHETTE_SPORT: Record<TipoSport, string> = {
   danza: 'Danza',
   altro: 'Altro',
 };
-export const ETICHETTE_DURATA: Record<DurataSport, string> = {
-  '15 min': '15 min',
-  '30 min': '30 min',
-  '45 min': '45 min',
-  '60 min': '1 ora',
-  'più di 60 min': 'Più di 1 ora',
+export const ETICHETTE_DURATA: Record<DurataSportLetta, string> = {
+  '<30m': 'Meno di 30 min',
+  '30m-1h': '30 min – 1 ora',
+  '1h-1.5h': '1 – 1,5 ore',
+  '>1.5h': 'Più di 1,5 ore',
+  '<20m': 'Meno di 20 min',
 };
 
 /** energy_level 1..4 (CHECK nel database); etichette del passaggio Valori. */
@@ -57,7 +65,8 @@ export type Diario = {
   satiety_level: number | null;
   hydration_level: LivelloIdratazione | null;
   sport_type: TipoSport | null;
-  sport_duration: DurataSport | null;
+  /** Una delle quattro durate attuali, oppure "<20m" letta da un diario storico (si conserva finché non si sceglie un'altra durata). */
+  sport_duration: DurataSportLetta | null;
   /** "Oggi riposo" scelto esplicitamente (nel database è indistinguibile da "non risposto": entrambi null). */
   riposo: boolean;
 };
@@ -99,8 +108,8 @@ export function normalizzaTesto(testo: string): string | null {
 export function tipoSportValido(valore: string | null | undefined): valore is TipoSport {
   return (TIPI_SPORT as readonly string[]).includes(valore ?? '');
 }
-export function durataSportValida(valore: string | null | undefined): valore is DurataSport {
-  return (DURATE_SPORT as readonly string[]).includes(valore ?? '');
+export function durataSportValida(valore: string | null | undefined): valore is DurataSportLetta {
+  return valore === DURATA_STORICA || (DURATE_SPORT as readonly string[]).includes(valore ?? '');
 }
 function livello4(valore: number | null | undefined): LivelloEnergia | null {
   return valore === 1 || valore === 2 || valore === 3 || valore === 4 ? valore : null;
@@ -151,7 +160,7 @@ export function stessiCampi(a: CampiDiarioDb, b: CampiDiarioDb): boolean {
   return (Object.keys(a) as (keyof CampiDiarioDb)[]).every((k) => a[k] === b[k]);
 }
 
-/** Diario dall'insieme dei campi letti dal database (tollera i valori storici fuori formato, es. durate "<20m"). */
+/** Diario dall'insieme dei campi letti dal database (tollera i valori fuori formato: tipo sconosciuto o durata non riconosciuta → null). */
 export function diarioDaCampi(campi: Partial<CampiDiarioDb>): Diario {
   const tipo = tipoSportValido(campi.sport_type) ? campi.sport_type : null;
   const durata = durataSportValida(campi.sport_duration) ? campi.sport_duration : null;

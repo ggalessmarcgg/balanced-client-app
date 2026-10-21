@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { PanResponder, StyleSheet, View } from 'react-native';
 
+import type { AndamentoSettimana } from '@/core/diario/andamento';
 import type { DiarioLocale } from '@/core/diario/bozza';
 import { etichettaData } from '@/core/diario/data';
 import { BLOCCHI, haContenuto, TITOLI_BLOCCHI, type Blocco, type Diario, type Pasto } from '@/core/diario/modello';
@@ -9,6 +10,7 @@ import type { StatoPannello } from '@/servizi/usePannelloGiornata';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import type { VoceNavigazione } from '@/ui/BarraNavigazione';
 import { BloccoCommento, BloccoPasti, BloccoSport, BloccoValori } from '@/ui/diario/Blocchi';
+import { SezioneAndamento } from '@/ui/diario/CardAndamento';
 import { CardDiario, ComandiDiario, SalutoDiario } from '@/ui/diario/CardDiario';
 import { CardSettimana } from '@/ui/diario/CardSettimana';
 import { IndicatoreAvanzamento } from '@/ui/diario/IndicatoreAvanzamento';
@@ -43,6 +45,8 @@ export type SchermataOggiProps = {
   nome: string;
   locale: DiarioLocale;
   giorni: GiornoSettimana[];
+  /** Andamento della settimana (lotto 4): tre grafici sotto la Card settimana, o le card "Pochi dati". */
+  andamento: AndamentoSettimana;
   /** Blocco aperto; null = card chiusa (da iniziare / in bozza) o condivisa. */
   blocco: Blocco | null;
   inviando: boolean;
@@ -69,17 +73,20 @@ export type SchermataOggiProps = {
   /** Altri elementi sopra la pagina. */
   sovrapposti?: ReactNode;
   giornata?: AzioniPannelloGiornata;
+  /** Pagina di sviluppo: parte scorsa in fondo (screenshot dell'andamento). */
+  scorriInFondoAllAvvio?: boolean;
 };
 
 /**
  * Oggi (Figma 444:1103 … 446:3777): barra superiore completa, Card diario (chiusa, aperta su un passaggio, in bozza o
- * condivisa), Card settimana, barra di navigazione con Oggi attiva. Contenuto: 16 sopra, margini 20, gap 12.
- * Dal lotto 2 i giorni condivisi della Card settimana aprono il pannello della giornata.
+ * condivisa), Card settimana, andamento della settimana, barra di navigazione con Oggi attiva. Contenuto: 16 sopra,
+ * margini 20, gap 12. Dal lotto 2 i giorni condivisi della Card settimana aprono il pannello della giornata.
  */
 export function SchermataOggi({
   nome,
   locale,
   giorni,
+  andamento,
   blocco,
   inviando,
   onScrivi,
@@ -99,6 +106,7 @@ export function SchermataOggi({
   notifica,
   sovrapposti,
   giornata,
+  scorriInFondoAllAvvio = false,
 }: SchermataOggiProps) {
   const [pastoAperto, setPastoAperto] = useState<Pasto | null>(pastoApertoIniziale);
   // Cambiando blocco si richiude l'eventuale pasto aperto (stato derivato in render dal cambio di `blocco`).
@@ -134,6 +142,7 @@ export function SchermataOggi({
 
   return (
     <Pagina
+      scorriInFondoAllAvvio={scorriInFondoAllAvvio}
       sovrapposti={
         <>
           <BarraNavigazioneFissa attiva="oggi" onSeleziona={onNavigazione} />
@@ -205,6 +214,7 @@ export function SchermataOggi({
           </View>
         )}
         <CardSettimana giorni={giorni} onApriGiorno={giornata?.onApriGiorno} onApriStorico={onApriStorico} />
+        <SezioneAndamento andamento={andamento} />
       </View>
     </Pagina>
   );

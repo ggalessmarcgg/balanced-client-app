@@ -10,6 +10,12 @@ export const SCHERMATE_DIARIO = {
   racconta: 'racconta · segnaposto',
   giornataPannello: 'giornata · pannello',
   giornataModifica: 'giornata · modifica',
+  storico: 'storico',
+  andamento: 'andamento',
+  andamentoEnergia: 'andamento · energia',
+  andamentoIdratazione: 'andamento · idratazione',
+  andamentoSport: 'andamento · sport',
+  andamentoPochiDati: 'andamento · pochi dati',
 } as const;
 
 export const AZIONI_DIARIO = {

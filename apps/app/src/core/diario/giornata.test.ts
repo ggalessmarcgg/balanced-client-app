@@ -30,7 +30,7 @@ const RIGA: RigaGiornata = {
   satiety_level: 7,
   hydration_level: 3,
   sport_type: 'camminata',
-  sport_duration: '30 min',
+  sport_duration: '30m-1h',
 };
 
 describe('modifica di una giornata condivisa', () => {
@@ -84,14 +84,14 @@ describe('modifica di una giornata condivisa', () => {
 });
 
 describe('riassunto della giornata (Figma 475:1337)', () => {
-  it('pasti compilati, valori come etichette, sport con durata estesa, commento personale', () => {
+  it('pasti compilati, valori come etichette, sport con la durata del diario, commento personale', () => {
     assert.deepEqual(riassuntoGiornata(giornataDaRiga(RIGA).diario), [
       { titolo: 'Colazione', tipo: 'testo', testo: 'Yogurt greco con frutti di bosco e un caffè' },
       { titolo: 'Pranzo', tipo: 'testo', testo: 'Pasta al pomodoro e insalata mista' },
       { titolo: 'Cena', tipo: 'testo', testo: 'Pollo alla griglia con verdure' },
       { titolo: 'Spuntini', tipo: 'testo', testo: 'Una mela a metà pomeriggio' },
       { titolo: 'Valori', tipo: 'valori', valori: ['Energia buona', 'Sazietà 7', 'Acqua 2 L'] },
-      { titolo: 'Sport', tipo: 'testo', testo: 'Camminata · 30 minuti' },
+      { titolo: 'Sport', tipo: 'testo', testo: 'Camminata · 30 min – 1 ora' },
       { titolo: 'Commento personale', tipo: 'testo', testo: 'Sabato sono a cena fuori con amici.' },
     ]);
   });
@@ -102,12 +102,15 @@ describe('riassunto della giornata (Figma 475:1337)', () => {
     ]);
     assert.deepEqual(riassuntoGiornata(DIARIO_VUOTO), []);
   });
-  it('sport: durate nuove estese, durate storiche tali quali, tipo senza durata, riposo o tipo sconosciuto assenti', () => {
-    assert.equal(etichettaSport('camminata', '60 min'), 'Camminata · 1 ora');
-    assert.equal(etichettaSport('pesi', 'più di 60 min'), 'Pesi · più di 1 ora');
-    assert.equal(etichettaSport('corsa', '30m-1h'), 'Corsa · 30m-1h');
+  it('sport: etichette del diario, "<20m" storico come "meno di 20 min", durata non riconosciuta tale quale, tipo senza durata, riposo o tipo sconosciuto assenti', () => {
+    assert.equal(etichettaSport('camminata', '<30m'), 'Camminata · meno di 30 min');
+    assert.equal(etichettaSport('corsa', '30m-1h'), 'Corsa · 30 min – 1 ora');
+    assert.equal(etichettaSport('bici', '1h-1.5h'), 'Bici · 1 – 1,5 ore');
+    assert.equal(etichettaSport('pesi', '>1.5h'), 'Pesi · più di 1,5 ore');
+    assert.equal(etichettaSport('camminata', '<20m'), 'Camminata · meno di 20 min');
+    assert.equal(etichettaSport('corsa', '45 min'), 'Corsa · 45 min');
     assert.equal(etichettaSport('nuoto', null), 'Nuoto');
-    assert.equal(etichettaSport(null, '30 min'), null);
-    assert.equal(etichettaSport('yoga', '30 min'), null);
+    assert.equal(etichettaSport(null, '30m-1h'), null);
+    assert.equal(etichettaSport('yoga', '30m-1h'), null);
   });
 });
