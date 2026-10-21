@@ -44,6 +44,9 @@ export default function RootLayout() {
         <Stack.Screen name="menu" options={{ animation: 'default' }} />
         <Stack.Screen name="nutrizionista" options={{ animation: 'default' }} />
         <Stack.Screen name="appuntamenti" options={{ animation: 'default' }} />
+        <Stack.Screen name="peso-misure" options={{ animation: 'default' }} />
+        <Stack.Screen name="contenuti/index" options={{ animation: 'default' }} />
+        <Stack.Screen name="contenuti/[id]" options={{ animation: 'default' }} />
         <Stack.Screen name="racconta" options={{ animation: 'default' }} />
         <Stack.Screen name="storico" options={{ animation: 'default' }} />
         {/* Rotte di sviluppo: escluse dalle versioni per i clienti. */}

@@ -5,6 +5,7 @@ import { classificaErrore, normalizzaEmail, type TipoErroreAccesso } from '@/cor
 import { svuotaAutoriInMemoria } from '@/servizi/diario';
 import { svuotaMemoriaDiario } from '@/servizi/memoriaDiario';
 import { svuotaArchivioFile } from '@/servizi/archivioFile';
+import { svuotaContenutiInMemoria } from '@/servizi/contenuti';
 import { svuotaRevisioni } from '@/servizi/memoriaRevisioni';
 import { svuotaCacheStato, svuotaStatoInMemoria } from '@/servizi/statoCliente';
 import { supabase } from '@/servizi/supabase';
@@ -63,6 +64,7 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   svuotaAutoriInMemoria();
   svuotaMemoriaDiario();
   await svuotaRevisioni();
+  svuotaContenutiInMemoria();
   await svuotaArchivioFile();
   return { revocaGlobale };
 }

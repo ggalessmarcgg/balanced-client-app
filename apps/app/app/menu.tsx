@@ -6,9 +6,9 @@ import { statoCorrente } from '@/servizi/statoCliente';
 import { useAzioniStato } from '@/servizi/useAzioniStato';
 import { SchermataMenu, type VoceMenu } from '@/ui/schermate/SchermataMenu';
 
-/** Voci già costruite: Peso e misure e Contenuti arrivano con il lotto 2, Le tue ricette con lo step 9. */
-const VOCI: VoceMenu[] = ['nutrizionista', 'appuntamenti'];
-const ROTTE: Record<VoceMenu, '/nutrizionista' | '/appuntamenti' | '/menu'> = { nutrizionista: '/nutrizionista', appuntamenti: '/appuntamenti', pesoEMisure: '/menu', contenuti: '/menu' };
+/** Voci già costruite ("Le tue ricette" arriva con lo step 9). */
+const VOCI: VoceMenu[] = ['nutrizionista', 'appuntamenti', 'pesoEMisure', 'contenuti'];
+const ROTTE: Record<VoceMenu, '/nutrizionista' | '/appuntamenti' | '/peso-misure' | '/contenuti'> = { nutrizionista: '/nutrizionista', appuntamenti: '/appuntamenti', pesoEMisure: '/peso-misure', contenuti: '/contenuti' };
 
 /** Menu a tutta pagina (step 11): dall'icona Menu della barra superiore dell'abbonato. */
 export default function RottaMenu() {

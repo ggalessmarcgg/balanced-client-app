@@ -117,6 +117,9 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 |---|---|---|
 | `menu` | Menu · 1 (`508:2614`) | menu a tutta pagina dall'icona Menu della barra superiore: righe "La tua nutrizionista", "Appuntamenti" (poi "Peso e misure" e "Contenuti" dal lotto 2; "Le tue ricette" solo quando esisterà), in fondo "Esci" e "Versione x.y.z" (dalla configurazione dell'app). Rotta `/menu` |
 | `menu · la tua nutrizionista` | Menu · 3 prenotato (`514:2530`), abbonato (`515:2957`), 3.1 in ferie (`596:5846`) | foto, nome con titolo, specializzazione (`expertise`), numero di albo con la nota; "Contatto diretto" con il numero WhatsApp e "Scrivi alla nutrizionista" solo con il percorso attivo (stato J), altrimenti numero oscurato e "Disponibile con il percorso attivo"; "Chi sono", "Competenze" (pillole), "Certificazioni", "Orari di lavoro" (giorni presenti in `working_hours`) con la nota; le sezioni vuote si nascondono. In ferie: profilo attenuato, frase "La Dott.ssa X è assente dal gg.mm al gg.mm.", card "Sostituzione" con la sostituta (o l'avviso che sarà assegnata). Rotta `/nutrizionista`, anche dalla card degli stati H e K |
+| `menu · peso e misure` | Menu · 6 grafici (`525:2846`), 6.1 tabelle (`525:2930`) | card BMI (solo con `clients.height` e almeno un peso: valore, nota, scala 19 · 25 · 29 · 39 con la barra), card Peso con grafico a linea (primo e ultimo valore e date) o tabella dalla più recente, card Circonferenze con il radar prima/ultima misurazione (solo con due o più misurazioni) o tabella (ultima in grassetto, prima al 60 %); senza dati un solo avviso. Nessun inserimento. Rotta `/peso-misure` |
+| `menu · contenuti` | Menu · 5 (`520:2883`) | griglia della libreria a gruppi di quattro (larga, alta, due impilate) con titolo, categoria e icona della categoria. Rotta `/contenuti` |
+| `menu · contenuto` | Menu · 5.1 (`520:3086`) | lettura: titolo, "Tempo di lettura: N minuti", paragrafi con i titoletti in grassetto. Rotta `/contenuti/<id>` |
 | `menu · appuntamenti` | Menu · 4 (`517:2616`), 4.1 visita oggi (`517:2680`), 4.2 nessuna visita (`517:2741`) | "Prossimo appuntamento": giorno ("Oggi" se è oggi in ora italiana), fascia oraria, tipo (prima visita da `appointments` o `control_visits.is_initial`, altrimenti visita di controllo), "Videochiamata, N minuti" dalla durata reale, nutrizionista, "Entra" (disabilitato "Link in arrivo" finché `meeting_url` manca), "Gestisci appuntamento"; senza visite "Nessuna visita in programma al momento." e "Prenota una consulenza" disabilitato (step 12). "Appuntamenti passati": `completed`, `no_show` e `scheduled` già finite, dalla più recente, al massimo 12; le cancellate non compaiono. Rotta `/appuntamenti` |
 
 ### Azioni
@@ -129,6 +132,8 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 | `nutrizionista · scrivi alla sostituta` | "Scrivi alla Dott.ssa X" nella card Sostituzione | come sopra, con il numero della sostituta |
 | `appuntamenti · entra` | "Entra" | apre `meeting_url` (Meet) con il tocco; nessuna finestra oraria |
 | `appuntamenti · gestisci` | "Gestisci appuntamento" | copia il numero WhatsApp del supporto negli appunti con la Notifica breve (nessun reindirizzamento, come negli stati) |
+| `peso e misure · vista grafico` / `vista tabella` | Selettore vista delle card Peso e Circonferenze | nessuna scrittura |
+| `contenuti · apri` | card della griglia | apre la lettura del contenuto; nessuna richiesta |
 
 ### Letture (nessuna scrittura)
 
@@ -144,3 +149,11 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
   scheduled_date, start_time, end_time, status, is_initial, meeting_url`, dalla più recente, al massimo 24)
   incorporate; prossimo e passati si calcolano nell'app in ora italiana. Copia su file nella cache per ripartire
   senza rete.
+- Peso e misure (lotto 2): all'apertura e a ogni ritorno in primo piano una richiesta su `clients` per `user_id`
+  con `height`, `weight_logs` (`log_date, weight`, dai più recenti, al massimo 60) e `measurements`
+  (`measurement_date, waist, hips, abdomen, arm, wrist, thigh`, dalle più recenti, al massimo 24) incorporate
+  (indici `idx_weight_logs_client_date`, `idx_measurements_client_date`); BMI calcolato nell'app. Copia su file
+  nella cache per ripartire senza rete.
+- Contenuti (lotto 2): una lettura di `library_contents` (`id, order_index, step_name, category, reading_time,
+  content_body`, 16 righe, 41 kB) tenuta in memoria e su file per un giorno; la lettura di un contenuto non fa
+  richieste.

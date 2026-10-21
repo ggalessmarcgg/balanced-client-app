@@ -13,7 +13,7 @@ import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
 import { SchermataRaccontaSegnaposto, SchermataSegnapostoPrenotazione } from '@/ui/schermate/SchermateSegnaposto';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
-import { MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
+import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
 import { StoricoSviluppo } from '@/ui/sviluppo/StoricoSviluppo';
@@ -108,6 +108,15 @@ export const STATI_SVILUPPO = [
   ['menu-4-link-in-arrivo', 'Appuntamenti con la prossima visita senza link (pulsante "Link in arrivo" disabilitato)'],
   ['menu-4-senza-passati', 'Appuntamenti senza visite passate'],
   ['menu-4-caricamento', 'Appuntamenti in caricamento'],
+  ['menu-6-grafici', 'Menu · 6 · Peso e misure · grafici (525:2846)'],
+  ['menu-6.1-tabelle', 'Menu · 6.1 · Peso e misure · tabelle (525:2930)'],
+  ['menu-6-senza-altezza', 'Peso e misure senza altezza (card BMI nascosta)'],
+  ['menu-6-una-misurazione', 'Peso e misure con un solo peso e una sola misurazione (niente confronto: tabella)'],
+  ['menu-6-senza-dati', 'Peso e misure senza dati'],
+  ['menu-6-caricamento', 'Peso e misure in caricamento'],
+  ['menu-5-contenuti', 'Menu · 5 · Contenuti (520:2883)'],
+  ['menu-5.1-contenuto', 'Menu · 5.1 · Contenuto (520:3086)'],
+  ['menu-5-caricamento', 'Contenuti in caricamento'],
   ['uscita-avviso', 'Esci con modifiche non inviate: Dialogo "Hai modifiche non ancora salvate" (Pannello dal basso di 499:2568)'],
   ['barra-animata', 'Barra di navigazione: la voce attiva cambia da sola ogni 2 s (sfondo che scorre, colori in dissolvenza)'],
 ] as const;
@@ -326,6 +335,24 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <MenuSviluppo scenario="appuntamentiSenzaPassati" />;
     case 'menu-4-caricamento':
       return <MenuSviluppo scenario="appuntamentiCaricamento" />;
+    case 'menu-6-grafici':
+      return <Lotto2Sviluppo scenario="misureGrafici" />;
+    case 'menu-6.1-tabelle':
+      return <Lotto2Sviluppo scenario="misureTabelle" />;
+    case 'menu-6-senza-altezza':
+      return <Lotto2Sviluppo scenario="misureSenzaAltezza" />;
+    case 'menu-6-una-misurazione':
+      return <Lotto2Sviluppo scenario="misureUnaMisurazione" />;
+    case 'menu-6-senza-dati':
+      return <Lotto2Sviluppo scenario="misureSenzaDati" />;
+    case 'menu-6-caricamento':
+      return <Lotto2Sviluppo scenario="misureCaricamento" />;
+    case 'menu-5-contenuti':
+      return <Lotto2Sviluppo scenario="contenuti" />;
+    case 'menu-5.1-contenuto':
+      return <Lotto2Sviluppo scenario="contenuto" />;
+    case 'menu-5-caricamento':
+      return <Lotto2Sviluppo scenario="contenutiCaricamento" />;
     case 'uscita-avviso':
       return (
         <SchermataPercorsoNonAttivo

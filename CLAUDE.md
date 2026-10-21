@@ -347,8 +347,18 @@ npx expo install --fix                   # riallinea versioni alla SDK
   filtrate per cliente, mai `profile_image_url` né `email` del profilo; profilo e ferie incorporati, niente catene di
   query; "oggi" sempre in Europe/Rome; contatto diretto visibile solo con il percorso attivo (stato J); contatti
   del supporto copiati, mai aperti; "Entra" apre `meeting_url` con il tocco; nessuna scrittura in questo lotto.
-- Pagina di sviluppo: `/sviluppo/stati?stato=menu-1|menu-3-abbonato|menu-3-prenotato|menu-3.1-ferie|menu-4-appuntamenti|…`;
-  esiti dei confronti in `~/Desktop/censimenti-app/step11-confronti/lotto1/`.
+- Lotto 2 (Peso e misure, Contenuti): `src/core/misure/misure.ts` (BMI, serie del peso, confronto prima/ultima
+  misurazione, etichette) e `src/core/contenuti/contenuti.ts` (elenco, griglia a gruppi di quattro, paragrafi);
+  servizi `misure.ts` (riletto all'apertura e al rientro) e `contenuti.ts` (cache di un giorno); grafici in
+  `src/ui/menu/GraficiMisure.tsx` con react-native-svg; schermate `SchermataPesoMisure`, `SchermataContenuti`,
+  `SchermataContenuto`; rotte `app/peso-misure.tsx`, `app/contenuti/index.tsx`, `app/contenuti/[id].tsx`. La
+  barra del BMI usa i token esistenti (badge/sfondo → grafico/sport → stato/da-rivedere → stato/errore): il
+  disegno ha una sfumatura con colori non presenti tra i token.
+- Competenze del profilo: chiavi del matching in `nutritionist_profiles.competences`, etichette italiane in
+  `src/core/nutrizionista/competenze.ts` copiate da `BADGE_LABEL` del funnel (`~/Desktop/onboarding-v2/src/ui/pages/NutritionistPage.tsx`);
+  il test `competenze.test.ts` segnala la divergenza quando il repo del funnel è sul disco.
+- Pagina di sviluppo: `/sviluppo/stati?stato=menu-1|menu-3-abbonato|menu-3-prenotato|menu-3.1-ferie|menu-4-appuntamenti|menu-6-grafici|menu-6.1-tabelle|menu-5-contenuti|menu-5.1-contenuto|…`;
+  esiti dei confronti in `~/Desktop/censimenti-app/step11-confronti/lotto1/` e `lotto2/`.
 
 ## Note su Xcode 27 / Device Hub
 
