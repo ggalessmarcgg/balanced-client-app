@@ -27,8 +27,14 @@ describe('peso e misure', () => {
     assert.equal(c?.prima.data, '2026-05-03');
     assert.equal(c?.ultima.data, '2026-10-02');
     assert.equal(confrontoCirconferenze(d.misurazioni.slice(0, 1)), null);
-    assert.deepEqual(raggiRadar(c!.prima, c!.ultima).waist, { prima: 1, ultima: 78 / 82 });
+    // Scala da 78 − 10 % = 70,2 a 82: il più alto sul bordo, il più basso a (78 − 70,2) / (82 − 70,2).
+    const vita = raggiRadar(c!.prima, c!.ultima).waist;
+    assert.equal(vita.prima, 1);
+    assert.ok(Math.abs(vita.ultima - (78 - 70.2) / (82 - 70.2)) < 1e-9);
     assert.deepEqual(raggiRadar(c!.prima, c!.ultima).arm, { prima: 0, ultima: 0 });
+    // Valori uguali: entrambi sul bordo.
+    const uguali = raggiRadar({ data: 'a', valori: { ...c!.prima.valori, wrist: 16 } }, { data: 'b', valori: { ...c!.ultima.valori, wrist: 16 } });
+    assert.deepEqual(uguali.wrist, { prima: 1, ultima: 1 });
   });
   it('scala del BMI 19–39 e etichette italiane', () => {
     assert.equal(posizioneBmi(19), 0);

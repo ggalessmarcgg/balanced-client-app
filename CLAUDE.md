@@ -352,8 +352,10 @@ npx expo install --fix                   # riallinea versioni alla SDK
   servizi `misure.ts` (riletto all'apertura e al rientro) e `contenuti.ts` (cache di un giorno); grafici in
   `src/ui/menu/GraficiMisure.tsx` con react-native-svg; schermate `SchermataPesoMisure`, `SchermataContenuti`,
   `SchermataContenuto`; rotte `app/peso-misure.tsx`, `app/contenuti/index.tsx`, `app/contenuti/[id].tsx`. La
-  barra del BMI usa i token esistenti (badge/sfondo → grafico/sport → stato/da-rivedere → stato/errore): il
-  disegno ha una sfumatura con colori non presenti tra i token.
+  barra del BMI usa le variabili Figma `grafico/bmi-1 … bmi-4` (sfumatura da sinistra a destra, segno sottile sul
+  valore); la curva del peso è un'interpolazione cubica monotona (`src/core/misure/curva.ts`, mai oltre i valori
+  reali); la scala di ogni asse del radar parte al 10 % sotto il più basso dei due valori; il selettore
+  grafico/tabella si anima come la barra di navigazione (`src/ui/menu/SelettoreVista.tsx`).
 - Competenze del profilo: chiavi del matching in `nutritionist_profiles.competences`, etichette italiane in
   `src/core/nutrizionista/competenze.ts` copiate da `BADGE_LABEL` del funnel (`~/Desktop/onboarding-v2/src/ui/pages/NutritionistPage.tsx`);
   il test `competenze.test.ts` segnala la divergenza quando il repo del funnel è sul disco.

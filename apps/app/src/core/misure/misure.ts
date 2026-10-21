@@ -111,14 +111,29 @@ export function confrontoCirconferenze(misurazioni: Circonferenze[]): { prima: C
   return ultima && prima ? { prima, ultima } : null;
 }
 
-/** Raggio relativo (0–1) di ogni asse del radar: ogni valore rispetto al massimo tra prima e ultima della stessa misura. */
+/** La scala di ogni asse del radar parte da questa frazione sotto il valore più basso (decisione del 21/10/2026): così il cambiamento si vede. */
+export const MARGINE_SCALA_RADAR = 0.1;
+
+/**
+ * Raggio relativo (0–1) di ogni asse del radar: scala da (valore più basso tra prima e ultima − 10 %) al valore più
+ * alto, uguale per tutti gli assi; il più alto sta sul bordo, il più basso poco dentro; valori uguali → entrambi sul
+ * bordo; misura assente → 0.
+ */
 export function raggiRadar(prima: Circonferenze, ultima: Circonferenze): Record<ChiaveCirconferenza, { prima: number; ultima: number }> {
   const raggi = {} as Record<ChiaveCirconferenza, { prima: number; ultima: number }>;
   for (const c of CIRCONFERENZE) {
-    const p = prima.valori[c] ?? 0;
-    const u = ultima.valori[c] ?? 0;
-    const massimo = Math.max(p, u) || 1;
-    raggi[c] = { prima: p / massimo, ultima: u / massimo };
+    const p = prima.valori[c];
+    const u = ultima.valori[c];
+    const presenti = [p, u].filter((v): v is number => v !== null && v > 0);
+    if (presenti.length === 0) {
+      raggi[c] = { prima: 0, ultima: 0 };
+      continue;
+    }
+    const minimo = Math.min(...presenti);
+    const massimo = Math.max(...presenti);
+    const base = minimo * (1 - MARGINE_SCALA_RADAR);
+    const r = (v: number | null) => (v === null || v <= 0 ? 0 : massimo === base ? 1 : Math.min(1, Math.max(0, (v - base) / (massimo - base))));
+    raggi[c] = { prima: r(p), ultima: r(u) };
   }
   return raggi;
 }

@@ -26,7 +26,7 @@ const PROFILO: ProfiloNutrizionista = profiloNutrizionista({
   app_photo_url: null,
   app_square_photo_url: null,
   who_are_you: 'Mi occupo di educazione alimentare e di percorsi per costruire abitudini sostenibili nel tempo. Credo in un approccio senza divieti, in cui il cibo torna a essere un piacere e non una fonte di ansia.',
-  competences: ['overweight-obesity', 'sports-nutrition', 'nutrition-education-counseling', 'pregnancy-breastfeeding'],
+  competences: ['overweight-obesity', 'sports-nutrition', 'nutrition-education-counseling', 'pregnancy-breastfeeding', 'insulin-resistance-metabolic'],
   certifications: ['Laurea magistrale in Biologia della nutrizione', 'Master in nutrizione sportiva', 'Corso di alimentazione intuitiva'],
   working_hours: { Lun: '09:00 - 18:00', Mar: '09:00 - 18:00', Mer: '14:00 - 20:00', Gio: '09:00 - 18:00', Ven: '09:00 - 13:00' },
   phone: '+39 333 123 4567',

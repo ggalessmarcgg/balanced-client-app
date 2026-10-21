@@ -100,7 +100,7 @@ function Contenuto({ profilo, ferie, contatto, onScrivi }: { profilo: ProfiloNut
           <CardSezione titolo="Competenze" style={stili.cardCompetenze}>
             <View style={stili.etichette} accessibilityRole="list">
               {profilo.competenze.map((c) => (
-                <Opzione key={c} etichetta={c} selezionata={false} fondo="campo" disabilitato />
+                <Opzione key={c} etichetta={c} selezionata={false} fondo="campo" allineamento="sinistra" disabilitato />
               ))}
             </View>
           </CardSezione>
@@ -234,7 +234,7 @@ const stili = StyleSheet.create({
   rigaWhatsApp: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: spazio[8] },
   sostituta: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: spazio[12] },
   cardCompetenze: { gap: spazio[10] },
-  etichette: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', gap: spazio[8] },
+  etichette: { alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'flex-start', alignItems: 'flex-start', gap: spazio[8] },
   elenco: { alignSelf: 'stretch' },
   certificazione: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: spazio[10], paddingVertical: spazio[14] },
   cresce: { flex: 1 },

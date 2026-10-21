@@ -16,10 +16,12 @@ export type OpzioneProps = {
   disabilitato?: boolean;
   /** Sfondo da non selezionata: card (predefinito) o campo quando la pillola sta su una card crema (competenze, Figma 516:2770). */
   fondo?: 'card' | 'campo';
+  /** Testo centrato (predefinito) o a sinistra: per le etichette lunghe che vanno a capo dentro la pillola (competenze). */
+  allineamento?: 'centro' | 'sinistra';
 };
 
 /** Opzione selezionabile a pillola (Figma 439:96): sfondo card / verde quando selezionata, testo Body details. */
-export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, cresce = false, disabilitato = false, fondo = 'card' }: OpzioneProps) {
+export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, cresce = false, disabilitato = false, fondo = 'card', allineamento = 'centro' }: OpzioneProps) {
   const { hitSlop, onLayout } = useAreaToccabile();
   return (
     <Pressable
@@ -30,9 +32,9 @@ export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, c
       accessibilityRole="button"
       accessibilityLabel={etichetta}
       accessibilityState={{ selected: selezionata, disabled: disabilitato }}
-      style={[stili.base, stili[forma], selezionata ? stili.selezionata : fondo === 'campo' ? stili.nonSelezionataSuCard : stili.nonSelezionata, cresce && stili.cresce]}
+      style={[stili.base, stili[forma], selezionata ? stili.selezionata : fondo === 'campo' ? stili.nonSelezionataSuCard : stili.nonSelezionata, cresce && stili.cresce, allineamento === 'sinistra' && stili.aSinistra]}
     >
-      <Testo stile="bodyDetails" colore={selezionata ? colori.testo.suAzione : colori.testo.primario} style={stili.etichetta}>
+      <Testo stile="bodyDetails" colore={selezionata ? colori.testo.suAzione : colori.testo.primario} style={[stili.etichetta, allineamento === 'sinistra' && stili.etichettaASinistra]}>
         {etichetta}
       </Testo>
     </Pressable>
@@ -48,5 +50,8 @@ const stili = StyleSheet.create({
   nonSelezionataSuCard: { backgroundColor: colori.sfondo.campo },
   selezionata: { backgroundColor: colori.azione.primaria },
   cresce: { flex: 1, alignSelf: 'stretch' },
+  // Larga quanto il testo, mai più della riga: un testo più lungo va a capo dentro la pillola (padding verticale 8).
+  aSinistra: { maxWidth: '100%', justifyContent: 'flex-start', paddingVertical: spazio[8] },
   etichetta: { flexShrink: 1, textAlign: 'center' },
+  etichettaASinistra: { textAlign: 'left' },
 });

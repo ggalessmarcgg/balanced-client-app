@@ -350,6 +350,38 @@
       "description": "Giornata valutata dalla nutrizionista come \"da rivedere\" (review_status = needs_review)."
     },
     {
+      "collection": "App · Colori",
+      "name": "grafico/bmi-1",
+      "type": "COLOR",
+      "hex": "#A2FF88",
+      "alpha": 1,
+      "description": "Scala del BMI nella card Peso e misure (sfumatura da sinistra a destra)."
+    },
+    {
+      "collection": "App · Colori",
+      "name": "grafico/bmi-2",
+      "type": "COLOR",
+      "hex": "#DEFFB0",
+      "alpha": 1,
+      "description": "Scala del BMI nella card Peso e misure (sfumatura da sinistra a destra)."
+    },
+    {
+      "collection": "App · Colori",
+      "name": "grafico/bmi-3",
+      "type": "COLOR",
+      "hex": "#FCFF53",
+      "alpha": 1,
+      "description": "Scala del BMI nella card Peso e misure (sfumatura da sinistra a destra)."
+    },
+    {
+      "collection": "App · Colori",
+      "name": "grafico/bmi-4",
+      "type": "COLOR",
+      "hex": "#FFBC81",
+      "alpha": 1,
+      "description": "Scala del BMI nella card Peso e misure (sfumatura da sinistra a destra)."
+    },
+    {
       "collection": "App · Misure",
       "name": "spazio/4",
       "type": "FLOAT",
@@ -1075,7 +1107,7 @@
       "id": "626:380",
       "name": "Icona / 16 / Grafico",
       "size": 16,
-      "description": "Lucide chart-line · 16 px, tratto 1,33. Selettore vista (Grafico).",
+      "description": "Lucide: chart-spline. Icona Lucide 16×16, tratto 1,33.",
       "strokeWeight": 1.33,
       "shapes": 2,
       "stroke": "icona/primaria"
@@ -1399,7 +1431,7 @@
       "id": "513:2717",
       "name": "Icona / 24 / Grafico",
       "size": 24,
-      "description": "Lucide: chart-line. Icona Lucide 24×24, tratto 2.",
+      "description": "Lucide: chart-spline. Icona Lucide 24×24, tratto 2.",
       "strokeWeight": 2,
       "shapes": 2,
       "stroke": "icona/primaria"

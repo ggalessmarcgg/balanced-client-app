@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Circle, Defs, Line, LinearGradient, Polygon, Polyline, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, Defs, Line, LinearGradient, Path, Polygon, Rect, Stop } from 'react-native-svg';
 
+import { percorsoCurva } from '@/core/misure/curva';
 import { CIRCONFERENZE, ETICHETTE_CIRCONFERENZE, etichettaKg, posizioneBmi, puntiPeso, raggiRadar, type ChiaveCirconferenza, type Circonferenze, type Peso } from '@/core/misure/misure';
 import { Testo } from '@/ui/Testo';
 import { colori, opacita, raggio, spazio } from '@/ui/theme';
@@ -12,9 +13,8 @@ function useLarghezza(): [number, (e: LayoutChangeEvent) => void] {
   return [larghezza, (e) => setLarghezza(Math.round(e.nativeEvent.layout.width))];
 }
 
-// Barra del BMI (Figma 523:3054): alta 20, raggio 5, sfumatura orizzontale. Il disegno usa quattro colori non presenti
-// tra i token (verde lime → giallo → arancio): qui la sfumatura va da badge/sfondo a stato/da-rivedere a stato/errore.
-// Non c'è un indicatore del valore, come nel disegno.
+// Barra del BMI (Figma 523:3054): alta 20, raggio 5, sfumatura orizzontale con le variabili grafico/bmi-1 … bmi-4
+// (tappe 0 %, 33 %, 66 %, 100 %) e un segno sottile sulla posizione del valore (decisione del 21/10/2026).
 const ALTEZZA_BARRA_BMI = 20;
 const RAGGIO_BARRA_BMI = 5;
 
@@ -27,14 +27,13 @@ export function BarraBmi({ bmi }: { bmi: number }) {
         <Svg width={larghezza} height={ALTEZZA_BARRA_BMI}>
           <Defs>
             <LinearGradient id="bmi" x1="0" y1="0" x2={larghezza} y2="0" gradientUnits="userSpaceOnUse">
-              <Stop offset="0" stopColor={colori.badge.sfondo} />
-              <Stop offset={String(posizioneBmi(25))} stopColor={colori.grafico.sport} />
-              <Stop offset={String(posizioneBmi(29))} stopColor={colori.stato.daRivedere} />
-              <Stop offset="1" stopColor={colori.stato.errore} />
+              <Stop offset="0" stopColor={colori.grafico.bmi1} />
+              <Stop offset="0.33" stopColor={colori.grafico.bmi2} />
+              <Stop offset="0.66" stopColor={colori.grafico.bmi3} />
+              <Stop offset="1" stopColor={colori.grafico.bmi4} />
             </LinearGradient>
           </Defs>
           <Rect width={larghezza} height={ALTEZZA_BARRA_BMI} rx={RAGGIO_BARRA_BMI} ry={RAGGIO_BARRA_BMI} fill="url(#bmi)" />
-          {/* Posizione del valore: segno sottile (non nel disegno, utile a leggere la scala). */}
           <Rect x={Math.max(1, Math.min(larghezza - 3, posizione * larghezza - 1))} y={0} width={2} height={ALTEZZA_BARRA_BMI} fill={colori.testo.primario} />
         </Svg>
       )}
@@ -42,8 +41,8 @@ export function BarraBmi({ bmi }: { bmi: number }) {
   );
 }
 
-// Grafico del peso (Figma 525:2878): area 305 × 150, linea azione/primaria con i punti agli estremi (raggio 3) e le
-// etichette del primo e dell'ultimo valore (Etichetta piccola). Margini interni perché punti ed etichette non escano;
+// Grafico del peso (Figma 525:2878): area 305 × 150, curva morbida (interpolazione monotona, core/misure/curva.ts) in
+// azione/primaria con i punti agli estremi (raggio 3) e le etichette del primo e dell'ultimo valore (Etichetta piccola). Margini interni perché punti ed etichette non escano;
 // ogni etichetta sta sopra il suo punto se la linea se ne allontana verso il basso, altrimenti sotto (mai sulla linea).
 const ALTEZZA_GRAFICO_PESO = 150;
 const MARGINE_PESO = { x: 14, alto: 30, basso: 30 };
@@ -72,7 +71,7 @@ export function GraficoPeso({ pesi }: { pesi: Peso[] }) {
       {larghezza > 0 && p0 && pN && (
         <>
           <Svg width={larghezza} height={ALTEZZA_GRAFICO_PESO}>
-            <Polyline points={punti.map((p) => `${aX(p.x)},${aY(p.y)}`).join(' ')} fill="none" stroke={colori.azione.primaria} strokeWidth={TRATTO} strokeLinejoin="round" strokeLinecap="round" />
+            {punti.length > 1 && <Path d={percorsoCurva(punti.map((p) => ({ x: aX(p.x), y: aY(p.y) })))} fill="none" stroke={colori.azione.primaria} strokeWidth={TRATTO} strokeLinejoin="round" strokeLinecap="round" />}
             <Circle cx={aX(p0.x)} cy={aY(p0.y)} r={RAGGIO_PUNTO} fill={colori.azione.primaria} />
             {punti.length > 1 && <Circle cx={aX(pN.x)} cy={aY(pN.y)} r={RAGGIO_PUNTO} fill={colori.azione.primaria} />}
           </Svg>
