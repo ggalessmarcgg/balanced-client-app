@@ -1,7 +1,8 @@
 // "La tua nutrizionista" (censimento step 11, §1): profilo da nutritionist_profiles incorporato nella riga clients
 // (mai profile_image_url: immagine base64 da mezzo megabyte; mai email), ferie in corso e sostituta da
 // holiday_replacements con le ferie incorporate. "Oggi" per le ferie è la data italiana, come
-// is_active_replacement_for_client nel database.
+// is_active_replacement_for_client nel database. Le competenze sono chiavi del matching: etichette in competenze.ts.
+import { etichettaCompetenza } from './competenze.ts';
 export const TABELLA_CLIENTI = 'clients';
 export const TABELLA_SOSTITUZIONI = 'holiday_replacements';
 
@@ -146,7 +147,7 @@ export function profiloNutrizionista(riga: RigaProfiloNutrizionista): ProfiloNut
     foto: riga.app_photo_url || null,
     fotoQuadrata: riga.app_square_photo_url || null,
     chiSono: riga.who_are_you?.trim() || null,
-    competenze: elenco(riga.competences),
+    competenze: elenco(riga.competences).map(etichettaCompetenza),
     certificazioni: elenco(riga.certifications),
     orari: orariDiLavoro(riga.working_hours),
     telefono: telefonoDa(riga.phone),

@@ -41,7 +41,7 @@ export default function RootLayout() {
         <Stack.Screen name="(abbonato)" />
         <Stack.Screen name="revisione/[id]" options={{ animation: 'default' }} />
         {/* Menu a tutta pagina (dall'icona Menu della barra superiore) e le sue schermate. */}
-        <Stack.Screen name="menu" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="menu" options={{ animation: 'default' }} />
         <Stack.Screen name="nutrizionista" options={{ animation: 'default' }} />
         <Stack.Screen name="appuntamenti" options={{ animation: 'default' }} />
         <Stack.Screen name="racconta" options={{ animation: 'default' }} />

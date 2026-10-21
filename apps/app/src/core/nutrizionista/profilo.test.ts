@@ -12,7 +12,7 @@ const RIGA: RigaProfiloNutrizionista = {
   app_photo_url: 'https://x/foto.jpg',
   app_square_photo_url: 'https://x/quadrata.jpg',
   who_are_you: ' Mi occupo di educazione alimentare. ',
-  competences: ['Ricomposizione corporea', '', 'Gravidanza'],
+  competences: ['weight-loss', '', 'pregnancy-breastfeeding'],
   certifications: ['Laurea magistrale'],
   working_hours: { Lun: '09:00 - 18:00', Mer: '14:00 - 20:00', Ven: '9:00-13:00', Sab: '' },
   phone: '+39 333 1234567',
@@ -23,7 +23,7 @@ describe('profilo della nutrizionista', () => {
     const p = profiloNutrizionista(RIGA);
     assert.equal(p.nome, 'Dott.ssa Ludovica Damiani');
     assert.equal(p.chiSono, 'Mi occupo di educazione alimentare.');
-    assert.deepEqual(p.competenze, ['Ricomposizione corporea', 'Gravidanza']);
+    assert.deepEqual(p.competenze, ['Dimagrimento', 'Gravidanza e allattamento']);
     assert.deepEqual(p.orari, [
       { giorno: 'Lunedì', orario: '9:00 – 18:00' },
       { giorno: 'Mercoledì', orario: '14:00 – 20:00' },
