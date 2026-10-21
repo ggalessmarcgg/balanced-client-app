@@ -44,6 +44,14 @@ describe('calcolaStato', () => {
     assert.deepEqual(s.profilo.nutrizionista, { id: 'n1', nome: 'Dott.ssa Margherita Chiadò', foto: 'https://x/foto.jpg' });
   });
 
+  it('profilo: nome completo e dati dell\'Account dalla stessa riga', () => {
+    const s = calcolaStato(dati({ status: 'subscribed', cliente: { ...CLIENTE, status: 'subscribed', email: 'giulia.rossi@email.it', total_submissions: 142, diary_reminder_enabled: true, diary_reminder_weekend_enabled: false, stripe_customer_id: 'cus_1' } }), ADESSO);
+    assert.equal(s.codice, 'J');
+    if (s.codice !== 'J') return;
+    assert.equal(s.profilo.nomeCompleto, 'Giulia Rossi');
+    assert.deepEqual(s.profilo.account, { email: 'giulia.rossi@email.it', giornateCondivise: 142, promemoria: { diario: true, weekend: false }, conStripe: true });
+  });
+
   it('profilo: nutrizionista ignorata se non è quella di clients.nutritionist_id', () => {
     const s = calcolaStato(dati({ status: 'subscribed', nutrizionista: { ...NUTRIZIONISTA, id: 'altra' } }), ADESSO);
     assert.equal(s.codice === 'J' && s.profilo.nutrizionista, null);

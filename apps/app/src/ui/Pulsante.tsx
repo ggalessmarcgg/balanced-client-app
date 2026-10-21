@@ -5,7 +5,7 @@ import { Testo } from '@/ui/Testo';
 import { colori, opacita, raggio, spazio, type NomeStileTesto } from '@/ui/theme';
 
 /** Livello del Pulsante (Figma 418:62, proprietà "Livello"). */
-export type LivelloPulsante = 'primario' | 'secondario' | 'terziario' | 'terziarioEvidenziato' | 'terziarioCompatto' | 'terziarioCompattoEvidenziato';
+export type LivelloPulsante = 'primario' | 'secondario' | 'terziario' | 'terziarioEvidenziato' | 'terziarioPericolo' | 'terziarioCompatto' | 'terziarioCompattoEvidenziato';
 /** Stato (proprietà "Stato"); "premuto" si attiva da solo durante il tocco, qui si può forzare per le prove. */
 export type StatoPulsante = 'normale' | 'premuto' | 'disabilitato' | 'caricamento';
 
@@ -26,6 +26,8 @@ const TESTO: Record<LivelloPulsante, { stile: NomeStileTesto; colore: string }> 
   terziario: { stile: 'body', colore: colori.testo.primario },
   /** Azione sicura di un dialogo ("Indietro", "Annulla": Etichetta, Figma 499:2707). */
   terziarioEvidenziato: { stile: 'etichetta', colore: colori.testo.primario },
+  /** Azione distruttiva di un dialogo ("Elimina definitivamente": Body in testo/errore, Figma 492:3727). */
+  terziarioPericolo: { stile: 'body', colore: colori.testo.errore },
   terziarioCompatto: { stile: 'bodyDetails', colore: colori.testo.secondario },
   terziarioCompattoEvidenziato: { stile: 'link', colore: colori.testo.secondario },
 };
@@ -98,6 +100,7 @@ const stili = StyleSheet.create({
   },
   terziario: { alignSelf: 'flex-start', minHeight: 46, paddingVertical: spazio[12], paddingHorizontal: spazio[4] },
   terziarioEvidenziato: { alignSelf: 'flex-start', minHeight: 46, paddingVertical: spazio[12], paddingHorizontal: spazio[4] },
+  terziarioPericolo: { alignSelf: 'flex-start', minHeight: 46, paddingVertical: spazio[12], paddingHorizontal: spazio[4] },
   terziarioCompatto: { alignSelf: 'flex-start' },
   terziarioCompattoEvidenziato: { alignSelf: 'flex-start' },
   premuto: { opacity: opacita.pulsantePremuto },

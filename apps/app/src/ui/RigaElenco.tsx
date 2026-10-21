@@ -9,13 +9,13 @@ import { colori, opacita, raggio, spazio, tocco, type IconaPerMisura } from '@/u
 /** Tipi della Riga elenco (Figma 498:220, proprietà "Tipo"); le proprietà di testo seguono il disegno di ogni tipo. */
 export type RigaElencoProps =
   | { tipo: 'freccia'; etichetta: string; onPress?: () => void }
-  | { tipo: 'interruttore'; etichetta: string; acceso: boolean; onChange?: (acceso: boolean) => void }
+  | { tipo: 'interruttore'; etichetta: string; acceso: boolean; onChange?: (acceso: boolean) => void; disabilitato?: boolean }
   | { tipo: 'valore'; etichetta: string; valore: string }
   | { tipo: 'copia'; etichetta: string; onPress?: () => void }
   | { tipo: 'frecciaConIcona'; etichetta: string; icona: IconaPerMisura[24]; onPress?: () => void }
   | { tipo: 'dueRighe'; titolo: string; sottotitolo: string; onPress?: () => void }
   | { tipo: 'conAvatar'; etichetta: string; nome: string; avatar?: ImageSourcePropType; onPress?: () => void }
-  | { tipo: 'notifica'; titolo: string; testo: string; ora: string };
+  | { tipo: 'notifica'; titolo: string; testo: string; ora: string; onPress?: () => void };
 
 /**
  * Riga di un elenco dentro una card crema. Separatori a cura del contenitore (componente Separatore).
@@ -38,7 +38,7 @@ export function RigaElenco(props: RigaElencoProps) {
           <Testo stile="body" style={stili.cresce}>
             {props.etichetta}
           </Testo>
-          <Interruttore acceso={props.acceso} onChange={props.onChange} etichetta={props.etichetta} />
+          <Interruttore acceso={props.acceso} onChange={props.onChange} etichetta={props.etichetta} disabilitato={props.disabilitato} />
         </View>
       );
     case 'valore':
@@ -98,9 +98,9 @@ export function RigaElenco(props: RigaElencoProps) {
           <IconaAttenuata nome="Avanti" />
         </Toccabile>
       );
-    case 'notifica':
-      return (
-        <View style={stili.rigaNotifica} accessible accessibilityLabel={`${props.titolo}. ${props.testo}. ${props.ora}`}>
+    case 'notifica': {
+      const contenuto = (
+        <>
           <Testo stile="etichettaPiccola">{props.titolo}</Testo>
           <Testo stile="bodyDetails" colore={colori.testo.corpoAttenuato} numberOfLines={1}>
             {props.testo}
@@ -108,8 +108,22 @@ export function RigaElenco(props: RigaElencoProps) {
           <Testo stile="caption" colore={colori.testo.terziario} style={stili.ora}>
             {props.ora}
           </Testo>
+        </>
+      );
+      const etichetta = `${props.titolo}. ${props.testo}. ${props.ora}`;
+      if (props.onPress) {
+        return (
+          <Toccabile onPress={props.onPress} etichetta={etichetta} style={stili.rigaNotifica}>
+            {contenuto}
+          </Toccabile>
+        );
+      }
+      return (
+        <View style={stili.rigaNotifica} accessible accessibilityLabel={etichetta}>
+          {contenuto}
         </View>
       );
+    }
   }
 }
 

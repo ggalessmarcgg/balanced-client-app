@@ -2,11 +2,13 @@
 // GoTrue vengono classificati in src/core/accesso/errori.ts: le schermate mostrano messaggi dedicati.
 import { ATTESA_REINVIO_SECONDI, URL_CONFERMA_EMAIL, URL_RECUPERO_PASSWORD } from '@/core/accesso/costanti';
 import { classificaErrore, normalizzaEmail, type TipoErroreAccesso } from '@/core/accesso/errori';
+import { svuotaAccountInMemoria } from '@/servizi/account';
 import { svuotaAutoriInMemoria } from '@/servizi/diario';
 import { svuotaMemoriaDiario } from '@/servizi/memoriaDiario';
 import { svuotaArchivioFile } from '@/servizi/archivioFile';
 import { svuotaContenutiInMemoria } from '@/servizi/contenuti';
 import { svuotaRevisioni } from '@/servizi/memoriaRevisioni';
+import { svuotaNotifiche } from '@/servizi/notifiche';
 import { svuotaCacheStato, svuotaStatoInMemoria } from '@/servizi/statoCliente';
 import { supabase } from '@/servizi/supabase';
 
@@ -65,6 +67,8 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   svuotaMemoriaDiario();
   await svuotaRevisioni();
   svuotaContenutiInMemoria();
+  svuotaAccountInMemoria();
+  await svuotaNotifiche();
   await svuotaArchivioFile();
   return { revocaGlobale };
 }

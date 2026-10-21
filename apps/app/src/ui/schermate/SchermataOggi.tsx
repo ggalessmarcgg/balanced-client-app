@@ -66,6 +66,8 @@ export type SchermataOggiProps = {
   onApriStorico?: () => void;
   onNotifiche?: () => void;
   onMenu?: () => void;
+  /** Pallino rosso sulla campanella (notifiche non ancora viste). */
+  notificheNuove?: boolean;
   /** Pasto aperto all'avvio (pagina di sviluppo). */
   pastoApertoIniziale?: Pasto | null;
   /** Nota del Commento a fuoco all'avvio (pagina di sviluppo: verifica della tastiera). */
@@ -104,6 +106,7 @@ export function SchermataOggi({
   onApriStorico,
   onNotifiche,
   onMenu,
+  notificheNuove = false,
   pastoApertoIniziale = null,
   commentoAFuoco = false,
   notifica,
@@ -169,7 +172,7 @@ export function SchermataOggi({
         </>
       }
     >
-      <BarraSuperiore onNotifiche={onNotifiche} onAzione={onMenu} />
+      <BarraSuperiore notifiche={notificheNuove ? 'conNuove' : 'campanella'} onNotifiche={onNotifiche} onAzione={onMenu} />
       <View style={stili.contenuto}>
         {condiviso ? (
           <CardDiario>

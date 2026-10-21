@@ -21,6 +21,8 @@ export type SchermataRevisioniProps = {
   onNavigazione?: (voce: VoceNavigazione) => void;
   onNotifiche?: () => void;
   onMenu?: () => void;
+  /** Pallino rosso sulla campanella (notifiche non ancora viste). */
+  notificheNuove?: boolean;
   sovrapposti?: ReactNode;
 };
 
@@ -29,7 +31,7 @@ export type SchermataRevisioniProps = {
  * margini 20, gap 24), poi il contenitore con spazio 12: card attive (avanzamento, In elaborazione, Nuove) ed elenco
  * delle revisioni passate. Barra di navigazione con Revisioni attiva.
  */
-export function SchermataRevisioni({ attive, nuove, passate, nuovaPresente, onApri, onNavigazione, onNotifiche, onMenu, sovrapposti }: SchermataRevisioniProps) {
+export function SchermataRevisioni({ attive, nuove, passate, nuovaPresente, onApri, onNavigazione, onNotifiche, onMenu, notificheNuove = false, sovrapposti }: SchermataRevisioniProps) {
   return (
     <Pagina
       sovrapposti={
@@ -39,7 +41,7 @@ export function SchermataRevisioni({ attive, nuove, passate, nuovaPresente, onAp
         </>
       }
     >
-      <BarraSuperiore onNotifiche={onNotifiche} onAzione={onMenu} />
+      <BarraSuperiore notifiche={notificheNuove ? 'conNuove' : 'campanella'} onNotifiche={onNotifiche} onAzione={onMenu} />
       <View style={stili.contenuto}>
         <Testo stile="accentoSerif" accessibilityRole="header">
           Revisioni

@@ -7,6 +7,7 @@ import { dataValida } from '@/core/diario/data';
 import { giorniSettimana } from '@/core/diario/settimana';
 import type { Profilo } from '@/core/stato/stato';
 import { useNuovaRevisione } from '@/servizi/memoriaRevisioni';
+import { aggiornaNotifiche, useNotificheNuove } from '@/servizi/notifiche';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useDiario } from '@/servizi/useDiario';
@@ -34,11 +35,17 @@ function Oggi({ profilo }: { profilo: Profilo }) {
   const pannello = usePannelloGiornata(profilo.clientId, profilo.nutrizionista, diario.mostraNotifica);
   // Pallino "Nuova revisione" sulla barra: una lettura leggera dello stato delle revisioni all'avvio dell'app
   // dell'abbonato, a ogni ritorno in primo piano (e dopo la condivisione di un diario, in useDiario); nessun testo.
+  // Lo stesso per il pallino sulla campanella (notifiche degli ultimi 7 giorni, filtrate per utente).
   const revisioneNuova = useNuovaRevisione();
+  const notificheNuove = useNotificheNuove();
   useEffect(() => {
     aggiornaStatoRevisioni(profilo.clientId);
+    aggiornaNotifiche();
     const sub = AppState.addEventListener('change', (stato: AppStateStatus) => {
-      if (stato === 'active') aggiornaStatoRevisioni(profilo.clientId);
+      if (stato === 'active') {
+        aggiornaStatoRevisioni(profilo.clientId);
+        aggiornaNotifiche();
+      }
     });
     return () => sub.remove();
   }, [profilo.clientId]);
@@ -54,6 +61,7 @@ function Oggi({ profilo }: { profilo: Profilo }) {
 
   const onRacconta = useCallback(() => router.push('/racconta'), [router]);
   const onMenu = useCallback(() => router.push('/menu'), [router]);
+  const onNotifiche = useCallback(() => router.push('/notifiche'), [router]);
   const onApriStorico = useCallback(() => router.push('/storico'), [router]);
   const { riprova: riprovaBozza } = diario;
   const { salvaModifiche } = pannello;
@@ -95,6 +103,8 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       onAggiorna={diario.aggiorna}
       onCondividi={diario.condividi}
       revisioneNuova={revisioneNuova}
+      notificheNuove={notificheNuove}
+      onNotifiche={onNotifiche}
       onMenu={onMenu}
       onApriStorico={onApriStorico}
       notifica={notifica}

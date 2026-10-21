@@ -2,6 +2,7 @@
 // clients_user_id_idx) con le tabelle collegate incorporate tramite le chiavi esterne, elencando solo le
 // colonne necessarie. Le policy RLS si applicano a ogni tabella incorporata; su consultation_leads_v2 il
 // ruolo authenticated ha il grant solo su alcune colonne (mai nutritionist_id: si prende da clients).
+import { COLONNE_ACCOUNT } from '../account/account.ts';
 import type { AppuntamentoRiga, ClienteRiga, DatiStato, LeadSlotRiga, NutrizionistaRiga } from './stato.ts';
 
 export const TABELLA_STATO = 'clients';
@@ -13,6 +14,8 @@ export const SELEZIONE_STATO = [
   'gender',
   'nutritionist_id',
   'consultation_lead_v2_id',
+  // Account (step 11): email, giornate condivise, promemoria, presenza del cliente Stripe (mai la chiave).
+  ...COLONNE_ACCOUNT,
   // clients.consultation_lead_v2_id → consultation_leads_v2.id (ci sono due FK tra le due tabelle: serve il nome)
   'consultation_leads_v2!clients_consultation_lead_v2_id_fkey(desired_date,desired_start_time)',
   // appointments.client_id → clients.id: incorporare per client_id esclude le righe v1 (client_id nullo)

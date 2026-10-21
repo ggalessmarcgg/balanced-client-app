@@ -359,8 +359,24 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Competenze del profilo: chiavi del matching in `nutritionist_profiles.competences`, etichette italiane in
   `src/core/nutrizionista/competenze.ts` copiate da `BADGE_LABEL` del funnel (`~/Desktop/onboarding-v2/src/ui/pages/NutritionistPage.tsx`);
   il test `competenze.test.ts` segnala la divergenza quando il repo del funnel è sul disco.
-- Pagina di sviluppo: `/sviluppo/stati?stato=menu-1|menu-3-abbonato|menu-3-prenotato|menu-3.1-ferie|menu-4-appuntamenti|menu-6-grafici|menu-6.1-tabelle|menu-5-contenuti|menu-5.1-contenuto|…`;
-  esiti dei confronti in `~/Desktop/censimenti-app/step11-confronti/lotto1/` e `lotto2/`.
+- Lotto 3 (Account, Notifiche): `src/core/account/account.ts` (iniziali, dati dell'Account dalla riga `clients`
+  già letta allo stato: `email, total_submissions, diary_reminder_enabled, diary_reminder_weekend_enabled,
+  stripe_customer_id` aggiunte a `SELEZIONE_STATO`; cascata dei promemoria; card dell'abbonamento dalla risposta
+  della edge function `get-client-subscription`; testi) e `src/core/notifiche/notifiche.ts` (lettura di
+  `client_notifications` per `user_id`, ultimi 7 giorni, limite 50, colonne esplicite, promemoria esclusi nel
+  filtro `not.in`; titolo e testo composti dall'app per tipo, `title`/`body` solo come riserva; destinazioni:
+  commento → pannello della giornata, revisione inviata → lettura, sbloccata → Revisioni, ferie → La tua
+  nutrizionista). Servizi `account.ts` (function una volta l'ora in memoria; `scriviPromemoria` = una modifica
+  su `clients` per id, solo le due colonne; privacy e termini con `Linking`), `notifiche.ts` (memoria +
+  copia su file, `aggiornaNotifiche` all'avvio e al rientro per il pallino, `segnaTutteViste` all'apertura
+  dell'elenco, `segnaCliccataNotifica` al tocco), hook `useNotifiche.ts`; schermate `SchermataAccount`,
+  `SchermataNotifiche`, pannello `src/ui/account/PannelloEliminaAccount.tsx`; rotte `app/(abbonato)/account.tsx`
+  (con la barra solo per l'abbonato; dagli stati H e K senza) e `app/notifiche.tsx`. L'eliminazione dell'account
+  è solo il percorso di interfaccia (avviso e conferma): nessun sistema la esegue (censimento §7), l'azione
+  finale mostra la Notifica breve "disponibile a breve". Il browser interno per privacy e termini
+  (`expo-web-browser`) è una dipendenza nuova in attesa di approvazione: oggi `Linking.openURL`.
+- Pagina di sviluppo: `/sviluppo/stati?stato=menu-1|menu-3-abbonato|menu-3-prenotato|menu-3.1-ferie|menu-4-appuntamenti|menu-6-grafici|menu-6.1-tabelle|menu-5-contenuti|menu-5.1-contenuto|account-1|account-3-avviso|account-4-conferma|menu-2-notifiche|…`;
+  esiti dei confronti in `~/Desktop/censimenti-app/step11-confronti/lotto1/`, `lotto2/` e `lotto3/`.
 
 ## Note su Xcode 27 / Device Hub
 

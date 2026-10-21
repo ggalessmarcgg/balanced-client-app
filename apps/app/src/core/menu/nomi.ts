@@ -7,6 +7,10 @@ export const SCHERMATE_MENU = {
   pesoEMisure: 'menu · peso e misure',
   contenuti: 'menu · contenuti',
   contenuto: 'menu · contenuto',
+  account: 'account',
+  eliminaAvviso: 'account · elimina · avviso',
+  eliminaConferma: 'account · elimina · conferma',
+  notifiche: 'notifiche',
 } as const;
 
 export const AZIONI_MENU = {
@@ -20,4 +24,11 @@ export const AZIONI_MENU = {
   vistaGrafico: 'peso e misure · vista grafico',
   vistaTabella: 'peso e misure · vista tabella',
   apriContenuto: 'contenuti · apri',
+  promemoriaDiario: 'account · promemoria del diario',
+  promemoriaWeekend: 'account · promemoria nel weekend',
+  apriPrivacy: 'account · informativa privacy',
+  apriTermini: 'account · termini del servizio',
+  eliminaAccount: 'account · elimina account',
+  apriNotifiche: 'notifiche · apri',
+  apriNotifica: 'notifiche · tocca',
 } as const;

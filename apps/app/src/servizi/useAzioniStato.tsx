@@ -6,6 +6,7 @@ import { inviaModificheInAttesa } from '@/servizi/attesa';
 import { copiaContattoSupporto, TESTO_COPIATO, type ContattoCopiato } from '@/servizi/contatti';
 import { Dialogo } from '@/ui/Dialogo';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
+import { INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
 
 export const TESTI_USCITA = {
   titolo: 'Hai modifiche non ancora salvate',
@@ -19,10 +20,11 @@ export const TESTI_USCITA = {
  * restano chiede conferma con il Dialogo), copia dei contatti del supporto (con Notifica breve di conferma) e Account.
  * `sovrapposti` va passato alla schermata: contiene dialogo e notifica.
  */
-export function useAzioniStato(): {
+export function useAzioniStato({ sopraLaBarra = false }: { sopraLaBarra?: boolean } = {}): {
   onEsci: () => void;
   onAccount: () => void;
   onNutrizionista: () => void;
+  onNotifiche: () => void;
   onEmailSupporto: () => void;
   onTelefonoSupporto: () => void;
   sovrapposti: ReactNode;
@@ -53,6 +55,7 @@ export function useAzioniStato(): {
   const annullaUscita = useCallback(() => setChiediConferma(false), []);
   const onAccount = useCallback(() => router.push('/account'), [router]);
   const onNutrizionista = useCallback(() => router.push('/nutrizionista'), [router]);
+  const onNotifiche = useCallback(() => router.push('/notifiche'), [router]);
   const copia = useCallback(async (contatto: ContattoCopiato) => {
     setCopiato(null);
     if (await copiaContattoSupporto(contatto)) setCopiato(contatto);
@@ -70,8 +73,8 @@ export function useAzioniStato(): {
         annulla={{ etichetta: TESTI_USCITA.annulla, onPress: annullaUscita }}
         conferma={{ etichetta: TESTI_USCITA.esciComunque, onPress: () => void esegui() }}
       />
-      {copiato ? <NotificaInBasso key={copiato} tipo="conferma" testo={TESTO_COPIATO[copiato]} onScomparsa={nascondi} /> : null}
+      {copiato ? <NotificaInBasso key={copiato} tipo="conferma" testo={TESTO_COPIATO[copiato]} onScomparsa={nascondi} sopra={sopraLaBarra ? INGOMBRO_BARRA_NAVIGAZIONE : 0} /> : null}
     </>
   );
-  return { onEsci, onAccount, onNutrizionista, onEmailSupporto, onTelefonoSupporto, sovrapposti };
+  return { onEsci, onAccount, onNutrizionista, onNotifiche, onEmailSupporto, onTelefonoSupporto, sovrapposti };
 }

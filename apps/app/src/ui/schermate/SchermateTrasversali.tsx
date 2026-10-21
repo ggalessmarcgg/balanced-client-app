@@ -43,10 +43,12 @@ export type StrutturaPagina = {
   barraNavigazione?: VoceNavigazione;
   /** Pallino rosso sulla voce Revisioni (almeno una revisione Nuova). */
   revisioneNuova?: boolean;
+  /** Pallino rosso sulla campanella (notifiche non ancora viste). */
+  notificheNuove?: boolean;
 };
 
-function Struttura({ barraSuperiore = 'soloLogo' }: StrutturaPagina) {
-  return barraSuperiore === 'completa' ? <BarraSuperiore /> : <BarraSuperiore notifiche="nascosta" azione="nascosta" />;
+function Struttura({ barraSuperiore = 'soloLogo', notificheNuove = false }: StrutturaPagina) {
+  return barraSuperiore === 'completa' ? <BarraSuperiore notifiche={notificheNuove ? 'conNuove' : 'campanella'} /> : <BarraSuperiore notifiche="nascosta" azione="nascosta" />;
 }
 
 function barraDi(struttura: StrutturaPagina) {

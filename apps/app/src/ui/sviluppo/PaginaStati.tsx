@@ -13,6 +13,7 @@ import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
 import { SchermataRaccontaSegnaposto, SchermataSegnapostoPrenotazione } from '@/ui/schermate/SchermateSegnaposto';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
+import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
@@ -117,6 +118,19 @@ export const STATI_SVILUPPO = [
   ['menu-5-contenuti', 'Menu · 5 · Contenuti (520:2883)'],
   ['menu-5.1-contenuto', 'Menu · 5.1 · Contenuto (520:3086)'],
   ['menu-5-caricamento', 'Contenuti in caricamento'],
+  ['account-1', 'Account · 1 · Profilo (499:2145)'],
+  ['account-1-senza-abbonamento', 'Account senza abbonamento Stripe leggibile (solo "Stato · Attivo" e il testo di riserva)'],
+  ['account-1-caricamento', 'Account con l\'abbonamento in caricamento'],
+  ['account-1-promemoria-spenti', 'Account con i promemoria spenti (weekend disabilitato)'],
+  ['account-1-senza-barra', 'Account dagli stati H e K: senza barra, senza nutrizionista'],
+  ['account-1-nuove', 'Account con i pallini: notifiche non viste e revisione Nuova'],
+  ['account-3-avviso', 'Account · 3 · Elimina account · avviso (499:2568)'],
+  ['account-4-conferma', 'Account · 4 · Elimina account · conferma (499:2709)'],
+  ['account-elimina-notifica', 'Account dopo "Elimina definitivamente": Notifica breve "disponibile a breve"'],
+  ['menu-2-notifiche', 'Menu · 2 · Notifiche (508:2699)'],
+  ['notifiche-vuote', 'Notifiche senza righe negli ultimi 7 giorni'],
+  ['notifiche-caricamento', 'Notifiche in caricamento'],
+  ['notifiche-errore', 'Notifiche senza connessione (Riprova)'],
   ['uscita-avviso', 'Esci con modifiche non inviate: Dialogo "Hai modifiche non ancora salvate" (Pannello dal basso di 499:2568)'],
   ['barra-animata', 'Barra di navigazione: la voce attiva cambia da sola ogni 2 s (sfondo che scorre, colori in dissolvenza)'],
 ] as const;
@@ -127,8 +141,10 @@ const EMAIL = 'giulia.rossi@email.it';
 const PROFILO: Profilo = {
   clientId: 'finto',
   nome: 'Giulia',
+  nomeCompleto: 'Giulia Rossi',
   genere: 'female',
   nutrizionista: { id: 'finta', nome: 'Dott.ssa Margherita Chiadò', foto: null },
+  account: { email: EMAIL, giornateCondivise: 142, promemoria: { diario: true, weekend: true }, conStripe: true },
 };
 const SLOT = { data: '2026-10-28', ora: '10:00', istante: new Date('2026-10-28T09:00:00.000Z') };
 const APPUNTAMENTO = { ...SLOT, id: 'finto', stato: 'scheduled' as const, linkVideochiamata: null };
@@ -353,6 +369,32 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <Lotto2Sviluppo scenario="contenuto" />;
     case 'menu-5-caricamento':
       return <Lotto2Sviluppo scenario="contenutiCaricamento" />;
+    case 'account-1':
+      return <AccountSviluppo scenario="account" />;
+    case 'account-1-senza-abbonamento':
+      return <AccountSviluppo scenario="accountSenzaAbbonamento" />;
+    case 'account-1-caricamento':
+      return <AccountSviluppo scenario="accountCaricamento" />;
+    case 'account-1-promemoria-spenti':
+      return <AccountSviluppo scenario="accountPromemoriaSpenti" />;
+    case 'account-1-senza-barra':
+      return <AccountSviluppo scenario="accountSenzaBarra" />;
+    case 'account-1-nuove':
+      return <AccountSviluppo scenario="accountNuove" />;
+    case 'account-3-avviso':
+      return <AccountSviluppo scenario="eliminaAvviso" />;
+    case 'account-4-conferma':
+      return <AccountSviluppo scenario="eliminaConferma" />;
+    case 'account-elimina-notifica':
+      return <AccountSviluppo scenario="eliminaNotifica" />;
+    case 'menu-2-notifiche':
+      return <AccountSviluppo scenario="notifiche" />;
+    case 'notifiche-vuote':
+      return <AccountSviluppo scenario="notificheVuote" />;
+    case 'notifiche-caricamento':
+      return <AccountSviluppo scenario="notificheCaricamento" />;
+    case 'notifiche-errore':
+      return <AccountSviluppo scenario="notificheErrore" />;
     case 'uscita-avviso':
       return (
         <SchermataPercorsoNonAttivo

@@ -1,6 +1,7 @@
 // Smistamento per stato del cliente (mappa dell'app, stati A–L). Funzione pura: riceve le righe lette dal
 // database e l'istante corrente, restituisce lo stato da mostrare. Regole dal censimento dello step 3
 // (~/Desktop/censimenti-app/step3-censimento-accesso.md, §3), identiche alla web app dove la web app decide.
+import { datiAccount, type DatiAccount, type RigaAccount } from '../account/account.ts';
 import { istanteRoma } from './orarioRoma.ts';
 
 /** Valori di clients.status (CHECK clients_status_check). */
@@ -8,7 +9,7 @@ export type StatoClienteDb = 'not_confirmed' | 'booked' | 'subscribed' | 'churne
 /** Valori di appointments.status (CHECK appointments_status_check). */
 export type StatoAppuntamentoDb = 'scheduled' | 'completed' | 'cancelled' | 'no_show';
 
-/** Riga di clients letta per user_id = auth.uid(), con le sole colonne che servono allo smistamento. */
+/** Riga di clients letta per user_id = auth.uid(): le colonne dello smistamento più quelle dell'Account (step 11). */
 export type ClienteRiga = {
   id: string;
   status: string;
@@ -16,7 +17,7 @@ export type ClienteRiga = {
   gender: string | null;
   nutritionist_id: string | null;
   consultation_lead_v2_id: string | null;
-};
+} & Partial<RigaAccount>;
 /** Slot desiderato in consultation_leads_v2: solo colonne concesse al ruolo authenticated (mai nutritionist_id). */
 export type LeadSlotRiga = { desired_date: string | null; desired_start_time: string | null };
 /** Riga di appointments, già filtrata per client_id. */
@@ -33,7 +34,7 @@ export type DatiStato = {
 
 export type Genere = 'female' | 'male' | 'other';
 export type Nutrizionista = { id: string; nome: string; foto: string | null };
-export type Profilo = { clientId: string; nome: string; genere: Genere | null; nutrizionista: Nutrizionista | null };
+export type Profilo = { clientId: string; nome: string; nomeCompleto: string; genere: Genere | null; nutrizionista: Nutrizionista | null; account: DatiAccount };
 export type Slot = { data: string; ora: string; istante: Date };
 export type Appuntamento = Slot & { id: string; stato: StatoAppuntamentoDb; linkVideochiamata: string | null };
 
@@ -90,7 +91,9 @@ function profiloDi(cliente: ClienteRiga, nutrizionista: NutrizionistaRiga | null
   return {
     clientId: cliente.id,
     nome: primoNome(cliente.full_name),
+    nomeCompleto: (cliente.full_name ?? '').trim(),
     genere: genere(cliente.gender),
+    account: datiAccount(cliente),
     nutrizionista:
       nutrizionista && nutrizionista.id === cliente.nutritionist_id
         ? { id: nutrizionista.id, nome: nomeNutrizionista(nutrizionista), foto: nutrizionista.app_square_photo_url }

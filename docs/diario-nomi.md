@@ -157,3 +157,36 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 - Contenuti (lotto 2): una lettura di `library_contents` (`id, order_index, step_name, category, reading_time,
   content_body`, 16 righe, 41 kB) tenuta in memoria e su file per un giorno; la lettura di un contenuto non fa
   richieste.
+
+## Account e Notifiche (step 11, lotto 3)
+
+### Schermate
+
+| Nome | Figma | Cosa mostra |
+|---|---|---|
+| `account` | Account · 1 (`499:2145`) | iniziali, nome ed email (`clients.full_name`, `clients.email`); "Giornate condivise" (`clients.total_submissions`, contatore del trigger: può differire di poco dai diari visibili) e "Revisioni ricevute" (revisioni `sent`, `opened`, `read` già in memoria); Card nutrizionista; Notifiche (interruttori "Promemoria del diario" e "Anche nel weekend", il secondo disabilitato con il primo spento); Abbonamento (Piano · Stato · Prossimo rinnovo dalla edge function `get-client-subscription`, altrimenti solo "Stato · Attivo" e "Per informazioni sul tuo abbonamento contatta il supporto."); Supporto (email e numero, copia); Privacy e dati (Informativa privacy, Termini del servizio, Elimina account); "Esci" e la versione. Scheda della barra per l'abbonato (rotta `/account`); dagli stati H e K la stessa schermata senza barra, con la X |
+| `account · elimina · avviso` | Account · 3 (`499:2568`) | Pannello dal basso "Vuoi eliminare il tuo account?" con il Messaggio info ("non interrompe l'abbonamento"), "Indietro" e "Continua" |
+| `account · elimina · conferma` | Account · 4 (`499:2709`) | "Conferma con la tua password", Campo password, "Indietro" ed "Elimina definitivamente". Nessun sistema esegue l'eliminazione: l'azione finale chiude il pannello e mostra la Notifica breve "L'eliminazione dell'account sarà disponibile a breve. Nel frattempo puoi chiederla al supporto." |
+| `notifiche` | Menu · 2 (`508:2699`) | dalla campanella: "Ultimi 7 giorni" e le righe Notifica (titolo, testo, ora "Oggi, 09:12" / "Ieri, 18:40" / "Lun, 11:02" in ora italiana), dalla più recente. Testi composti dall'app per tipo: `nutritionist_comment` "Nuovo commento sul tuo diario · <Nome> ha commentato la tua giornata di <giorno>."; `review_sent` "La tua revisione è pronta · Revisione N: scopri cosa è andato bene questa settimana."; `review_unlocked` "Revisione sbloccata · Hai condiviso N diari: <Nome> sta preparando la revisione."; `holiday_replacement` "Sostituzione per ferie · Fino al <g mese> ti segue la <sostituta>."; `food_suggestion_approved` "Suggerimento approvato" + corpo; `goal_comment` "Nuovo commento sul tuo obiettivo" + corpo; altri tipi `title`/`body` salvati. I promemoria (`diary_reminder`, `weight_update`, `measurement_update`) non compaiono. Rotta `/notifiche`. Pallino sulla campanella quando c'è almeno una riga dell'elenco non vista |
+
+### Azioni
+
+| Nome | Dove | Effetto sui dati |
+|---|---|---|
+| `account · promemoria del diario` / `account · promemoria nel weekend` | interruttori della card Notifiche | una modifica su `clients` per `id` con le sole colonne `diary_reminder_enabled` e/o `diary_reminder_weekend_enabled` (spegnere il diario spegne anche il weekend); in memoria subito, ripristino e Notifica breve se la scrittura fallisce |
+| `account · informativa privacy` / `account · termini del servizio` | righe di Privacy e dati | aprono `https://www.joinbalanced.it/privacy-policy` e `/termini-e-condizioni` (browser del sistema; browser interno in attesa di approvazione); nessuna scrittura |
+| `account · elimina account` | riga "Elimina account" | solo il percorso di interfaccia (avviso → conferma → Notifica breve); nessuna scrittura |
+| `notifiche · apri` | campanella | apre l'elenco; all'apertura una modifica `viewed_at = now()` su `client_notifications` dove `user_id = auth.uid()` e `viewed_at is null` (come la web app) |
+| `notifiche · tocca` | riga con destinazione | `clicked_at = now()` su quella riga (per `id`); apre il pannello della giornata (`/abbonato?giornata=`, con una lettura di `daily_submissions` per `id` se la data non è in memoria), la lettura della revisione (`/revisione/<id>`), Revisioni o La tua nutrizionista |
+
+### Letture
+
+- Account: nessuna lettura in più oltre allo stato (le cinque colonne dell'Account sono nella stessa riga `clients`
+  letta all'avvio) e una chiamata alla edge function `get-client-subscription` (sessione dell'utente, Stripe lato
+  server) al massimo una volta l'ora, solo se `stripe_customer_id` è valorizzato; "Revisioni ricevute" dalle righe
+  delle revisioni già in memoria (lettura leggera dello stato se mancano).
+- Notifiche: `client_notifications` (`id, notification_type, reference_id, reference_table, title, body, viewed_at,
+  clicked_at, created_at`) dove `user_id = auth.uid()`, `created_at >= now − 7 giorni`,
+  `notification_type not in (diary_reminder, weight_update, measurement_update)`, dalla più recente, al massimo 50
+  (indice `idx_client_notifications_user_viewed`); all'avvio dell'app dell'abbonato, al rientro in primo piano e
+  all'apertura dell'elenco. Copia su file nella cache per ripartire senza rete; tutto si cancella all'uscita.

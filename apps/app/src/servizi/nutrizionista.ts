@@ -37,6 +37,18 @@ function datiDa(riga: RigaClienteConProfilo | null, sostituzioni: RigaSostituzio
   return { profilo, ferie: ferieInCorso(sostituzioni, profilo?.nome ?? '') };
 }
 
+/** Ferie in corso dall'ultima copia su file (per i testi delle notifiche): nessuna richiesta. */
+export async function ferieInCache(clientId: string, adesso: Date = new Date()): Promise<Ferie | null> {
+  const cache = await cacheDi(clientId);
+  if (!cache) return null;
+  const oggi = dataOraRoma(adesso).data;
+  const inCorso = cache.sostituzioni.filter((s) => {
+    const f = s.nutritionist_holidays;
+    return f && f.start_date <= oggi && f.end_date >= oggi;
+  });
+  return datiDa(cache.riga, inCorso).ferie;
+}
+
 /** Lettura della schermata: profilo dalla cache se ha meno di un giorno, ferie sempre dal server; senza rete l'ultima copia. */
 export async function leggiNutrizionista(clientId: string, adesso: Date = new Date()): Promise<EsitoNutrizionista> {
   const { data: sessione } = await supabase.auth.getSession();

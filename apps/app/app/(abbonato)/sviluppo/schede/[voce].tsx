@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 import { PREFISSO_SCHEDE_SVILUPPO, type VoceNavigazione } from '@/core/navigazione/voci';
 import { SchermataPianoSegnaposto } from '@/ui/schermate/SchermateSegnaposto';
-import { SchermataCaricamento } from '@/ui/schermate/SchermateTrasversali';
+import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
 
@@ -31,7 +31,7 @@ export default function SchedeSviluppo() {
     case 'revisioni':
       return <RevisioniSviluppo scenario="inCorso" />;
     case 'account':
-      return <SchermataCaricamento barraSuperiore="completa" barraNavigazione="account" />;
+      return <AccountSviluppo scenario="account" />;
     default:
       return <Redirect href="/sviluppo/stati" />;
   }
