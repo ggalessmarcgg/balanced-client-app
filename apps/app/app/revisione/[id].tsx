@@ -8,7 +8,7 @@ import { SchermataLetturaRevisione } from '@/ui/schermate/SchermataLetturaRevisi
 
 /**
  * Lettura di una revisione per id (step 7): dalla card Nuova, dall'elenco delle passate o dalla rotta diretta
- * `/revisioni/<id>` (notifica di invio, step 6). Se la revisione non è più Nuova si apre comunque; se non esiste o
+ * `/revisione/<id>` (notifica di invio, step 6). Fuori dal gruppo delle schede: senza barra di navigazione. Se la revisione non è più Nuova si apre comunque; se non esiste o
  * non è stata inviata si torna all'elenco.
  */
 export default function RottaLetturaRevisione() {

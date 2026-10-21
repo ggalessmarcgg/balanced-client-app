@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Reanimated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { useSovrappostiNelPortale } from '@/ui/schermate/Sovrapposti';
 import { colori } from '@/ui/theme';
 import { FornitoreCampi, useScorrimentoConTastiera } from '@/ui/tastiera';
 
@@ -14,7 +15,7 @@ export type PaginaProps = {
   sfondo?: string;
   /** Il contenuto scorre se non entra (predefinito); false per schermate fisse. */
   scorrevole?: boolean;
-  /** Elementi sopra tutto (barra di navigazione fluttuante, pannello dal basso, notifica breve): posizionati da chi li passa. */
+  /** Elementi sopra tutto (pannello dal basso, notifica breve): posizionati da chi li passa. Nel gruppo dell'abbonato vanno al portale del layout, sopra la barra persistente. */
   sovrapposti?: ReactNode;
   /** Solo per le pagine di sviluppo: all'avvio scorre fino in fondo (screenshot del contenuto sotto la piega). */
   scorriInFondoAllAvvio?: boolean;
@@ -32,6 +33,7 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
   // Il piede sta sotto lo scorrimento: la tastiera copre lo scorrimento solo per la parte che supera piede e area sicura.
   const [altezzaPiede, setAltezzaPiede] = useState(0);
   const { riferimento: scorrimento, onScroll: segnaPosizione, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(altezzaPiede + insets.bottom);
+  const nelPortale = useSovrappostiNelPortale(sovrapposti);
   return (
     <View style={[stili.pagina, { backgroundColor: sfondo }]}>
       <View style={[stili.pagina, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
@@ -61,7 +63,7 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
         )}
         {piede && <View onLayout={(e) => setAltezzaPiede(e.nativeEvent.layout.height)}>{piede}</View>}
       </View>
-      {sovrapposti}
+      {nelPortale ? null : sovrapposti}
     </View>
   );
 }

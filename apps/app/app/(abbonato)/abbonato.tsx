@@ -11,12 +11,12 @@ import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useDiario } from '@/servizi/useDiario';
 import { usePannelloGiornata } from '@/servizi/usePannelloGiornata';
-import type { VoceNavigazione } from '@/ui/BarraNavigazione';
 import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 
 /**
- * Stato J: app dell'abbonato, pagina Oggi (step 5). Revisioni dallo step 7; Piano, campanella e menu restano segnaposti.
+ * Stato J: app dell'abbonato, pagina Oggi (step 5). La barra di navigazione (e il passaggio tra le schede) è del layout
+ * del gruppo app/(abbonato); Piano, campanella e menu restano segnaposti.
  * `/abbonato?giornata=YYYY-MM-DD` apre direttamente il pannello di quella giornata (per la push del commento, step 6).
  */
 export default function RottaAbbonato() {
@@ -52,15 +52,6 @@ function Oggi({ profilo }: { profilo: Profilo }) {
     apriGiornata(giornataRichiesta);
   }, [diario.fase.tipo, giornataRichiesta, apriGiornata]);
 
-  const onNavigazione = useCallback(
-    (voce: VoceNavigazione) => {
-      // Account è un segnaposto con "Esci"; Piano arriva con uno step successivo. Tra le voci della barra si passa
-      // senza impilare le pagine.
-      if (voce === 'account') router.push('/account');
-      if (voce === 'revisioni') router.replace('/revisioni');
-    },
-    [router],
-  );
   const onRacconta = useCallback(() => router.push('/racconta'), [router]);
   const onApriStorico = useCallback(() => router.push('/storico'), [router]);
   const { riprova: riprovaBozza } = diario;
@@ -102,7 +93,6 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       onVaiA={diario.vaiA}
       onAggiorna={diario.aggiorna}
       onCondividi={diario.condividi}
-      onNavigazione={onNavigazione}
       revisioneNuova={revisioneNuova}
       onApriStorico={onApriStorico}
       notifica={notifica}

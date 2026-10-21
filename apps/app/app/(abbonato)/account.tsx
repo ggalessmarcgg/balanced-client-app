@@ -5,18 +5,21 @@ import { useAzioniStato } from '@/servizi/useAzioniStato';
 import { Intestazione } from '@/ui/Intestazione';
 import { Pulsante } from '@/ui/Pulsante';
 import { Pagina } from '@/ui/schermate/Pagina';
+import { INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
+import { useBarraPersistente } from '@/ui/schermate/Sovrapposti';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio } from '@/ui/theme';
 
-/** Segnaposto della pagina Account (schermate vere allo step 4): raggiunta dal pulsante "Account" degli stati. */
+/** Segnaposto della pagina Account (schermate vere allo step 4): scheda della barra per l'abbonato, pulsante "Account" degli stati per gli altri. */
 export default function RottaAccount() {
   const router = useRouter();
   const { onEsci, sovrapposti } = useAzioniStato();
+  const conBarra = useBarraPersistente();
   return (
     <Pagina
       sovrapposti={sovrapposti}
       piede={
-        <View style={stili.comandi}>
+        <View style={[stili.comandi, conBarra && stili.sopraLaBarra]}>
           <Pulsante etichetta="Esci" livello="terziario" onPress={onEsci} style={stili.centrato} />
         </View>
       }
@@ -35,4 +38,5 @@ const stili = StyleSheet.create({
   contenuto: { flex: 1, paddingTop: spazio[12], paddingHorizontal: margine.pagina, gap: spazio[24] },
   centrato: { alignSelf: 'center' },
   comandi: { paddingTop: spazio[12], paddingBottom: spazio[8], paddingHorizontal: margine.pagina, alignItems: 'center' },
+  sopraLaBarra: { paddingBottom: spazio[8] + INGOMBRO_BARRA_NAVIGAZIONE },
 });

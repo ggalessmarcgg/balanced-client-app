@@ -6,6 +6,7 @@ import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import { Intestazione } from '@/ui/Intestazione';
 import { Pulsante } from '@/ui/Pulsante';
 import { Pagina } from '@/ui/schermate/Pagina';
+import { BarraNavigazioneFissa, INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
 import { TitoloAccento } from '@/ui/schermate/TitoloAccento';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio } from '@/ui/theme';
@@ -82,8 +83,29 @@ export function SchermataRaccontaSegnaposto({ onIndietro }: SchermataRaccontaSeg
   );
 }
 
+/** Segnaposto della scheda Piano (sezione Figma 4 · Piano, step successivo): titolo in Accento serif e testo, con la barra di navigazione. */
+export function SchermataPianoSegnaposto() {
+  return (
+    <Pagina sovrapposti={<BarraNavigazioneFissa attiva="piano" />}>
+      <BarraSuperiore />
+      <View style={stili.contenutoScheda}>
+        <Testo stile="accentoSerif" accessibilityRole="header">
+          Piano
+        </Testo>
+        <Testo stile="body" colore={colori.testo.corpoAttenuato}>
+          Qui troverai il tuo piano alimentare. Arriva con uno step successivo.
+        </Testo>
+        <Testo stile="caption" colore={colori.testo.secondario}>
+          Segnaposto · Piano · sezione Figma 4
+        </Testo>
+      </View>
+    </Pagina>
+  );
+}
+
 const stili = StyleSheet.create({
   contenuto: { flex: 1, paddingTop: spazio[16], paddingHorizontal: margine.pagina, gap: spazio[24] },
+  contenutoScheda: { flex: 1, paddingTop: spazio[16], paddingHorizontal: margine.pagina, paddingBottom: INGOMBRO_BARRA_NAVIGAZIONE + spazio[16], gap: spazio[24] },
   contenutoIntestazione: { flex: 1, paddingTop: spazio[12], paddingHorizontal: margine.pagina, gap: spazio[24] },
   saluto: { gap: spazio[8] },
   centrato: { alignSelf: 'center' },

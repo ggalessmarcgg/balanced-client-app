@@ -37,12 +37,11 @@ export default function RootLayout() {
         <Stack.Screen name="stato/consulenza-non-svolta" />
         <Stack.Screen name="stato/percorso-concluso" />
         <Stack.Screen name="stato/account-non-collegato" />
-        <Stack.Screen name="abbonato" />
-        <Stack.Screen name="revisioni/index" />
-        <Stack.Screen name="revisioni/[id]" options={{ animation: 'default' }} />
+        {/* Schede dell'abbonato (Oggi, Piano, Revisioni, Account): una sola barra di navigazione persistente nel layout del gruppo. */}
+        <Stack.Screen name="(abbonato)" />
+        <Stack.Screen name="revisione/[id]" options={{ animation: 'default' }} />
         <Stack.Screen name="racconta" options={{ animation: 'default' }} />
         <Stack.Screen name="storico" options={{ animation: 'default' }} />
-        <Stack.Screen name="account" options={{ animation: 'default' }} />
         {/* Rotte di sviluppo: escluse dalle versioni per i clienti. */}
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="sviluppo/componenti" />

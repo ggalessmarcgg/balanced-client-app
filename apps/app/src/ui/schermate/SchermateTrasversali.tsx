@@ -1,3 +1,4 @@
+import { useContext } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,13 +7,20 @@ import { BarraNavigazione, type VoceNavigazione } from '@/ui/BarraNavigazione';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import { ErroreCaricamento } from '@/ui/ErroreCaricamento';
 import { Pagina } from '@/ui/schermate/Pagina';
+import { BarraPersistenteContesto } from '@/ui/schermate/Sovrapposti';
 import { Segnaposto } from '@/ui/Segnaposto';
 import { Testo } from '@/ui/Testo';
 import { margine, spazio } from '@/ui/theme';
 
-/** Barra di navigazione fissa al viewport: 8 sopra l'area sicura inferiore, margini laterali 20 (Figma 493:368). */
-export function BarraNavigazioneFissa({ attiva, revisioneNuova = false, onSeleziona }: { attiva: VoceNavigazione; revisioneNuova?: boolean; onSeleziona?: (voce: VoceNavigazione) => void }) {
+/**
+ * Barra di navigazione fissa al viewport: 8 sopra l'area sicura inferiore, margini laterali 20 (Figma 493:368).
+ * Nel gruppo dell'abbonato la barra è una sola e la rende il layout (`persistente`): quelle passate dalle schermate
+ * non rendono nulla, così la stessa barra resta montata e anima il passaggio tra le voci.
+ */
+export function BarraNavigazioneFissa({ attiva, revisioneNuova = false, onSeleziona, persistente = false }: { attiva: VoceNavigazione; revisioneNuova?: boolean; onSeleziona?: (voce: VoceNavigazione) => void; persistente?: boolean }) {
   const insets = useSafeAreaInsets();
+  const nelGruppo = useContext(BarraPersistenteContesto) !== null;
+  if (nelGruppo && !persistente) return null;
   return (
     <View style={[stili.barraFissa, { bottom: insets.bottom + spazio[8] }]} pointerEvents="box-none">
       <BarraNavigazione attiva={attiva} revisioneNuova={revisioneNuova} onSeleziona={onSeleziona} />

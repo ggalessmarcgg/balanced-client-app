@@ -189,6 +189,16 @@ comuni dei campi in `src/ui/tastiera.ts`.
   aggiungeranno come altri workspace quando serviranno.
 - `apps/app/app/` → rotte di Expo Router (ogni file è una schermata,
   `_layout.tsx` definisce i navigator). Niente logica o componenti qui.
+  Le schede dell'abbonato (Oggi `/abbonato`, Piano `/piano`, Revisioni
+  `/revisioni`, Account `/account`) stanno nel gruppo `app/(abbonato)/`, il cui
+  layout rende **una sola barra di navigazione persistente** (`Slot` sotto, barra
+  sopra, portale degli elementi sovrapposti ancora sopra:
+  `src/ui/schermate/Sovrapposti.tsx`); le schermate passano tra le voci con
+  `router.replace` e la barra anima l'evidenza. Le `BarraNavigazioneFissa` delle
+  schermate rendono nulla dentro il gruppo (servono alla pagina di sviluppo). Voce
+  ↔ percorso in `src/core/navigazione/voci.ts`. Le pagine senza barra (lettura
+  della revisione `/revisione/<id>`, storico, racconta) stanno fuori dal gruppo.
+  Verifica dell'animazione senza accesso: `/sviluppo/schede/oggi?ciclo=1`.
 - `apps/app/src/ui/` → componenti React Native di presentazione. Possono
   importare da `core/`.
 - `apps/app/src/core/` → TypeScript puro: tipi, validazioni, macchine a
@@ -312,7 +322,7 @@ npx expo install --fix                   # riallinea versioni alla SDK
   scritture, `autore.ts`, `nomi.ts` → `docs/diario-nomi.md`); servizi `src/servizi/revisioni.ts`,
   `memoriaRevisioni.ts` (memoria di sessione + cache nel portachiavi), hook `useRevisioni.ts` e
   `useLetturaRevisione.ts`; componenti in `src/ui/revisioni/`, schermate `SchermataRevisioni.tsx` e
-  `SchermataLetturaRevisione.tsx`, rotte `app/revisioni/index.tsx` e `app/revisioni/[id].tsx`.
+  `SchermataLetturaRevisione.tsx`, rotte `app/(abbonato)/revisioni/index.tsx` e `app/revisione/[id].tsx`.
 - Regole sui dati (censimento `~/Desktop/censimenti-app/step7-censimento-revisioni.md`): il ciclo lo fa il trigger
   del diario, l'app non crea né conta nulla; lettura leggera dello stato per `user_id` senza testo (anche all'avvio
   dell'app dell'abbonato e dopo la condivisione di un diario, per il pallino sulla barra), testi solo per `sent`,
