@@ -32,7 +32,7 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 | `diario · indietro` | scorrimento verso destra | torna al blocco precedente e salva la bozza se ci sono modifiche |
 | `diario · vai al blocco` | tocco su una tacchetta dell'indicatore | va a quel blocco (avanti o indietro) e salva la bozza se ci sono modifiche |
 | `diario · chiudi` | link "Chiudi" | chiude la card e salva la bozza se ci sono modifiche |
-| `diario · salva bozza` | automatico: chiusura/cambio di blocco, uscita dalla pagina, app in secondo piano, ritorno della rete | inserimento (prima volta, solo con contenuto) o modifica dei soli campi, senza `status` |
+| `diario · salva bozza` | automatico: chiusura/cambio di blocco, uscita dalla pagina, app in secondo piano, ritorno della rete; all'apertura di Oggi anche le bozze di giorni passati rimaste in attesa | inserimento (prima volta, solo con contenuto) o modifica dei soli campi, senza `status`; finché il server non conferma la bozza resta nella copia di sicurezza (cartella documenti) |
 | `diario · condividi` | "Invia alla nutrizionista" | una sola modifica con `status = submitted` e `submitted_at` (o inserimento già condiviso) |
 | `diario · riprova salvataggio` | "Riprova" nella Notifica breve di errore | ripete il salvataggio in attesa |
 | `settimana · apri storico` | icona Calendario della Card settimana | apre `storico`; nessuna scrittura |
@@ -57,8 +57,10 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
   condivisi prendono il colore della valutazione (verde, senape, bianco) e il pallino del commento si combina come
   prima; oggi resta con le varianti "Oggi". Si aggiorna con la rilettura all'apertura e al ritorno in primo piano.
 - Storico (lotto 3): all'apertura una lettura minima del primo diario del cliente (`submission_date`, ordinata, un
-  solo risultato, per `client_id`), poi in memoria e nella copia locale del diario (dal 21/10/2026 su file nella
-  sandbox dell'app, non più nel portachiavi; i file dei giorni passati si cancellano quando si scrive quello di oggi); una lettura per mese
+  solo risultato, per `client_id`), poi in memoria e nella cache del diario su file (dal 21/10/2026 nella cartella
+  cache della sandbox, non più nel portachiavi; i file dei giorni passati si cancellano quando si scrive quello di
+  oggi, mentre le copie in attesa di bozze e modifiche stanno in un file a parte nella cartella documenti e restano
+  finché il server non conferma); una lettura per mese
   (`submission_date, status` per `client_id` e intervallo del mese) solo quando il mese entra, o sta per entrare, nello
   schermo, tenuta in memoria per la sessione; il mese corrente riusa la settimana già in memoria e legge solo la parte
   del mese che la precede (nulla se la settimana corrente comincia nel mese). Nessuna scrittura oltre a "letto" e
@@ -97,7 +99,8 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
   seconda lettura con `review_text` solo per le revisioni `sent`, `opened`, `read` il cui testo non è già in memoria
   (il testo non cambia dopo l'invio). Mai il testo di `unlocked` o `draft`. Memoria di sessione e copia locale su
   file nella sandbox dell'app (`balanced.revisioni.<clientId>.json` nella cartella cache, `src/servizi/archivioFile.ts`;
-  non nel portachiavi, riservato a sessione e piccoli dati), cancellata all'uscita.
+  non nel portachiavi, riservato a sessione e piccoli dati); aperture e letture non ancora confermate in
+  `balanced.revisioni-attesa.<clientId>.json` nella cartella documenti, che il sistema non svuota. Tutto cancellato all'uscita.
 - All'avvio dell'app dell'abbonato (pagina Oggi), a ogni ritorno in primo piano e dopo la condivisione di un diario:
   solo la lettura leggera dello stato, per il pallino rosso sulla voce Revisioni (almeno una `sent`).
 - Rotta diretta a freddo: lettura leggera dello stato più il testo della sola revisione richiesta.

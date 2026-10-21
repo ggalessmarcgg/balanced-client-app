@@ -1,5 +1,5 @@
 // Diario di oggi e giornate della settimana: letture mirate su daily_submissions, copia locale su file nella sandbox
-// dell'app (archivioFile.ts; fino al 21/10/2026 nel portachiavi) finché il server non conferma, salvataggio della bozza senza status e condivisione in una sola modifica (logica
+// dell'app (archivioFile.ts: cache per i dati già sul server, cartella documenti per le modifiche in attesa, core/diario/attesa.ts), salvataggio della bozza senza status e condivisione in una sola modifica (logica
 // pura in src/core/diario). Lotto 2: la settimana corrente (lunedì–domenica) porta anche commento e "letto" per i
 // pallini; la giornata completa si legge al tocco (o viene dalla cache); "letto" e modifica di una giornata
 // condivisa scrivono solo le colonne del cliente. client_id viene dallo stato letto una volta per sessione
@@ -18,6 +18,7 @@ import {
   type DiarioLocale,
   type StatoRiga,
 } from '@/core/diario/bozza';
+import { aggiornaCopieInAttesa, ATTESA_VUOTA, bozzePrecedenti, copieInAttesaValide, haCopieInAttesa, unisciConCache, type CopieInAttesa } from '@/core/diario/attesa';
 import { applicaLettureInAttesa, type ModificaLetto } from '@/core/diario/commento';
 import { dataOggiRoma, intervalloSettimana } from '@/core/diario/data';
 import { dopoErroreModifica, dopoModifica, pianificaModifica, type GiornataLocale } from '@/core/diario/giornata';
@@ -37,7 +38,7 @@ import {
 import { campiDaSalvare, DIARIO_VUOTO, diarioDaCampi } from '@/core/diario/modello';
 import { SELEZIONE_STORICO, type RigaStorico } from '@/core/diario/storico';
 import { leggi, scrivi } from '@/servizi/archivio';
-import { leggiFile, rimuoviFile, rimuoviFilePerPrefisso, scriviFile } from '@/servizi/archivioFile';
+import { leggiFile, rimuoviFile, rimuoviFilePerPrefisso, scriviFile, type Posizione } from '@/servizi/archivioFile';
 import { precaricaFoto } from '@/servizi/foto';
 import { supabase } from '@/servizi/supabase';
 
@@ -58,11 +59,18 @@ export type EsitoScrittura = { tipo: 'ok' } | { tipo: 'giaCondiviso' } | { tipo:
 
 type Cache = DatiOggi & { letto: string };
 const PREFISSO_CACHE = 'balanced.diario';
-/** Chiave con cliente e data italiana: a mezzanotte si passa al giorno nuovo. */
+const PREFISSO_ATTESA = 'balanced.attesa';
+const DOCUMENTI: Posizione = 'documenti';
+/** Chiave della cache con cliente e data italiana: a mezzanotte si passa al giorno nuovo. */
 function chiaveCache(clientId: string, data: string): string {
   return `${PREFISSO_CACHE}.${clientId}.${data}`;
 }
+/** Chiave delle copie in attesa: una per cliente, con dentro le date. */
+function chiaveAttesa(clientId: string): string {
+  return `${PREFISSO_ATTESA}.${clientId}`;
+}
 
+/** La cache (dati già sul server) di oggi, se c'è ed è di questo cliente e giorno. */
 async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null> {
   try {
     const testo = await leggiFile(chiaveCache(clientId, data));
@@ -75,9 +83,25 @@ async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null>
   }
 }
 
+/** Le copie in attesa del cliente (cartella documenti): mai cancellate prima della conferma del server. */
+export async function copieInAttesaDi(clientId: string): Promise<CopieInAttesa> {
+  try {
+    const testo = await leggiFile(chiaveAttesa(clientId), DOCUMENTI);
+    return testo ? copieInAttesaValide(JSON.parse(testo), clientId) : ATTESA_VUOTA;
+  } catch {
+    return ATTESA_VUOTA;
+  }
+}
+
+/** Bozze di giorni passati rimaste in attesa (app chiusa prima del salvataggio, poi è cambiato il giorno). */
+export async function bozzePrecedentiInAttesa(clientId: string, oggi: string): Promise<DiarioLocale[]> {
+  return bozzePrecedenti(await copieInAttesaDi(clientId), oggi);
+}
+
 // La copia locale si aggiorna a ogni modifica (tasto, tocco, trascinamento): le scritture su file sono
-// serializzate e, se ne arrivano molte mentre una è in corso, si scrive solo l'ultima. Le copie dei giorni passati
-// dello stesso cliente si cancellano quando si scrive quella di oggi.
+// serializzate e, se ne arrivano molte mentre una è in corso, si scrive solo l'ultima. Ogni scrittura aggiorna la
+// cache di oggi (cancellando le cache dei giorni passati dello stesso cliente) e, per fusione, il file delle copie in
+// attesa nella cartella documenti: le date assenti dalla memoria restano com'erano.
 let scritturaCache: Promise<void> = Promise.resolve();
 let cacheInCoda: Cache | null = null;
 
@@ -91,9 +115,13 @@ export function salvaCache(dati: DatiOggi): void {
     while (cacheInCoda) {
       const daScrivere = cacheInCoda;
       cacheInCoda = null;
-      const chiave = chiaveCache(daScrivere.locale.clientId, daScrivere.locale.data);
+      const clientId = daScrivere.locale.clientId;
+      const attesa = aggiornaCopieInAttesa(await copieInAttesaDi(clientId), daScrivere);
+      if (haCopieInAttesa(attesa)) await scriviFile(chiaveAttesa(clientId), JSON.stringify(attesa), DOCUMENTI).catch(() => {});
+      else await rimuoviFile(chiaveAttesa(clientId), DOCUMENTI);
+      const chiave = chiaveCache(clientId, daScrivere.locale.data);
       await scriviFile(chiave, JSON.stringify(daScrivere)).catch(() => {});
-      await rimuoviFilePerPrefisso(`${PREFISSO_CACHE}.${daScrivere.locale.clientId}.`, [chiave]);
+      await rimuoviFilePerPrefisso(`${PREFISSO_CACHE}.${clientId}.`, [chiave]);
     }
   });
 }
@@ -140,7 +168,12 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
   const userId = await userIdSessione();
   if (!userId) return { tipo: 'nonAutenticato' };
 
-  const cache = await cacheDi(clientId, data);
+  const [cache, attesa] = await Promise.all([cacheDi(clientId, data), copieInAttesaDi(clientId)]);
+  // Senza rete si riparte dalla cache con sopra le copie in attesa; con rete la riga di oggi viene dal server, ma la
+  // bozza locale in attesa (documenti, o cache se più recente di updated_at) vince sul contenuto.
+  const unione = unisciConCache(cache, attesa, data);
+  const daCache = (): EsitoLetturaDiario =>
+    cache ? { tipo: 'ok', dati: { ...cache, locale: unione.locale ?? cache.locale, giornate: unione.giornate, lettureInAttesa: [...new Set([...cache.lettureInAttesa, ...attesa.lettureInAttesa])] }, daCache: true } : { tipo: 'rete' };
   const { da, a } = intervalloSettimana(data);
   const lettura = await supabase
     .from(TABELLA_DIARIO)
@@ -151,18 +184,18 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
     .order('submission_date', { ascending: true })
     .returns<RigaSettimana[]>();
   if (lettura.error) {
-    if (erroreDiRete(lettura.error)) return cache ? { tipo: 'ok', dati: cache, daCache: true } : { tipo: 'rete' };
+    if (erroreDiRete(lettura.error)) return daCache();
     return { tipo: 'errore', messaggio: lettura.error.message };
   }
   // I "letto" non ancora confermati restano letti in locale (si riprovano alla prossima apertura del pannello).
-  const lettureInAttesa = cache?.lettureInAttesa ?? [];
+  const lettureInAttesa = [...new Set([...(cache?.lettureInAttesa ?? []), ...attesa.lettureInAttesa])];
   const settimana = applicaLettureInAttesa(lettura.data ?? [], lettureInAttesa);
   const oggiInElenco = settimana.find((r) => r.submission_date === data);
 
   let locale: DiarioLocale;
   try {
     const rigaOggi = oggiInElenco ? await leggiRigaOggi(oggiInElenco.id) : null;
-    const inAttesa = cache && copiaLocalePiuRecente(cache.locale, rigaOggi?.updated_at) ? cache.locale : null;
+    const inAttesa = unione.locale && copiaLocalePiuRecente(unione.locale, rigaOggi?.updated_at) ? unione.locale : null;
     if (!rigaOggi) {
       locale = inAttesa ?? diarioLocaleIniziale(clientId, data, DIARIO_VUOTO, { tipo: 'assente' });
     } else {
@@ -173,11 +206,11 @@ export async function leggiDiarioOggi(clientId: string, adesso: Date = new Date(
     }
   } catch (e) {
     const err = e as { message?: string };
-    if (tipoErroreScrittura(e) === 'rete') return cache ? { tipo: 'ok', dati: cache, daCache: true } : { tipo: 'rete' };
+    if (tipoErroreScrittura(e) === 'rete') return daCache();
     return { tipo: 'errore', messaggio: err.message ?? 'Errore di lettura' };
   }
 
-  const dati: DatiOggi = { locale, settimana, giornate: cache?.giornate ?? {}, lettureInAttesa, primoDiario: cache?.primoDiario };
+  const dati: DatiOggi = { locale, settimana, giornate: unione.giornate, lettureInAttesa, primoDiario: cache?.primoDiario };
   salvaCache(dati);
   return { tipo: 'ok', dati, daCache: false };
 }

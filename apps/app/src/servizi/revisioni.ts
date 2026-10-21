@@ -50,7 +50,7 @@ async function preparaMemoria(clientId: string): Promise<void> {
   const m = memoriaRevisioni();
   if (m.clientId === clientId && m.righe !== null) return;
   const cache = await cacheRevisioni(clientId);
-  aggiornaMemoriaRevisioni({ clientId, righe: cache?.righe ?? null, testi: cache?.testi ?? {}, scrittureInAttesa: cache?.scrittureInAttesa ?? [] });
+  aggiornaMemoriaRevisioni({ clientId, righe: cache.righe, testi: cache.testi, scrittureInAttesa: cache.scrittureInAttesa });
 }
 
 /** Id delle revisioni inviate senza testo in memoria. */

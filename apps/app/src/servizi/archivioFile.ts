@@ -1,13 +1,22 @@
-// Copie locali che crescono con i dati del cliente (diario, revisioni): file JSON nella sandbox dell'app
-// (expo-file-system, cartella cache: protetta dal sistema, non inclusa nei backup, cancellabile dal sistema se lo
-// spazio manca e svuotata all'uscita). Il portachiavi (archivio.ts) resta per ciò che è piccolo e sensibile: sessione,
-// stato del cliente, profili delle nutrizioniste. Decisione del 21/10/2026.
+// Copie locali su file nella sandbox dell'app (expo-file-system), in due cartelle (decisione del 21/10/2026):
+// - "cache" (Paths.cache/balanced-cache): dati già sul server, rigenerabili (diario di oggi, settimana, giornate,
+//   primo diario, revisioni con i testi); il sistema può svuotarla quando manca spazio;
+// - "documenti" (Paths.document/balanced-attesa): copie di sicurezza delle modifiche non ancora confermate dal server
+//   (bozza del diario, modifiche di giornate, "letto", aperture e letture delle revisioni); il sistema non la svuota
+//   e l'app non cancella una copia prima della conferma.
+// Il portachiavi (archivio.ts) resta per ciò che è piccolo e sensibile: sessione, stato del cliente, profili.
 import { Directory, File, Paths } from 'expo-file-system';
 
-const CARTELLA = 'balanced-cache';
+export type Posizione = 'cache' | 'documenti';
 
-function cartella(): Directory {
-  const d = new Directory(Paths.cache, CARTELLA);
+const CARTELLE: Record<Posizione, { radice: () => Directory; nome: string }> = {
+  cache: { radice: () => Paths.cache, nome: 'balanced-cache' },
+  documenti: { radice: () => Paths.document, nome: 'balanced-attesa' },
+};
+
+function cartella(posizione: Posizione): Directory {
+  const { radice, nome } = CARTELLE[posizione];
+  const d = new Directory(radice(), nome);
   if (!d.exists) d.create({ intermediates: true, idempotent: true });
   return d;
 }
@@ -16,9 +25,9 @@ function nomeFile(chiave: string): string {
   return `${chiave}.json`;
 }
 
-export async function leggiFile(chiave: string): Promise<string | null> {
+export async function leggiFile(chiave: string, posizione: Posizione = 'cache'): Promise<string | null> {
   try {
-    const f = new File(cartella(), nomeFile(chiave));
+    const f = new File(cartella(posizione), nomeFile(chiave));
     if (!f.exists) return null;
     return await f.text();
   } catch {
@@ -26,25 +35,25 @@ export async function leggiFile(chiave: string): Promise<string | null> {
   }
 }
 
-export async function scriviFile(chiave: string, valore: string): Promise<void> {
-  const f = new File(cartella(), nomeFile(chiave));
+export async function scriviFile(chiave: string, valore: string, posizione: Posizione = 'cache'): Promise<void> {
+  const f = new File(cartella(posizione), nomeFile(chiave));
   await f.write(valore);
 }
 
-export async function rimuoviFile(chiave: string): Promise<void> {
+export async function rimuoviFile(chiave: string, posizione: Posizione = 'cache'): Promise<void> {
   try {
-    const f = new File(cartella(), nomeFile(chiave));
+    const f = new File(cartella(posizione), nomeFile(chiave));
     if (f.exists) f.delete();
   } catch {
     // file già assente o non cancellabile: nulla da fare
   }
 }
 
-/** Cancella i file il cui nome inizia con il prefisso, tranne quelli indicati (es. le copie dei giorni passati del diario). */
+/** Solo nella cache: cancella i file il cui nome inizia con il prefisso, tranne quelli indicati (copie dei giorni passati del diario). */
 export async function rimuoviFilePerPrefisso(prefisso: string, tranne: string[] = []): Promise<void> {
   try {
     const tenere = new Set(tranne.map(nomeFile));
-    for (const voce of cartella().list()) {
+    for (const voce of cartella('cache').list()) {
       if (voce instanceof File && voce.name.startsWith(prefisso) && !tenere.has(voce.name)) voce.delete();
     }
   } catch {
@@ -52,12 +61,15 @@ export async function rimuoviFilePerPrefisso(prefisso: string, tranne: string[] 
   }
 }
 
-/** All'uscita: tutta la cartella delle copie locali. */
+/** All'uscita: entrambe le cartelle (dopo il signOut le copie in attesa non potrebbero più essere inviate). */
 export async function svuotaArchivioFile(): Promise<void> {
-  try {
-    const d = new Directory(Paths.cache, CARTELLA);
-    if (d.exists) d.delete();
-  } catch {
-    // nulla da fare
+  for (const posizione of Object.keys(CARTELLE) as Posizione[]) {
+    try {
+      const { radice, nome } = CARTELLE[posizione];
+      const d = new Directory(radice(), nome);
+      if (d.exists) d.delete();
+    } catch {
+      // nulla da fare
+    }
   }
 }

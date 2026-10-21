@@ -255,12 +255,22 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (`src/servizi/archivio.ts`, logica in `src/core/sessione/pezzi.ts`), rinnovata
   in automatico con l'app in primo piano. "Esci" = `signOut` globale + svuotamento
   della cache locale.
-- **Due archivi locali** (decisione del 21/10/2026): nel portachiavi solo ciò che è
-  piccolo e sensibile (sessione, stato del cliente, profili delle nutrizioniste);
-  le copie locali che crescono con i dati del cliente (diario di oggi con settimana
-  e giornate, revisioni con i testi) stanno su file JSON nella sandbox dell'app
-  (`src/servizi/archivioFile.ts`, `expo-file-system`, cartella cache
-  `balanced-cache/`), cancellati all'uscita.
+- **Tre archivi locali** (decisione del 21/10/2026), `src/servizi/archivio.ts` e
+  `src/servizi/archivioFile.ts` (`expo-file-system`):
+  1. portachiavi: solo ciò che è piccolo e sensibile (sessione, stato del cliente,
+     profili delle nutrizioniste);
+  2. cartella cache della sandbox (`balanced-cache/`): dati già sul server,
+     rigenerabili (diario di oggi, settimana, giornate, primo diario, revisioni con i
+     testi); il sistema può svuotarla quando manca spazio;
+  3. cartella documenti della sandbox (`balanced-attesa/`): copie di sicurezza delle
+     modifiche non ancora confermate dal server (bozza del diario, modifiche di
+     giornate condivise, "letto" dei commenti, aperture e letture delle revisioni);
+     il sistema non la svuota e l'app non cancella mai una copia prima della
+     conferma: il file si aggiorna per fusione per data
+     (`src/core/diario/attesa.ts`), anche la pulizia delle cache dei giorni passati
+     non la tocca; le bozze di giorni passati si salvano alla prima apertura di Oggi.
+  Tutti e tre si svuotano all'uscita (dopo il signOut le copie in attesa non
+  potrebbero più essere inviate).
 - Smistamento: una sola lettura all'avvio (`clients` per `user_id` con lead,
   appuntamenti e nutrizionista incorporati, colonne esplicite in
   `src/core/stato/letture.ts`) → `calcolaStato` (`src/core/stato/stato.ts`,

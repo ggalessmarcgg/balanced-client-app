@@ -10,7 +10,7 @@ import { applicaLettureInAttesa } from '@/core/diario/commento';
 import { dataOggiRoma } from '@/core/diario/data';
 import type { RigaSettimana } from '@/core/diario/letture';
 import { BLOCCHI, bloccoSuccessivo, type Blocco, type Diario } from '@/core/diario/modello';
-import { condividiDiario, leggiDiarioOggi, precaricaAutori, salvaBozza, type EsitoScrittura } from '@/servizi/diario';
+import { bozzePrecedentiInAttesa, condividiDiario, leggiDiarioOggi, precaricaAutori, salvaBozza, type EsitoScrittura } from '@/servizi/diario';
 import { giornateInAttesa, riprovaLetture, salvaGiornateInAttesa } from '@/servizi/giornate';
 import { accodaScrittura, aggiornaMemoria, memoriaDiario, persistiMemoria, useMemoriaDiario } from '@/servizi/memoriaDiario';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
@@ -109,9 +109,16 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
   const carica = useCallback(() => {
     let attivo = true;
     (async () => {
-      // Una bozza in attesa di ieri (giorno cambiato) si prova a salvare prima di passare a oggi.
-      const precedente = memoriaDiario().locale;
-      if (precedente?.inAttesa && precedente.data !== dataOggiRoma(new Date())) await salva(false);
+      // Le bozze in attesa di giorni passati (giorno cambiato, o app chiusa prima del salvataggio: copie nella
+      // cartella documenti) si provano a salvare prima di passare a oggi.
+      const oggi = dataOggiRoma(new Date());
+      const inMemoria = memoriaDiario().locale;
+      const precedenti = inMemoria ? (inMemoria.inAttesa && inMemoria.data !== oggi ? [inMemoria] : []) : await bozzePrecedentiInAttesa(clientId, oggi);
+      for (const bozza of precedenti) {
+        if (!attivo || !montato.current) return;
+        aggiornaMemoria({ locale: bozza });
+        await salva(false);
+      }
       const esito = await leggiDiarioOggi(clientId);
       if (!attivo || !montato.current) return;
       switch (esito.tipo) {
