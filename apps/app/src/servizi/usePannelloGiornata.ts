@@ -93,7 +93,7 @@ export function usePannelloGiornata(clientId: string, nutrizionista: Nutrizionis
       if (!dataValida(data) || pannelloRef.current?.data === data) return;
       // Le modifiche in attesa di un pannello precedente si salvano prima di passare a un'altra giornata.
       salvaModifiche(true);
-      riprovaLetture();
+      void riprovaLetture();
       impostaPannello({ data, fase: { tipo: 'caricamento' }, modifica: null });
       (async () => {
         const oggi = memoriaDiario().locale?.data ?? dataOggiRoma(new Date());

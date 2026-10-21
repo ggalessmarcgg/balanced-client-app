@@ -71,3 +71,11 @@ export function unisciConCache<C extends { locale: DiarioLocale | null; giornate
 ): { locale: DiarioLocale | null; giornate: Record<string, GiornataLocale> } {
   return { locale: attesa.bozze[oggi] ?? cache?.locale ?? null, giornate: { ...(cache?.giornate ?? {}), ...attesa.giornate } };
 }
+
+/** Tutto ciò che l'app ha mostrato come fatto ma il server non ha ancora confermato: da inviare prima di uscire. */
+export type ModificheInAttesa = MemoriaPerAttesa & { scrittureRevisioni: number };
+
+/** Vero se c'è almeno una modifica non confermata (bozza, giornate, "letto" dei commenti, aperture e letture delle revisioni). */
+export function haModificheInAttesa(m: ModificheInAttesa): boolean {
+  return Boolean(m.locale?.inAttesa) || Object.values(m.giornate).some((g) => g.inAttesa) || m.lettureInAttesa.length > 0 || m.scrittureRevisioni > 0;
+}

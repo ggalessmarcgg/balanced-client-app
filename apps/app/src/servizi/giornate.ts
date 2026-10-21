@@ -1,9 +1,10 @@
 // Operazioni sulle giornate condivise comuni a Oggi, storico e pannello: giornate in memoria, salvataggio delle
 // modifiche in attesa (serializzato con le altre scritture), "letto" dei commenti con nuovo tentativo silenzioso.
+import { aggiornaDiario } from '@/core/diario/bozza';
 import { pianificaLetto, segnaLettoInCache } from '@/core/diario/commento';
 import { aggiornaGiornata, type GiornataLocale } from '@/core/diario/giornata';
 import { statoRiga, type RigaSettimana } from '@/core/diario/letture';
-import { salvaGiornata, scriviCommentoLetto, type EsitoScrittura } from '@/servizi/diario';
+import { salvaBozza, salvaGiornata, scriviCommentoLetto, type EsitoScrittura } from '@/servizi/diario';
 import { accodaScrittura, aggiornaMemoria, memoriaDiario, persistiMemoria } from '@/servizi/memoriaDiario';
 
 /** Aggiorna una giornata in memoria; se è la giornata di oggi, già condivisa, anche il diario di oggi la segue. */
@@ -59,6 +60,22 @@ export function salvaGiornateInAttesa(): Promise<EsitoScrittura | null> {
   });
 }
 
+/**
+ * Salva la bozza del diario in attesa (serializzato con le altre scritture). Se nel frattempo il contenuto locale è
+ * cambiato, si tengono le modifiche più recenti con la riga aggiornata. null se non c'era nulla da salvare.
+ */
+export function salvaBozzaInAttesa(): Promise<EsitoScrittura | null> {
+  return accodaScrittura(async () => {
+    const attuale = memoriaDiario().locale;
+    if (!attuale || !attuale.inAttesa) return null;
+    const { locale: dopo, esito } = await salvaBozza(attuale);
+    const corrente = memoriaDiario().locale;
+    aggiornaMemoria({ locale: corrente && corrente !== attuale ? aggiornaDiario({ ...corrente, riga: dopo.riga, errore: dopo.errore }, corrente.diario) : dopo });
+    persistiMemoria();
+    return esito;
+  });
+}
+
 /** Vero se c'è almeno una giornata con modifiche in attesa. */
 export function giornateInAttesa(): boolean {
   return Object.values(memoriaDiario().giornate).some((g) => g.inAttesa);
@@ -81,11 +98,13 @@ export function segnaLetto(riga: RigaSettimana): void {
   });
 }
 
-/** "Letto" in attesa di conferma: si riprova in silenzio (all'apertura di un pannello, al ritorno della rete). */
-export function riprovaLetture(): void {
-  for (const id of memoriaDiario().lettureInAttesa) {
-    void scriviCommentoLetto({ id, campi: { comment_acknowledged: true } }).then((ok) => {
-      if (ok) togliLetturaInAttesa(id);
-    });
-  }
+/** "Letto" in attesa di conferma: si riprova in silenzio (all'apertura di un pannello, al ritorno della rete, prima di uscire). */
+export function riprovaLetture(): Promise<void> {
+  return Promise.all(
+    memoriaDiario().lettureInAttesa.map((id) =>
+      scriviCommentoLetto({ id, campi: { comment_acknowledged: true } }).then((ok) => {
+        if (ok) togliLetturaInAttesa(id);
+      }),
+    ),
+  ).then(() => undefined);
 }

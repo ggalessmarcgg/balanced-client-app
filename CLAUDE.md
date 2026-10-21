@@ -269,8 +269,18 @@ npx expo install --fix                   # riallinea versioni alla SDK
      conferma: il file si aggiorna per fusione per data
      (`src/core/diario/attesa.ts`), anche la pulizia delle cache dei giorni passati
      non la tocca; le bozze di giorni passati si salvano alla prima apertura di Oggi.
-  Tutti e tre si svuotano all'uscita (dopo il signOut le copie in attesa non
-  potrebbero più essere inviate).
+  Tutti e tre si svuotano all'uscita. **"Esci"** (`useAzioniStato`, `src/servizi/attesa.ts`):
+  prima prova a inviare le modifiche in attesa (bozza, giornate modificate, "letto"
+  dei commenti, aperture e letture delle revisioni); se ne restano (es. senza rete)
+  chiede conferma con il `Dialogo` ("Hai modifiche non ancora salvate" / "Se esci ora
+  andranno perse." / "Esci comunque" · "Annulla") e solo con "Esci comunque" esce e
+  cancella tutto. Con la rete attiva nessun avviso.
+- **Dialogo** (`src/ui/Dialogo.tsx`): Pannello dal basso con titolo H2, testo Body e
+  due azioni terziarie centrate (Figma 499:2568, "Elimina account"); l'azione sicura
+  a sinistra in Etichetta (`Pulsante` livello `terziarioEvidenziato`).
+- **Barra di navigazione**: al cambio di voce l'evidenza scorre e i colori si
+  dissolvono in 300 ms ease-out (`TRANSIZIONI.tacchetteMs`, come le tacchette del
+  diario); con "Riduci movimento" l'evidenza salta e resta una dissolvenza breve.
 - Smistamento: una sola lettura all'avvio (`clients` per `user_id` con lead,
   appuntamenti e nutrizionista incorporati, colonne esplicite in
   `src/core/stato/letture.ts`) → `calcolaStato` (`src/core/stato/stato.ts`,

@@ -11,9 +11,10 @@ import { colori, margine, spazio } from '@/ui/theme';
 /** Segnaposto della pagina Account (schermate vere allo step 4): raggiunta dal pulsante "Account" degli stati. */
 export default function RottaAccount() {
   const router = useRouter();
-  const { onEsci } = useAzioniStato();
+  const { onEsci, sovrapposti } = useAzioniStato();
   return (
     <Pagina
+      sovrapposti={sovrapposti}
       piede={
         <View style={stili.comandi}>
           <Pulsante etichetta="Esci" livello="terziario" onPress={onEsci} style={stili.centrato} />

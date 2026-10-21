@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { aggiornaCopieInAttesa, ATTESA_VUOTA, bozzePrecedenti, copieInAttesaValide, haCopieInAttesa, unisciConCache, type CopieInAttesa } from './attesa.ts';
+import { aggiornaCopieInAttesa, ATTESA_VUOTA, bozzePrecedenti, copieInAttesaValide, haCopieInAttesa, haModificheInAttesa, unisciConCache, type CopieInAttesa } from './attesa.ts';
 import { diarioLocaleIniziale, type DiarioLocale } from './bozza.ts';
 import type { GiornataLocale } from './giornata.ts';
 import { campiDaSalvare, DIARIO_VUOTO } from './modello.ts';
@@ -55,5 +55,19 @@ describe('copie in attesa', () => {
     assert.equal(u.giornate['2026-10-14']?.inAttesa, false);
     assert.equal(unisciConCache(null, ATTESA_VUOTA, '2026-10-21').locale, null);
     assert.equal(unisciConCache(null, attesa, '2026-10-22').locale, null);
+  });
+});
+
+describe('modifiche in attesa prima di uscire', () => {
+  const vuote = { locale: null, giornate: {}, lettureInAttesa: [], scrittureRevisioni: 0 };
+  it('nulla in attesa → si può uscire senza avviso', () => {
+    assert.equal(haModificheInAttesa(vuote), false);
+    assert.equal(haModificheInAttesa({ ...vuote, locale: bozza('2026-10-21', false), giornate: { '2026-10-15': giornata('2026-10-15', false) } }), false);
+  });
+  it('bozza, giornata, letto o scrittura delle revisioni in attesa → avviso', () => {
+    assert.equal(haModificheInAttesa({ ...vuote, locale: bozza('2026-10-21', true) }), true);
+    assert.equal(haModificheInAttesa({ ...vuote, giornate: { '2026-10-15': giornata('2026-10-15', true) } }), true);
+    assert.equal(haModificheInAttesa({ ...vuote, lettureInAttesa: ['x'] }), true);
+    assert.equal(haModificheInAttesa({ ...vuote, scrittureRevisioni: 1 }), true);
   });
 });

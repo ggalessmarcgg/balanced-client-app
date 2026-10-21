@@ -10,8 +10,8 @@ import { applicaLettureInAttesa } from '@/core/diario/commento';
 import { dataOggiRoma } from '@/core/diario/data';
 import type { RigaSettimana } from '@/core/diario/letture';
 import { BLOCCHI, bloccoSuccessivo, type Blocco, type Diario } from '@/core/diario/modello';
-import { bozzePrecedentiInAttesa, condividiDiario, leggiDiarioOggi, precaricaAutori, salvaBozza, type EsitoScrittura } from '@/servizi/diario';
-import { giornateInAttesa, riprovaLetture, salvaGiornateInAttesa } from '@/servizi/giornate';
+import { bozzePrecedentiInAttesa, condividiDiario, leggiDiarioOggi, precaricaAutori, type EsitoScrittura } from '@/servizi/diario';
+import { giornateInAttesa, riprovaLetture, salvaBozzaInAttesa, salvaGiornateInAttesa } from '@/servizi/giornate';
 import { accodaScrittura, aggiornaMemoria, memoriaDiario, persistiMemoria, useMemoriaDiario } from '@/servizi/memoriaDiario';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { notificaModifica, type NotificaDiario, type NutrizionistaCliente } from '@/servizi/usePannelloGiornata';
@@ -80,19 +80,13 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
     if (montato.current) setNotifica(n);
   }, []);
 
-  /** Salvataggio della bozza di oggi (serializzato: una scrittura alla volta). */
+  /** Salvataggio della bozza di oggi (serializzato: una scrittura alla volta, servizi/giornate). */
   const salva = useCallback(
-    (mostraErrore: boolean): Promise<void> =>
-      accodaScrittura(async () => {
-        const attuale = memoriaDiario().locale;
-        if (!attuale || !attuale.inAttesa) return;
-        const { locale: dopo, esito } = await salvaBozza(attuale);
-        // Se nel frattempo il contenuto locale è cambiato, si tengono le modifiche più recenti con la riga aggiornata.
-        const corrente = memoriaDiario().locale;
-        impostaLocale(corrente && corrente !== attuale ? aggiornaDiario({ ...corrente, riga: dopo.riga, errore: dopo.errore }, corrente.diario) : dopo);
-        const n = notificaDi(esito, false);
-        if (n && mostraErrore) mostraNotifica(n);
-      }),
+    async (mostraErrore: boolean): Promise<void> => {
+      const esito = await salvaBozzaInAttesa();
+      const n = esito ? notificaDi(esito, false) : null;
+      if (n && mostraErrore) mostraNotifica(n);
+    },
     [mostraNotifica],
   );
 
@@ -145,7 +139,7 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
           if (!esito.daCache) {
             if (esito.dati.locale.inAttesa) void salva(true);
             if (giornateInAttesa()) salvaGiornate(true);
-            riprovaLetture();
+            void riprovaLetture();
           }
           break;
         }

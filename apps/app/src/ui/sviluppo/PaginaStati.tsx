@@ -1,9 +1,11 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { Profilo } from '@/core/stato/stato';
+import type { VoceNavigazione } from '@/ui/BarraNavigazione';
+import { Dialogo } from '@/ui/Dialogo';
 import { NotificaBreve } from '@/ui/NotificaBreve';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
@@ -90,6 +92,8 @@ export const STATI_SVILUPPO = [
   ['senza-connessione-abbonato', 'Trasversali 1 · Senza connessione nell app dell abbonato (563:4517)'],
   ['errore-caricamento-abbonato', 'Trasversali 3 · Errore di caricamento nell app dell abbonato (563:4978)'],
   ['copia-contatto', 'H con Notifica breve dopo la copia di un contatto'],
+  ['uscita-avviso', 'Esci con modifiche non inviate: Dialogo "Hai modifiche non ancora salvate" (Pannello dal basso di 499:2568)'],
+  ['barra-animata', 'Barra di navigazione: la voce attiva cambia da sola ogni 2 s (sfondo che scorre, colori in dissolvenza)'],
 ] as const;
 export type ChiaveStatoSviluppo = (typeof STATI_SVILUPPO)[number][0];
 
@@ -276,6 +280,17 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <SchermataSenzaConnessione onRiprova={nulla} barraSuperiore="completa" barraNavigazione="oggi" />;
     case 'errore-caricamento-abbonato':
       return <SchermataErroreCaricamento onRiprova={nulla} titolo="Piano" barraSuperiore="completa" barraNavigazione="piano" />;
+    case 'uscita-avviso':
+      return (
+        <SchermataPercorsoNonAttivo
+          profilo={PROFILO}
+          onAccount={nulla}
+          onEsci={nulla}
+          sovrapposti={<Dialogo aperto titolo="Hai modifiche non ancora salvate" testo="Se esci ora andranno perse." annulla={{ etichetta: 'Annulla', onPress: nulla }} conferma={{ etichetta: 'Esci comunque', onPress: nulla }} />}
+        />
+      );
+    case 'barra-animata':
+      return <BarraAnimata />;
     case 'copia-contatto':
       return (
         <SchermataPercorsoNonAttivo
@@ -286,6 +301,19 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
         />
       );
   }
+}
+
+const VOCI_CICLO: VoceNavigazione[] = ['oggi', 'piano', 'revisioni', 'account', 'revisioni', 'oggi'];
+const PASSO_CICLO_MS = 2000;
+
+/** La voce attiva della barra cambia da sola ogni 2 s, per vedere lo scorrimento dell'evidenza e la dissolvenza dei colori. */
+function BarraAnimata() {
+  const [passo, setPasso] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setPasso((p) => (p + 1) % VOCI_CICLO.length), PASSO_CICLO_MS);
+    return () => clearInterval(timer);
+  }, []);
+  return <SchermataCaricamento barraSuperiore="completa" barraNavigazione={VOCI_CICLO[passo] ?? 'oggi'} revisioneNuova />;
 }
 
 /** Elenco delle schermate: ogni voce apre la rotta con ?stato=<chiave>. */

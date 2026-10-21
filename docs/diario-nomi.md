@@ -91,6 +91,7 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 | `revisione · aperta` | automatico: apertura della lettura | una sola modifica `status = 'opened'`, `opened_at = adesso`, filtrata su `status = 'sent'` (0 righe = già aperta altrove, nulla da riscrivere); la cache passa subito ad aperta (la card Nuova sparisce, la revisione va nell'elenco e il pallino sulla barra si spegne); se la scrittura fallisce resta in attesa e si riprova in silenzio |
 | `revisione · letta` | automatico: il piè di pagina "Hai letto tutta la revisione." è entrato nello schermo (nessun tempo minimo, decisione del 21/10/2026; una volta per apertura) | una sola modifica `status = 'read'`, `read_at = adesso`, filtrata su `status in ('opened', 'sent')`; stessa cache e stesso ritentativo. Nessun pulsante "Ho capito!" |
 | `revisione · indietro` | icona Indietro dell'intestazione | torna alla sezione; nessuna scrittura |
+| `esci` | "Esci" nell'Account e nelle schermate di stato | prima invia le modifiche in attesa (bozza, giornate, "letto", aperture e letture delle revisioni); se ne restano chiede conferma ("Hai modifiche non ancora salvate"); con "Esci comunque" (o senza nulla in attesa) signOut globale e cancellazione di memoria, portachiavi dello stato e file locali |
 
 ### Letture
 
