@@ -3,7 +3,7 @@
 import { classificaErrore } from '@/core/accesso/errori';
 import type { DatiAccount } from '@/core/account/account';
 import { datiDaRiga, SELEZIONE_STATO, TABELLA_STATO, type RigaStato } from '@/core/stato/letture';
-import { calcolaStato, type StatoCliente } from '@/core/stato/stato';
+import { calcolaStato, type Appuntamento, type StatoCliente } from '@/core/stato/stato';
 import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
 import { supabase } from '@/servizi/supabase';
 
@@ -47,6 +47,17 @@ export function aggiornaAccountInMemoria(modifica: Partial<DatiAccount>, colonne
     ultimaCache = { ...ultimaCache, riga: { ...ultimaCache.riga, ...colonne } };
     scrivi(CHIAVE_CACHE, JSON.stringify(ultimaCache)).catch(() => {});
   }
+}
+
+/**
+ * Dopo `confirmed` (step 12): lo stato in memoria diventa G con l'appuntamento appena creato, così la rotta
+ * /stato/prenotato mostra la schermata di conferma. G non si salva nel portachiavi: "Torna alla home" rilegge lo
+ * stato dal server (che intanto è `booked`), e all'avvio successivo si riparte da F.
+ */
+export function impostaStatoConfermato(appuntamento: Appuntamento): boolean {
+  if (!inMemoria || !('profilo' in inMemoria)) return false;
+  inMemoria = { codice: 'G', profilo: inMemoria.profilo, appuntamento };
+  return true;
 }
 
 async function cacheDi(userId: string): Promise<RigaStato | null | undefined> {

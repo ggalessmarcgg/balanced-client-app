@@ -17,13 +17,15 @@ export type ClienteRiga = {
   gender: string | null;
   nutritionist_id: string | null;
   consultation_lead_v2_id: string | null;
+  /** Telefono del cliente (card "I tuoi dati" degli stati C e D, step 12); opzionale per le cache salvate prima. */
+  phone_number?: string | null;
 } & Partial<RigaAccount>;
 /** Slot desiderato in consultation_leads_v2: solo colonne concesse al ruolo authenticated (mai nutritionist_id). */
 export type LeadSlotRiga = { desired_date: string | null; desired_start_time: string | null };
-/** Riga di appointments, già filtrata per client_id. */
-export type AppuntamentoRiga = { id: string; appointment_date: string; start_time: string; status: string; meeting_url: string | null };
-/** Riga di nutritionist_profiles (mai profile_image_url: è in base64). */
-export type NutrizionistaRiga = { id: string; full_name: string | null; title: string | null; app_square_photo_url: string | null };
+/** Riga di appointments, già filtrata per client_id (end_time dallo step 12, opzionale per le cache salvate prima). */
+export type AppuntamentoRiga = { id: string; appointment_date: string; start_time: string; end_time?: string | null; status: string; meeting_url: string | null };
+/** Riga di nutritionist_profiles (mai profile_image_url: è in base64); specializzazione e numero d'ordine dallo step 12. */
+export type NutrizionistaRiga = { id: string; full_name: string | null; title: string | null; app_square_photo_url: string | null; expertise?: string | null; registration_number?: string | null };
 
 export type DatiStato = {
   cliente: ClienteRiga | null;
@@ -33,10 +35,11 @@ export type DatiStato = {
 };
 
 export type Genere = 'female' | 'male' | 'other';
-export type Nutrizionista = { id: string; nome: string; foto: string | null };
-export type Profilo = { clientId: string; nome: string; nomeCompleto: string; genere: Genere | null; nutrizionista: Nutrizionista | null; account: DatiAccount };
+export type Nutrizionista = { id: string; nome: string; foto: string | null; specializzazione: string | null; numeroAlbo: string | null };
+export type Profilo = { clientId: string; nome: string; nomeCompleto: string; genere: Genere | null; telefono: string | null; nutrizionista: Nutrizionista | null; account: DatiAccount };
 export type Slot = { data: string; ora: string; istante: Date };
-export type Appuntamento = Slot & { id: string; stato: StatoAppuntamentoDb; linkVideochiamata: string | null };
+/** `fine` è la fine del blocco in calendario (end_time, `HH:MM`); al cliente si mostra la fine della visita (durate in appuntamenti.ts). */
+export type Appuntamento = Slot & { id: string; fine: string | null; stato: StatoAppuntamentoDb; linkVideochiamata: string | null };
 
 /**
  * Stati della mappa. A (non autenticato) e B (email non confermata) non nascono dai dati ma dalla sessione
@@ -93,10 +96,17 @@ function profiloDi(cliente: ClienteRiga, nutrizionista: NutrizionistaRiga | null
     nome: primoNome(cliente.full_name),
     nomeCompleto: (cliente.full_name ?? '').trim(),
     genere: genere(cliente.gender),
+    telefono: cliente.phone_number?.trim() || null,
     account: datiAccount(cliente),
     nutrizionista:
       nutrizionista && nutrizionista.id === cliente.nutritionist_id
-        ? { id: nutrizionista.id, nome: nomeNutrizionista(nutrizionista), foto: nutrizionista.app_square_photo_url }
+        ? {
+            id: nutrizionista.id,
+            nome: nomeNutrizionista(nutrizionista),
+            foto: nutrizionista.app_square_photo_url,
+            specializzazione: nutrizionista.expertise?.trim() || null,
+            numeroAlbo: nutrizionista.registration_number?.trim() || null,
+          }
         : null,
   };
 }
@@ -112,7 +122,7 @@ function appuntamentoDi(riga: AppuntamentoRiga): Appuntamento | null {
   if (!istante) return null;
   const stato = riga.status as StatoAppuntamentoDb;
   if (stato !== 'scheduled' && stato !== 'completed' && stato !== 'cancelled' && stato !== 'no_show') return null;
-  return { id: riga.id, data: riga.appointment_date, ora: riga.start_time.slice(0, 5), istante, stato, linkVideochiamata: riga.meeting_url };
+  return { id: riga.id, data: riga.appointment_date, ora: riga.start_time.slice(0, 5), fine: riga.end_time ? riga.end_time.slice(0, 5) : null, istante, stato, linkVideochiamata: riga.meeting_url };
 }
 
 /**

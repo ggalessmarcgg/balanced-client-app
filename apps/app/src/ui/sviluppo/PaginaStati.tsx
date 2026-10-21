@@ -10,17 +10,18 @@ import { NotificaBreve } from '@/ui/NotificaBreve';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
 import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
-import { SchermataRaccontaSegnaposto, SchermataSegnapostoPrenotazione } from '@/ui/schermate/SchermateSegnaposto';
+import { SchermataRaccontaSegnaposto } from '@/ui/schermate/SchermateSegnaposto';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
+import { StatiSviluppo } from '@/ui/sviluppo/StatiSviluppo';
 import { StoricoSviluppo } from '@/ui/sviluppo/StoricoSviluppo';
 import { colori, margine, spazio, testi, tocco } from '@/ui/theme';
 
-// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3, 5 e 7 con dati finti, per i
+// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3, 5, 7, 11 e 12 con dati finti, per i
 // confronti con Figma senza accedere. /sviluppo/stati?stato=<chiave> mostra la sola schermata a tutto schermo.
 
 export const STATI_SVILUPPO = [
@@ -31,11 +32,23 @@ export const STATI_SVILUPPO = [
   ['recupero', 'Accesso · Recupero password · Email (425:286)'],
   ['notifica', 'Login con Notifica breve · conferma (563:5122)'],
   ['login-tastiera', 'Login con il campo email a fuoco (verifica della tastiera: Accedi resta coperto)'],
-  ['C', 'C · Consulenza da confermare (segnaposto)'],
-  ['D', 'D · Orario passato senza conferma (segnaposto)'],
-  ['E', 'E · Orario non più disponibile (segnaposto)'],
-  ['F', 'F · Prenotato, prima della consulenza (segnaposto)'],
-  ['G', 'G · Appena prenotata (segnaposto)'],
+  ['stati-1-da-confermare', 'C · Stati 1 · Consulenza da confermare (550:3636)'],
+  ['stati-1-conferma-caricamento', 'C · "Conferma la consulenza" in caricamento'],
+  ['stati-1-errore', 'C · Notifica breve di errore dopo una conferma non riuscita'],
+  ['stati-2-prima', 'F · Stati 2 · Prima della consulenza (550:3694)'],
+  ['stati-2-link-in-arrivo', 'F · Prima della consulenza senza link ("Link in arrivo")'],
+  ['stati-2-senza-appuntamento', 'F · Prenotato senza una visita in programma (solo cancellate)'],
+  ['stati-3-orario-passato', 'D · Stati 3 · Orario passato senza conferma (550:3754)'],
+  ['stati-3-orario-assente', 'D · Lead senza orario (card senza "Quando")'],
+  ['stati-4-scegli', 'Stati 4 · Orario passato · scegli un nuovo orario (556:3756)'],
+  ['stati-4-settimana-successiva', 'Stati 4 · pannello sulla scheda "Settimana successiva"'],
+  ['stati-4.1-non-disponibile', 'E · Stati 4.1 · Orario non più disponibile (556:3897)'],
+  ['stati-4.2-cambia', 'Stati 4.2 · Cambia orario prima della conferma (556:4038)'],
+  ['stati-4.3-nessun-orario', 'Stati 4.3 · Nessun orario disponibile (738:7520)'],
+  ['stati-4-caricamento', 'Pannello scelta orario in caricamento'],
+  ['stati-4-errore', 'Pannello scelta orario senza connessione (Riprova)'],
+  ['stati-4-confermando', 'Pannello scelta orario con "Conferma orario" in caricamento'],
+  ['stati-5-confermata', 'G · Stati 5 · Consulenza prenotata (550:3890)'],
   ['H', 'H · Stati 6 · Percorso non ancora attivo (558:4206)'],
   ['I', 'I · Stati 12 · Consulenza non svolta (562:4195)'],
   ['J', 'J · Oggi · 1 · Diario da iniziare (444:1103)'],
@@ -144,11 +157,10 @@ const PROFILO: Profilo = {
   nome: 'Giulia',
   nomeCompleto: 'Giulia Rossi',
   genere: 'female',
-  nutrizionista: { id: 'finta', nome: 'Dott.ssa Margherita Chiadò', foto: null },
+  telefono: null,
+  nutrizionista: { id: 'finta', nome: 'Dott.ssa Margherita Chiadò', foto: null, specializzazione: null, numeroAlbo: null },
   account: { email: EMAIL, giornateCondivise: 142, promemoria: { diario: true, weekend: true }, conStripe: true },
 };
-const SLOT = { data: '2026-10-28', ora: '10:00', istante: new Date('2026-10-28T09:00:00.000Z') };
-const APPUNTAMENTO = { ...SLOT, id: 'finto', stato: 'scheduled' as const, linkVideochiamata: null };
 
 function Accesso({ variante, password = '••••••••••', notifica = false, emailAFuoco = false }: { variante: VarianteAccesso; password?: string; notifica?: boolean; emailAFuoco?: boolean }) {
   const [email, setEmail] = useState(EMAIL);
@@ -198,16 +210,40 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <Accesso variante={{ tipo: 'normale' }} password="" notifica />;
     case 'login-tastiera':
       return <Accesso variante={{ tipo: 'normale' }} password="" emailAFuoco />;
-    case 'C':
-      return <SchermataSegnapostoPrenotazione stato={{ codice: 'C', profilo: PROFILO, slot: SLOT }} nome={PROFILO.nome} onEsci={nulla} />;
-    case 'D':
-      return <SchermataSegnapostoPrenotazione stato={{ codice: 'D', profilo: PROFILO, slot: SLOT }} nome={PROFILO.nome} onEsci={nulla} />;
-    case 'E':
-      return <SchermataSegnapostoPrenotazione stato={{ codice: 'E' }} nome={PROFILO.nome} onEsci={nulla} />;
-    case 'F':
-      return <SchermataSegnapostoPrenotazione stato={{ codice: 'F', profilo: PROFILO, appuntamento: APPUNTAMENTO }} nome={PROFILO.nome} onEsci={nulla} />;
-    case 'G':
-      return <SchermataSegnapostoPrenotazione stato={{ codice: 'G', profilo: PROFILO, appuntamento: APPUNTAMENTO }} nome={PROFILO.nome} onEsci={nulla} />;
+    case 'stati-1-da-confermare':
+      return <StatiSviluppo scenario="daConfermare" />;
+    case 'stati-1-conferma-caricamento':
+      return <StatiSviluppo scenario="daConfermareCaricamento" />;
+    case 'stati-1-errore':
+      return <StatiSviluppo scenario="daConfermareErrore" />;
+    case 'stati-2-prima':
+      return <StatiSviluppo scenario="prima" />;
+    case 'stati-2-link-in-arrivo':
+      return <StatiSviluppo scenario="primaLinkInArrivo" />;
+    case 'stati-2-senza-appuntamento':
+      return <StatiSviluppo scenario="primaSenzaAppuntamento" />;
+    case 'stati-3-orario-passato':
+      return <StatiSviluppo scenario="orarioPassato" />;
+    case 'stati-3-orario-assente':
+      return <StatiSviluppo scenario="orarioAssente" />;
+    case 'stati-4-scegli':
+      return <StatiSviluppo scenario="pannelloOrarioPassato" />;
+    case 'stati-4-settimana-successiva':
+      return <StatiSviluppo scenario="pannelloSettimanaSuccessiva" />;
+    case 'stati-4.1-non-disponibile':
+      return <StatiSviluppo scenario="pannelloNonDisponibile" />;
+    case 'stati-4.2-cambia':
+      return <StatiSviluppo scenario="pannelloModifica" />;
+    case 'stati-4.3-nessun-orario':
+      return <StatiSviluppo scenario="pannelloNessunOrario" />;
+    case 'stati-4-caricamento':
+      return <StatiSviluppo scenario="pannelloCaricamento" />;
+    case 'stati-4-errore':
+      return <StatiSviluppo scenario="pannelloErrore" />;
+    case 'stati-4-confermando':
+      return <StatiSviluppo scenario="pannelloConfermando" />;
+    case 'stati-5-confermata':
+      return <StatiSviluppo scenario="confermata" />;
     case 'H':
       return <SchermataPercorsoNonAttivo profilo={PROFILO} onAccount={nulla} onEsci={nulla} />;
     case 'I':

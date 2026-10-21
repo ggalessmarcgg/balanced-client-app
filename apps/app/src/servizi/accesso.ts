@@ -3,6 +3,7 @@
 import { ATTESA_REINVIO_SECONDI, URL_CONFERMA_EMAIL, URL_RECUPERO_PASSWORD } from '@/core/accesso/costanti';
 import { classificaErrore, normalizzaEmail, type TipoErroreAccesso } from '@/core/accesso/errori';
 import { svuotaAccountInMemoria } from '@/servizi/account';
+import { svuotaPrenotazioneInMemoria } from '@/servizi/prenotazione';
 import { svuotaAutoriInMemoria } from '@/servizi/diario';
 import { svuotaMemoriaDiario } from '@/servizi/memoriaDiario';
 import { svuotaArchivioFile } from '@/servizi/archivioFile';
@@ -68,6 +69,7 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   await svuotaRevisioni();
   svuotaContenutiInMemoria();
   svuotaAccountInMemoria();
+  svuotaPrenotazioneInMemoria();
   await svuotaNotifiche();
   await svuotaArchivioFile();
   return { revocaGlobale };

@@ -13,9 +13,9 @@ nutrizionista reale.
 | B | Email non confermata | `+capi1` | utente auth non confermato, `clients.status = not_confirmed` (già così) |
 | C | Consulenza da confermare | `+testdmarc` | dopo la prova di D: slot desiderato del lead spostato nel futuro |
 | D | Orario passato senza conferma | `+testdmarc` | `not_confirmed` con slot del lead passato (già così) |
-| E | Orario non più disponibile | — | transitorio (esito della RPC), non si prepara con i dati |
-| F | Prenotato, prima della consulenza | — | rimandato allo step 12 |
-| G | Appena prenotata | — | stato di interfaccia, dallo step 12 |
+| E | Orario non più disponibile | `+testdmarc` | transitorio: esito `slot_taken`/`day_full` della conferma (riga fittizia in `appointments` alla stessa ora, censimento step 12 §8) o elenco degli orari vuoto |
+| F | Prenotato, prima della consulenza | `+testdmarc` dopo la conferma nell'app | la conferma crea l'appuntamento vero: la nutrizionista dell'alias deve essere "Alessandra Marchina" o "Guest Test" (censimento step 12 §8, SQL dalla chat di progetto) |
+| G | Appena prenotata | `+testdmarc` | stato di interfaccia subito dopo la conferma fatta nell'app (step 12) |
 | H | Percorso non ancora attivo | `+test` (consulenza `completed`) e `+test2` (`scheduled` passata, euristica dei 45 minuti) | già così |
 | I | Consulenza non svolta | `+test7` | unico appuntamento messo a `no_show` |
 | J | Abbonato | `+test4` (per il diario) | già `subscribed`, senza diari né revisioni; vedi sotto |

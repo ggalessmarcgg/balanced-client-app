@@ -1645,7 +1645,7 @@
     }
   ],
   "opacitaLivello": {
-    "_nota": "Opacità di livello usate nelle schermate e nei componenti ma non presenti come variabili in Figma (fonte: docs/figma-pulizia.md, Inventario della trasparenza; componenti Pulsante 418:62 e Campo di testo 418:182 letti il 19/10/2026). Da promuovere a variabili se Alessmarc lo decide.",
+    "_nota": "Opacità di livello usate nelle schermate e nei componenti ma non presenti come variabili in Figma (fonte: docs/figma-pulizia.md, Inventario della trasparenza; componenti Pulsante 418:62 e Campo di testo 418:182 letti il 19/10/2026; orarioPassato: livello \"Quando\" barrato in Stati · 3 552:4254, letto il 21/10/2026). Da promuovere a variabili se Alessmarc lo decide.",
     "velo": 0.25,
     "veloTutorial": 0.4,
     "pulsantePrimarioDisabilitato": 0.4,
@@ -1657,7 +1657,8 @@
     "pulsantePremuto": 0.85,
     "campoDisabilitato": 0.5,
     "caricamentoPuntoMedio": 0.6,
-    "caricamentoPuntoChiaro": 0.3
+    "caricamentoPuntoChiaro": 0.3,
+    "orarioPassato": 0.4
   },
   "coloriCodice": {
     "_nota": "Colori decisi in codice, non variabili in Figma: derivati da una variabile Figma (base) con un'alfa. sfondoBarraAndroid: fondo della Barra di navigazione su Android, dove il vetro nativo non esiste (decisione di Alessmarc del 19/10/2026, vedi docs/figma-pulizia.md).",

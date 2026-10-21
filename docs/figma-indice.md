@@ -136,7 +136,7 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Menu · 7 (spostata qui da Alessmarc il 18/10/2026) · Le tue ricette | `539:3724` | 852 |
 | Menu · 7.1 (spostata qui da Alessmarc il 18/10/2026) · Le tue ricette · nessuna ricetta | `539:3777` | 852 |
 
-### 8 · Stati dell'account · `550:3635` · 14 schermate
+### 8 · Stati dell'account · `550:3635` · 15 schermate
 
 | Schermata | node-id | Altezza |
 |---|---|---|
@@ -146,6 +146,7 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Stati · 4 · Orario passato · scegli un nuovo orario | `556:3756` | 852 |
 | Stati · 4.1 · Orario non più disponibile | `556:3897` | 852 |
 | Stati · 4.2 · Cambia orario prima della conferma | `556:4038` | 852 |
+| Stati · 4.3 · Nessun orario disponibile (aggiunta il 21/10/2026, step 12) | `738:7520` | 852 |
 | Stati · 5 · Consulenza prenotata | `550:3890` | 852 |
 | Stati · 6 · Percorso non ancora attivo | `558:4206` | 852 |
 | Stati · 7 · Percorso concluso | `558:4260` | 852 |

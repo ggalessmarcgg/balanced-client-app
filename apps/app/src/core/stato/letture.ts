@@ -14,14 +14,16 @@ export const SELEZIONE_STATO = [
   'gender',
   'nutritionist_id',
   'consultation_lead_v2_id',
+  // Stati C e D (step 12): telefono del cliente nella card "I tuoi dati".
+  'phone_number',
   // Account (step 11): email, giornate condivise, promemoria, presenza del cliente Stripe (mai la chiave).
   ...COLONNE_ACCOUNT,
   // clients.consultation_lead_v2_id → consultation_leads_v2.id (ci sono due FK tra le due tabelle: serve il nome)
   'consultation_leads_v2!clients_consultation_lead_v2_id_fkey(desired_date,desired_start_time)',
-  // appointments.client_id → clients.id: incorporare per client_id esclude le righe v1 (client_id nullo)
-  'appointments!appointments_client_id_fkey(id,appointment_date,start_time,status,meeting_url)',
-  // clients.nutritionist_id → nutritionist_profiles.id (policy: solo profili attivi; mai profile_image_url)
-  'nutritionist_profiles!clients_nutritionist_id_fkey(id,full_name,title,app_square_photo_url)',
+  // appointments.client_id → clients.id: incorporare per client_id esclude le righe v1 (client_id nullo); end_time dallo step 12
+  'appointments!appointments_client_id_fkey(id,appointment_date,start_time,end_time,status,meeting_url)',
+  // clients.nutritionist_id → nutritionist_profiles.id (mai profile_image_url né email); specializzazione e numero d'ordine dallo step 12
+  'nutritionist_profiles!clients_nutritionist_id_fkey(id,full_name,title,app_square_photo_url,expertise,registration_number)',
 ].join(',');
 
 /** Forma della riga restituita da PostgREST con SELEZIONE_STATO. */

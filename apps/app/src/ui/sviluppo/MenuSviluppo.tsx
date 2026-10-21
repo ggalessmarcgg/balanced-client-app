@@ -55,7 +55,7 @@ function dati(prossima: Visita | null, passatiPresenti = true) {
   const a = appuntamenti(passatiPresenti ? riga : { ...riga, appointments: [], control_visits: riga.control_visits.filter((c) => c.status === 'scheduled') }, ADESSO);
   return { tipo: 'pronto' as const, prossimo: a.prossimo, passati: a.passati, adesso: ADESSO };
 }
-const controllo = (data: string, link: string | null = LINK): Visita => ({ id: 'c1', tipo: 'controllo', data, inizio: '18:30', fine: '19:00', durataMinuti: 30, linkVideochiamata: link, istanteInizio: ADESSO, istanteFine: ADESSO });
+const controllo = (data: string, link: string | null = LINK): Visita => ({ id: 'c1', tipo: 'controllo', data, inizio: '18:30', fine: '18:50', durataMinuti: 20, linkVideochiamata: link, istanteInizio: ADESSO, istanteFine: ADESSO });
 
 export type ScenarioMenu =
   | 'menu'
@@ -106,7 +106,7 @@ export function MenuSviluppo({ scenario }: { scenario: ScenarioMenu }) {
     case 'appuntamenti':
       return <SchermataAppuntamenti fase={dati(controllo('2026-10-22'))} nutrizionista={NUTRIZIONISTA} onIndietro={nulla} onEntra={nulla} onGestisci={nulla} />;
     case 'appuntamentiOggi':
-      return <SchermataAppuntamenti fase={dati({ ...controllo('2026-10-15'), id: 'p1', tipo: 'prima', fine: '19:30', durataMinuti: 60 })} nutrizionista={NUTRIZIONISTA} onIndietro={nulla} onEntra={nulla} onGestisci={nulla} />;
+      return <SchermataAppuntamenti fase={dati({ ...controllo('2026-10-15'), id: 'p1', tipo: 'prima', fine: '19:10', durataMinuti: 40 })} nutrizionista={NUTRIZIONISTA} onIndietro={nulla} onEntra={nulla} onGestisci={nulla} />;
     case 'appuntamentiNessuno':
       return <SchermataAppuntamenti fase={dati(null)} nutrizionista={NUTRIZIONISTA} onIndietro={nulla} onGestisci={nulla} />;
     case 'appuntamentiLinkInArrivo':

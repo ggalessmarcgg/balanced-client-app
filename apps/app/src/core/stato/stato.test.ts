@@ -41,7 +41,26 @@ describe('calcolaStato', () => {
     if (s.codice !== 'J') return;
     assert.equal(s.profilo.nome, 'Giulia');
     assert.equal(s.profilo.genere, 'female');
-    assert.deepEqual(s.profilo.nutrizionista, { id: 'n1', nome: 'Dott.ssa Margherita Chiadò', foto: 'https://x/foto.jpg' });
+    assert.deepEqual(s.profilo.nutrizionista, { id: 'n1', nome: 'Dott.ssa Margherita Chiadò', foto: 'https://x/foto.jpg', specializzazione: null, numeroAlbo: null });
+    assert.equal(s.profilo.telefono, null);
+  });
+
+  it('profilo (step 12): telefono del cliente, specializzazione e numero d\'ordine della nutrizionista; fine del blocco dell\'appuntamento', () => {
+    const s = calcolaStato(
+      dati({
+        status: 'booked',
+        cliente: { ...CLIENTE, phone_number: ' 333 1234567 ' },
+        nutrizionista: { ...NUTRIZIONISTA, expertise: 'Biologa nutrizionista', registration_number: 'PLV_A4044' },
+        appuntamenti: [{ ...app('scheduled', '2026-10-22', '18:30:00'), end_time: '19:30:00' }],
+      }),
+      ADESSO,
+    );
+    assert.equal(s.codice, 'F');
+    if (s.codice !== 'F') return;
+    assert.equal(s.profilo.telefono, '333 1234567');
+    assert.equal(s.profilo.nutrizionista?.specializzazione, 'Biologa nutrizionista');
+    assert.equal(s.profilo.nutrizionista?.numeroAlbo, 'PLV_A4044');
+    assert.equal(s.appuntamento?.fine, '19:30');
   });
 
   it('profilo: nome completo e dati dell\'Account dalla stessa riga', () => {

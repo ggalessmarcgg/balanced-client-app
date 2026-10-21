@@ -34,19 +34,43 @@ export type Visita = {
 
 export const ETICHETTA_TIPO: Record<TipoVisita, string> = { prima: 'Prima visita', controllo: 'Visita di controllo' };
 
-const MINUTO_MS = 60_000;
+/**
+ * Durate mostrate al cliente (decisione del 22/10/2026, vale in tutta l'app): la durata della visita, non quella
+ * del blocco in calendario (appointments dura 60 minuti nel database, control_visits anche di più). Prima visita
+ * 40 minuti, visita di controllo 20. La fascia mostrata è inizio – inizio + durata (es. 18:30 – 19:10).
+ */
+export const DURATA_VISITA_MINUTI: Record<TipoVisita, number> = { prima: 40, controllo: 20 };
+
+const ORA = /^(\d{2}):(\d{2})/;
+
+/** `HH:MM` più i minuti dati, nel giorno (le visite non scavalcano la mezzanotte); formato non valido → invariato. */
+export function oraPiuMinuti(ora: string, minuti: number): string {
+  const m = ORA.exec(ora);
+  if (!m) return ora;
+  const totale = ((Number(m[1]) * 60 + Number(m[2]) + minuti) % 1440 + 1440) % 1440;
+  const due = (n: number) => String(n).padStart(2, '0');
+  return `${due(Math.floor(totale / 60))}:${due(totale % 60)}`;
+}
+
+/** "18:30 – 19:10": fascia dall'inizio alla fine della visita (inizio + durata). */
+export function fasciaOraria(inizio: string, durataMinuti: number): string {
+  return `${inizio.slice(0, 5)} – ${oraPiuMinuti(inizio, durataMinuti)}`;
+}
 
 function visitaDa(id: string, tipo: TipoVisita, data: string, inizio: string, fine: string, link: string | null): Visita | null {
   const istanteInizio = istanteRoma(data, inizio);
-  const istanteFine = istanteRoma(data, fine);
+  // La fine reale del blocco (end_time) serve solo a decidere se la visita è ancora in corso; al cliente si mostra
+  // la fine della visita (inizio + durata).
+  const istanteFine = istanteRoma(data, fine) ?? istanteInizio;
   if (!istanteInizio || !istanteFine) return null;
+  const durataMinuti = DURATA_VISITA_MINUTI[tipo];
   return {
     id,
     tipo,
     data,
     inizio: inizio.slice(0, 5),
-    fine: fine.slice(0, 5),
-    durataMinuti: Math.max(0, Math.round((istanteFine.getTime() - istanteInizio.getTime()) / MINUTO_MS)),
+    fine: oraPiuMinuti(inizio, durataMinuti),
+    durataMinuti,
     linkVideochiamata: link?.trim() || null,
     istanteInizio,
     istanteFine,
@@ -91,12 +115,12 @@ export function etichettaQuando(visita: Visita, adesso: Date): string {
   return visita.data === dataOraRoma(adesso).data ? 'Oggi' : etichettaData(visita.data);
 }
 
-/** "18:30 – 19:00". */
+/** "18:30 – 19:10" (fine = inizio + durata della visita). */
 export function etichettaOrario(visita: Visita): string {
-  return `${visita.inizio} – ${visita.fine}`;
+  return fasciaOraria(visita.inizio, visita.durataMinuti);
 }
 
-/** "Videochiamata, 20 minuti" (durata reale da end_time − start_time, non un testo fisso). */
+/** "Videochiamata, 40 minuti" (durata della visita per tipo, DURATA_VISITA_MINUTI). */
 export function etichettaVideochiamata(visita: Visita): string {
   return `Videochiamata, ${visita.durataMinuti} ${visita.durataMinuti === 1 ? 'minuto' : 'minuti'}`;
 }

@@ -1,10 +1,9 @@
 import { Fragment, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
-import { ETICHETTA_TIPO, etichettaOrario, etichettaPassato, etichettaQuando, etichettaVideochiamata, type Visita } from '@/core/appuntamenti/appuntamenti';
+import { etichettaPassato, type Visita } from '@/core/appuntamenti/appuntamenti';
+import { ContenutoAppuntamento, type NutrizionistaAppuntamento } from '@/ui/appuntamenti/CardAppuntamento';
 import { ErroreCaricamento } from '@/ui/ErroreCaricamento';
-import { FotoProfilo } from '@/ui/FotoProfilo';
-import { Icona } from '@/ui/icone';
 import { Intestazione } from '@/ui/Intestazione';
 import { CardSezione } from '@/ui/menu/CardSezione';
 import { Pulsante } from '@/ui/Pulsante';
@@ -15,7 +14,7 @@ import { Separatore } from '@/ui/Separatore';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio } from '@/ui/theme';
 
-export type NutrizionistaAppuntamento = { nome: string; foto: string | null; iniziali: string };
+export type { NutrizionistaAppuntamento } from '@/ui/appuntamenti/CardAppuntamento';
 
 export type SchermataAppuntamentiProps = {
   fase: { tipo: 'caricamento' } | { tipo: 'rete' | 'errore'; onRiprova: () => void } | { tipo: 'pronto'; prossimo: Visita | null; passati: Visita[]; adesso: Date };
@@ -29,11 +28,8 @@ export type SchermataAppuntamentiProps = {
 };
 
 // Menu · 4 (Figma 517:2616): intestazione 12 sopra; contenuto 24 sopra, margini 20, gap 12. Card appuntamento padding
-// 32 gap 12: Heading, "Quando" (H2 + Body large all'80 %, gap 2), righe dettaglio (icona 20 + Body, gap 8),
-// nutrizionista (foto 20 + Body), "Entra" primario, "oppure" (Body details 130 centrato), "Gestisci appuntamento"
-// secondario con Caption centrata (gap 8). 4.2: "Nessuna visita in programma al momento." e primario disabilitato.
-const FOTO_NUTRIZIONISTA = 20;
-
+// 32 gap 12 (contenuto in ui/appuntamenti/CardAppuntamento.tsx, condiviso con lo stato F). 4.2: "Nessuna visita in
+// programma al momento." e primario disabilitato.
 export function SchermataAppuntamenti({ fase, nutrizionista, onIndietro, onEntra, onGestisci, sovrapposti }: SchermataAppuntamentiProps) {
   return (
     <Pagina scorrevole={false} sovrapposti={sovrapposti}>
@@ -45,7 +41,7 @@ export function SchermataAppuntamenti({ fase, nutrizionista, onIndietro, onEntra
           <>
             <CardSezione titolo="Prossimo appuntamento">
               {fase.prossimo ? (
-                <Prossimo visita={fase.prossimo} adesso={fase.adesso} nutrizionista={nutrizionista} onEntra={onEntra} onGestisci={onGestisci} />
+                <ContenutoAppuntamento visita={fase.prossimo} adesso={fase.adesso} nutrizionista={nutrizionista} onEntra={onEntra} onGestisci={onGestisci} />
               ) : (
                 <>
                   <Testo stile="bodyDetails" colore={colori.testo.secondario}>
@@ -86,59 +82,10 @@ export function SchermataAppuntamenti({ fase, nutrizionista, onIndietro, onEntra
   );
 }
 
-function Prossimo({ visita, adesso, nutrizionista, onEntra, onGestisci }: { visita: Visita; adesso: Date; nutrizionista: NutrizionistaAppuntamento | null; onEntra?: (link: string) => void; onGestisci?: () => void }) {
-  const link = visita.linkVideochiamata;
-  return (
-    <>
-      <View style={stili.quando}>
-        <Testo stile="h2">{etichettaQuando(visita, adesso)}</Testo>
-        <Testo stile="bodyLarge" colore={colori.testo.corpoAttenuato}>
-          {etichettaOrario(visita)}
-        </Testo>
-      </View>
-      <View style={stili.dettaglio}>
-        <Icona misura={20} nome="Calendario" />
-        <Testo stile="body" style={stili.cresce}>
-          {ETICHETTA_TIPO[visita.tipo]}
-        </Testo>
-      </View>
-      <View style={stili.dettaglio}>
-        <Icona misura={20} nome="Videochiamata" />
-        <Testo stile="body" style={stili.cresce}>
-          {etichettaVideochiamata(visita)}
-        </Testo>
-      </View>
-      {nutrizionista && (
-        <View style={stili.dettaglio} accessible accessibilityLabel={nutrizionista.nome}>
-          <FotoProfilo misura={FOTO_NUTRIZIONISTA} foto={nutrizionista.foto} iniziali={undefined} />
-          <Testo stile="body" numberOfLines={1} style={stili.cresce}>
-            {nutrizionista.nome}
-          </Testo>
-        </View>
-      )}
-      <Pulsante etichetta={link ? 'Entra' : 'Link in arrivo'} stato={link ? 'normale' : 'disabilitato'} onPress={link && onEntra ? () => onEntra(link) : undefined} accessibilityHint="Apre la videochiamata" />
-      <Testo stile="bodyDetails130" style={stili.centrato}>
-        oppure
-      </Testo>
-      <View style={stili.gestisci}>
-        <Pulsante etichetta="Gestisci appuntamento" livello="secondario" onPress={onGestisci} accessibilityHint="Copia il numero WhatsApp del supporto" />
-        <Testo stile="caption" style={stili.centrato}>
-          Puoi gestire il tuo appuntamento in programma scrivendoci su WhatsApp
-        </Testo>
-      </View>
-    </>
-  );
-}
-
 const stili = StyleSheet.create({
   intestazione: { paddingTop: spazio[12], paddingHorizontal: margine.pagina },
   scorrimento: { flex: 1 },
   contenuto: { paddingTop: spazio[24], paddingHorizontal: margine.pagina, paddingBottom: spazio[40], gap: spazio[12] },
-  quando: { alignSelf: 'stretch', gap: spazio[2] },
-  dettaglio: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: spazio[8] },
-  cresce: { flex: 1 },
-  centrato: { alignSelf: 'stretch', textAlign: 'center' },
-  gestisci: { alignSelf: 'stretch', gap: spazio[8] },
   elenco: { alignSelf: 'stretch' },
   errore: { paddingTop: spazio[24] },
 });

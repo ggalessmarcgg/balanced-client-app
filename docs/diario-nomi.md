@@ -190,3 +190,46 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
   `notification_type not in (diary_reminder, weight_update, measurement_update)`, dalla più recente, al massimo 50
   (indice `idx_client_notifications_user_viewed`); all'avvio dell'app dell'abbonato, al rientro in primo piano e
   all'apertura dell'elenco. Copia su file nella cache per ripartire senza rete; tutto si cancella all'uscita.
+
+## Stati prima dell'abbonamento (step 12)
+
+Decisione del 21/10/2026 (censimento `~/Desktop/censimenti-app/step12-censimento-stati.md`). In codice:
+`apps/app/src/core/prenotazione/nomi.ts` (`SCHERMATE_PRENOTAZIONE`, `AZIONI_PRENOTAZIONE`).
+
+### Schermate
+
+| Nome | Figma | Cosa mostra |
+|---|---|---|
+| `consulenza · da confermare` | Stati · 1 (`550:3636`) | stato C: "Ciao Giulia, ci siamo quasi!", card "I tuoi dati" (`clients.full_name`, `email`, `phone_number`), "La tua Nutrizionista" (foto quadrata, nome con titolo, `expertise`, "N. Ordine" = `registration_number`), "La tua consulenza" (giorno per esteso, fascia inizio – inizio + 40 minuti, Prima visita, Videochiamata 40 minuti, link in App, gratuita); "Conferma la consulenza" e "Modifica". Rotta `/stato/prenotazione` |
+| `consulenza · orario passato` | Stati · 3 (`550:3754`) | stato D: stessa pagina con giorno e ora barrati al 40 % e "Questo orario è passato: scegline uno nuovo."; "Scegli un nuovo orario". Lead senza orario: card senza "Quando" e frase "Non hai ancora un orario…" |
+| `consulenza · scelta orario` | Stati · 4 (`556:3756`), 4.1 (`556:3897`), 4.2 (`556:4038`); componente `555:422` | Pannello dal basso "Scegli un nuovo orario" (avviso "orario passato" o "non più disponibile") oppure "Cambia orario" (senza avviso): due schede da 5 giorni feriali, colonne con le ore a pillola e "N/A", nota dei 14 giorni, "Conferma orario" e "Annulla". I giorni vengono dalle date restituite dalla funzione degli orari |
+| `consulenza · nessun orario` | Stati · 4.3 (`738:7520`), variante `738:7440` | pannello "Nessun orario disponibile" con l'avviso, email e numero del supporto da copiare, "Chiudi". Elenco degli orari vuoto (ferie lunghe, fasce assenti, nutrizionista non assegnata) |
+| `consulenza · confermata` | Stati · 5 (`550:3890`) | stato G, solo dopo una conferma fatta nell'app: icona Conferma, "Prenotazione della consulenza confermata!", card "I prossimi passi:", "Torna alla home" (→ F con rilettura dello stato). Rotta `/stato/prenotato` |
+| `consulenza · prima della consulenza` | Stati · 2 (`550:3694`) | stato F: "Ciao Giulia, manca poco alla consulenza!", card dell'appuntamento riusata da Appuntamenti ("Entra" o "Link in arrivo", "Gestisci appuntamento" che copia il supporto) e Card nutrizionista → `/nutrizionista`. Senza visita futura: "Nessuna visita in programma al momento." e "Gestisci appuntamento". Rotta `/stato/prenotato` |
+
+### Azioni
+
+| Nome | Dove | Effetto sui dati |
+|---|---|---|
+| `consulenza · conferma` | "Conferma la consulenza" (C) | una chiamata a `confirm_initial_appointment` con `p_client_id` e, se l'orario è stato cambiato con "Modifica", `p_date` e `p_start_time` (`HH:MM:00`); la funzione scrive una riga in `appointments` e `clients.status = booked`. Esiti: `confirmed` → `consulenza · confermata` e in sottofondo `send-appointment-confirmation-v2` + `send-booking-notification-v2` (body `{ appointmentId }`, una sola volta); `already_confirmed`, `invalid_status` → rilettura dello stato; `slot_taken`, `day_full` → pannello "non più disponibile" con scelta azzerata e orari riletti; `slot_in_past`, `no_desired_slot` → pannello "orario passato" con orari riletti; altro → Notifica breve di errore con "Riprova" |
+| `consulenza · modifica orario` | "Modifica" (C) | apre il pannello "Cambia orario"; nessuna scrittura |
+| `consulenza · scegli un nuovo orario` | "Scegli un nuovo orario" (D) | apre il pannello con l'avviso dell'orario passato; nessuna scrittura |
+| `consulenza · scheda giorni` | "Prossimi giorni" / "Settimana successiva" | nessuna richiesta (gli orari sono già tutti in memoria) |
+| `consulenza · scegli orario` | pillola di un'ora | selezione singola in memoria; secondo tocco deseleziona |
+| `consulenza · conferma orario` | "Conferma orario" nel pannello | con "Cambia orario": la scelta resta solo nell'app e la card di C si aggiorna, nessuna scrittura (il lead non si tocca mai); con "orario passato" / "non più disponibile": parte subito `confirm_initial_appointment` con `p_date` e `p_start_time`, esiti come sopra |
+| `consulenza · annulla scelta` | "Annulla", "Chiudi", velo, tasto indietro | chiude il pannello e azzera la scelta in corso |
+| `consulenza · riprova orari` | "Riprova" nel pannello | rilegge gli orari |
+| `consulenza · torna alla home` | "Torna alla home" e icona Indietro (G) | rilegge lo stato all'avvio e mostra F |
+| `consulenza · entra` / `consulenza · gestisci appuntamento` | card dell'appuntamento (F) | come `appuntamenti · entra` / `appuntamenti · gestisci` |
+
+### Letture
+
+- Stato: la lettura unica all'avvio (`SELEZIONE_STATO`) include dallo step 12 `clients.phone_number`,
+  `appointments.end_time` e `nutritionist_profiles.expertise, registration_number`. Nessuna lettura in più per C, D, G.
+- Orari: `get_nutritionist_available_slots_v2` con il solo `p_nutritionist_id` (= `clients.nutritionist_id`, default
+  14 giorni e 8 ore di anticipo) all'apertura del pannello, dopo `slot_taken`/`day_full`/`slot_in_past` e su "Riprova";
+  mai al cambio di scheda; una ripetizione silenziosa dopo 300 ms su errore. Elenco vuoto → `consulenza · nessun orario`.
+- F: nessuna lettura in più oltre allo stato; se il link della videochiamata manca, lo stato si rilegge al ritorno in
+  primo piano ("Torna alla home" da G rilegge comunque).
+- Durate (decisione del 22/10/2026, tutta l'app): prima visita 40 minuti, visita di controllo 20; la fascia mostrata è
+  inizio – inizio + durata, non `end_time`; la fine reale del blocco serve solo a decidere se la visita è in corso.

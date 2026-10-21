@@ -466,6 +466,7 @@ export const opacita = {
   campoDisabilitato: 0.5,
   caricamentoPuntoMedio: 0.6,
   caricamentoPuntoChiaro: 0.3,
+  orarioPassato: 0.4,
 } as const;
 
 /** Colori decisi in codice (non variabili in Figma): variabile Figma di base con un'alfa, vedi figma-tokens.json → coloriCodice. */

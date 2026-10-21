@@ -390,6 +390,35 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Pagina di sviluppo: `/sviluppo/stati?stato=menu-1|menu-3-abbonato|menu-3-prenotato|menu-3.1-ferie|menu-4-appuntamenti|menu-6-grafici|menu-6.1-tabelle|menu-5-contenuti|menu-5.1-contenuto|account-1|account-3-avviso|account-4-conferma|menu-2-notifiche|…`;
   esiti dei confronti in `~/Desktop/censimenti-app/step11-confronti/lotto1/`, `lotto2/` e `lotto3/`.
 
+## Stati prima dell'abbonamento (step 12)
+
+- Logica pura in `src/core/prenotazione/` (`orari.ts`: selettore estratto da `SlotPage.tsx` del funnel con l'origine
+  dichiarata, giorni **dalle date restituite dalla funzione** e mai dal fuso del telefono, una ripetizione dopo 300 ms,
+  scelta azzerata se l'orario sparisce, selezione singola; `conferma.ts`: parametri di `confirm_initial_appointment`,
+  traduzione dei codici in esiti, testi; `nomi.ts` → `docs/diario-nomi.md`); servizi `src/servizi/prenotazione.ts`
+  (orari con `get_nutritionist_available_slots_v2` e il solo `p_nutritionist_id` = `clients.nutritionist_id`; conferma;
+  le due email della web app dopo `confirmed`, una sola volta per appuntamento, errori registrati e mai bloccanti) e hook
+  `usePrenotazione.ts`; `impostaStatoConfermato` in `statoCliente.ts` mette G in memoria (mai nel portachiavi).
+- Componenti in `src/ui/prenotazione/` (card "I tuoi dati", "La tua Nutrizionista", "La tua consulenza" anche barrata;
+  `PannelloSceltaOrario` con le varianti del componente Figma `555:422`: orario passato, non disponibile, modifica,
+  nessun orario) e `src/ui/appuntamenti/CardAppuntamento.tsx` (contenuto della card condiviso con Appuntamenti);
+  schermate `SchermataPrenotazione` (C e D), `SchermataPrenotato` (F), `SchermataConsulenzaConfermata` (G); rotte
+  `app/stato/prenotazione.tsx` e `app/stato/prenotato.tsx`. Il menu (`app/menu.tsx`) negli stati C, D, F, G ha la sola
+  voce "La tua nutrizionista" oltre a "Esci".
+- Regole (censimento `~/Desktop/censimenti-app/step12-censimento-stati.md`): nessuna logica di prenotazione nuova,
+  nessuna scrittura diretta dell'app (scrive solo la funzione del database); orari letti all'apertura del pannello,
+  dopo `slot_taken`/`day_full`/`slot_in_past` e su "Riprova", mai al cambio di scheda; elenco vuoto → variante
+  "Nessun orario" con il supporto da copiare; "Modifica" in C tiene la scelta solo in memoria e **non scrive mai sul
+  lead**; `p_start_time` in `HH:MM:00`; G compare solo dopo una conferma nell'app e "Torna alla home" rilegge lo
+  stato; in F senza link lo stato si rilegge al ritorno in primo piano. Lettura dello stato estesa a `phone_number`,
+  `appointments.end_time`, `expertise`, `registration_number`.
+- **Durate (decisione del 22/10/2026, tutta l'app)**: al cliente si mostra la durata della visita, non il blocco in
+  calendario: prima visita 40 minuti, visita di controllo 20 (`DURATA_VISITA_MINUTI`, `fasciaOraria` in
+  `src/core/appuntamenti/appuntamenti.ts`); fascia = inizio – inizio + durata (es. 18:30 – 19:10); `end_time` serve solo
+  a decidere se la visita è in corso. Gli orari si scelgono a ore intere.
+- Pagina di sviluppo: `/sviluppo/stati?stato=stati-1-da-confermare|stati-2-prima|stati-3-orario-passato|stati-4-scegli|stati-4.1-non-disponibile|stati-4.2-cambia|stati-4.3-nessun-orario|stati-5-confermata|…`;
+  esiti dei confronti in `~/Desktop/censimenti-app/step12-confronti/`.
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

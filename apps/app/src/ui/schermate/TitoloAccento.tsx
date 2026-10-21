@@ -1,4 +1,4 @@
-import { Text, type TextProps } from 'react-native';
+import { StyleSheet, Text, type TextProps } from 'react-native';
 
 import { Testo } from '@/ui/Testo';
 import { testi } from '@/ui/theme';
@@ -11,16 +11,20 @@ export type TitoloAccentoProps = {
   dopo?: string;
   /** app: H1 32 + Accento serif (saluti in-app). accesso: H1 Accesso 36 + Accento serif 36 (schermate di accesso). */
   contesto?: 'app' | 'accesso';
+  /** Allineamento del testo (centrato nella conferma della consulenza, Figma 550:3890). */
+  allineamento?: 'sinistra' | 'centro';
 } & Pick<TextProps, 'accessibilityRole'>;
 
 /** Titolo con la parola in corsivo serif, come i saluti e i titoli delle schermate di accesso in Figma. */
-export function TitoloAccento({ prima = '', accento, dopo = '', contesto = 'app', accessibilityRole = 'header' }: TitoloAccentoProps) {
+export function TitoloAccento({ prima = '', accento, dopo = '', contesto = 'app', allineamento = 'sinistra', accessibilityRole = 'header' }: TitoloAccentoProps) {
   const accesso = contesto === 'accesso';
   return (
-    <Testo stile={accesso ? 'h1Accesso' : 'h1'} accessibilityRole={accessibilityRole}>
+    <Testo stile={accesso ? 'h1Accesso' : 'h1'} accessibilityRole={accessibilityRole} style={allineamento === 'centro' && stili.centrato}>
       {prima}
       <Text style={accesso ? testi.accentoSerifAccesso : testi.accentoSerif}>{accento}</Text>
       {dopo}
     </Testo>
   );
 }
+
+const stili = StyleSheet.create({ centrato: { alignSelf: 'stretch', textAlign: 'center' } });
