@@ -60,6 +60,8 @@ export type SchermataOggiProps = {
   onAggiorna: (diario: Diario) => void;
   onCondividi: () => void;
   onNavigazione?: (voce: VoceNavigazione) => void;
+  /** Pallino rosso sulla voce Revisioni della barra (almeno una revisione Nuova). */
+  revisioneNuova?: boolean;
   /** Icona Calendario della Card settimana: apre lo storico delle giornate. */
   onApriStorico?: () => void;
   onNotifiche?: () => void;
@@ -98,6 +100,7 @@ export function SchermataOggi({
   onAggiorna,
   onCondividi,
   onNavigazione,
+  revisioneNuova = false,
   onApriStorico,
   onNotifiche,
   onMenu,
@@ -145,7 +148,7 @@ export function SchermataOggi({
       scorriInFondoAllAvvio={scorriInFondoAllAvvio}
       sovrapposti={
         <>
-          <BarraNavigazioneFissa attiva="oggi" onSeleziona={onNavigazione} />
+          <BarraNavigazioneFissa attiva="oggi" revisioneNuova={revisioneNuova} onSeleziona={onNavigazione} />
           {giornata && (
             <PannelloGiornata
               pannello={giornata.pannello}

@@ -1,9 +1,10 @@
-# Nomi stabili del diario (schermate e azioni)
+# Nomi stabili del diario e delle revisioni (schermate e azioni)
 
 Decisione del 19/10/2026 (step 5, lotto 1), estesa il 20/10/2026 con il lotto 2 (settimana, pannello della
-giornata e commenti) e il 21/10/2026 con il lotto 3 (storico delle giornate) e il lotto 4 (andamento della
-settimana e durate dello sport). Nomi da usare in futuro per gli eventi di misurazione: non cambiano al cambiare dei testi
-a schermo. In codice: `apps/app/src/core/diario/nomi.ts` (`SCHERMATE_DIARIO`, `AZIONI_DIARIO`).
+giornata e commenti), il 21/10/2026 con il lotto 3 (storico delle giornate), il lotto 4 (andamento della
+settimana e durate dello sport) e lo step 7 (revisioni). Nomi da usare in futuro per gli eventi di misurazione: non
+cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/nomi.ts` (`SCHERMATE_DIARIO`,
+`AZIONI_DIARIO`) e `apps/app/src/core/revisioni/nomi.ts` (`SCHERMATE_REVISIONI`, `AZIONI_REVISIONI`).
 
 ## Schermate
 
@@ -68,3 +69,35 @@ a schermo. In codice: `apps/app/src/core/diario/nomi.ts` (`SCHERMATE_DIARIO`, `A
 - Autore del commento: una lettura di `nutritionist_profiles` (`id, full_name, title, app_square_photo_url`) per
   `comment_author_id`, tenuta in memoria per la sessione e nel portachiavi per 30 giorni; se il profilo non è leggibile
   (inattivo) si mostra la nutrizionista del cliente; senza foto, le iniziali.
+
+## Revisioni (step 7)
+
+### Schermate
+
+| Nome | Figma | Cosa mostra |
+|---|---|---|
+| `revisioni` | Revisioni · 1, 2, 3, 5 (`494:1944`, `494:2060`, `494:2165`, `494:2528`), Card revisione (`496:2350`) | la sezione: card attive in un contenitore con spazio 12 (avanzamento "Inizia" 0 su 7 o "Da sbloccare" n su 7, poi "In elaborazione" 7 su 7, poi le "Nuove" dalla più vecchia alla più recente per `sent_at`), quindi l'elenco delle passate (`opened` e `read`, per `sent_at` decrescente) con "Revisione N · giorno mese" e l'inizio del testo. "Inizia" è una riga virtuale (numero = massimo + 1) che l'app non crea mai; solo la revisione 1 ha il testo che spiega cos'è una revisione. Rotta `/revisioni` |
+| `revisione · lettura` | Revisioni · 4 (`494:2487`) | intestazione "Revisione N", autrice ("<title> <full_name>" da `review_author_id`, ripiego sulla nutrizionista assegnata; foto dalla memoria su disco, iniziali durante il caricamento), data di invio in ora italiana, sezioni "Generale", "Correlazione", "Spunti e consigli" (le vuote nascoste; righe con `- `, `* `, `• ` come elenco puntato; `**` tolto), piè di pagina "Hai letto tutta la revisione.". Rotta diretta `/revisioni/<id>` (per la notifica di invio, step 6): se la revisione non è più `sent` si apre comunque; se non esiste o non è inviata si torna a `/revisioni` |
+
+### Azioni
+
+| Nome | Dove | Effetto sui dati |
+|---|---|---|
+| `revisioni · apri` | riga dell'elenco delle passate | apre `revisione · lettura`; nessuna scrittura |
+| `revisioni · leggi la revisione` | "Leggi la revisione" nella card Nuova | apre `revisione · lettura` |
+| `revisione · aperta` | automatico: apertura della lettura | una sola modifica `status = 'opened'`, `opened_at = adesso`, filtrata su `status = 'sent'` (0 righe = già aperta altrove, nulla da riscrivere); la cache passa subito ad aperta (la card Nuova sparisce, la revisione va nell'elenco e il pallino sulla barra si spegne); se la scrittura fallisce resta in attesa e si riprova in silenzio |
+| `revisione · letta` | automatico: il piè di pagina è entrato nello schermo E sono passati almeno 25 caratteri al secondo di tempo in pagina (minimo 5 secondi) | una sola modifica `status = 'read'`, `read_at = adesso`, filtrata su `status in ('opened', 'sent')`; stessa cache e stesso ritentativo. Nessun pulsante "Ho capito!" |
+| `revisione · indietro` | icona Indietro dell'intestazione | torna alla sezione; nessuna scrittura |
+
+### Letture
+
+- All'apertura della sezione e a ogni ritorno in primo piano: una lettura leggera di `client_reviews` per `user_id`
+  (`id, review_number, status, submissions_count, review_author_id, sent_at, opened_at, read_at`, senza testo) e una
+  seconda lettura con `review_text` solo per le revisioni `sent`, `opened`, `read` il cui testo non è già in memoria
+  (il testo non cambia dopo l'invio). Mai il testo di `unlocked` o `draft`. Memoria di sessione e cache nel
+  portachiavi (`balanced.revisioni.<clientId>`), svuotate all'uscita.
+- All'avvio dell'app dell'abbonato (pagina Oggi) e dopo la condivisione di un diario: solo la lettura leggera dello
+  stato, per il pallino rosso sulla voce Revisioni (almeno una `sent`).
+- Rotta diretta a freddo: lettura leggera dello stato più il testo della sola revisione richiesta.
+- Autrice: `nutritionist_profiles` per `review_author_id` dalla stessa memoria dei profili dei commenti (30 giorni nel
+  portachiavi); numero di diari mostrato = `submissions_count` della revisione.

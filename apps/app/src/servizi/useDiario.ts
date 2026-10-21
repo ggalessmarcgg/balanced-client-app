@@ -13,6 +13,7 @@ import { BLOCCHI, bloccoSuccessivo, type Blocco, type Diario } from '@/core/diar
 import { condividiDiario, leggiDiarioOggi, precaricaAutori, salvaBozza, type EsitoScrittura } from '@/servizi/diario';
 import { giornateInAttesa, riprovaLetture, salvaGiornateInAttesa } from '@/servizi/giornate';
 import { accodaScrittura, aggiornaMemoria, memoriaDiario, persistiMemoria, useMemoriaDiario } from '@/servizi/memoriaDiario';
+import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { notificaModifica, type NotificaDiario, type NutrizionistaCliente } from '@/servizi/usePannelloGiornata';
 
 export type { NotificaDiario, NutrizionistaCliente } from '@/servizi/usePannelloGiornata';
@@ -249,6 +250,8 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
           primoDiario: m.primoDiario ?? dopo.data,
         });
         persistiMemoria();
+        // Il trigger del diario ha fatto avanzare (o sbloccato) la revisione: si rilegge solo lo stato leggero.
+        aggiornaStatoRevisioni(dopo.clientId);
       }
       if (!montato.current) return;
       setInviando(false);

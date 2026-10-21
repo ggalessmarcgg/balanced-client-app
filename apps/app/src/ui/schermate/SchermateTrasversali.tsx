@@ -11,11 +11,11 @@ import { Testo } from '@/ui/Testo';
 import { margine, spazio } from '@/ui/theme';
 
 /** Barra di navigazione fissa al viewport: 8 sopra l'area sicura inferiore, margini laterali 20 (Figma 493:368). */
-export function BarraNavigazioneFissa({ attiva, onSeleziona }: { attiva: VoceNavigazione; onSeleziona?: (voce: VoceNavigazione) => void }) {
+export function BarraNavigazioneFissa({ attiva, revisioneNuova = false, onSeleziona }: { attiva: VoceNavigazione; revisioneNuova?: boolean; onSeleziona?: (voce: VoceNavigazione) => void }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[stili.barraFissa, { bottom: insets.bottom + spazio[8] }]} pointerEvents="box-none">
-      <BarraNavigazione attiva={attiva} onSeleziona={onSeleziona} />
+      <BarraNavigazione attiva={attiva} revisioneNuova={revisioneNuova} onSeleziona={onSeleziona} />
     </View>
   );
 }
@@ -33,6 +33,8 @@ export type StrutturaPagina = {
   barraSuperiore?: 'soloLogo' | 'completa';
   /** Voce attiva della barra di navigazione; assente = nessuna barra (predefinito). */
   barraNavigazione?: VoceNavigazione;
+  /** Pallino rosso sulla voce Revisioni (almeno una revisione Nuova). */
+  revisioneNuova?: boolean;
 };
 
 function Struttura({ barraSuperiore = 'soloLogo' }: StrutturaPagina) {
@@ -40,7 +42,7 @@ function Struttura({ barraSuperiore = 'soloLogo' }: StrutturaPagina) {
 }
 
 function barraDi(struttura: StrutturaPagina) {
-  return struttura.barraNavigazione ? <BarraNavigazioneFissa attiva={struttura.barraNavigazione} /> : undefined;
+  return struttura.barraNavigazione ? <BarraNavigazioneFissa attiva={struttura.barraNavigazione} revisioneNuova={struttura.revisioneNuova} /> : undefined;
 }
 
 /** Trasversali · 2 · Caricamento (Figma 563:4751): tre segnaposti che pulsano dentro la struttura della pagina. */

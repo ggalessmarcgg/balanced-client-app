@@ -279,6 +279,23 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Pagina di sviluppo: `/sviluppo/stati?stato=J|oggi-2-pasti|…|oggi-7-condiviso|racconta`; esiti dei
   confronti in `~/Desktop/censimenti-app/step5-confronti/lotto1/`.
 
+## Revisioni (step 7)
+
+- Logica pura in `src/core/revisioni/` (`letture.ts` colonne esplicite di `client_reviews`, `stato.ts` card e
+  elenco con la "Inizia" virtuale, `testo.ts` sezioni ed elenchi puntati, `lettura.ts` regola del letto e le due sole
+  scritture, `autore.ts`, `nomi.ts` → `docs/diario-nomi.md`); servizi `src/servizi/revisioni.ts`,
+  `memoriaRevisioni.ts` (memoria di sessione + cache nel portachiavi), hook `useRevisioni.ts` e
+  `useLetturaRevisione.ts`; componenti in `src/ui/revisioni/`, schermate `SchermataRevisioni.tsx` e
+  `SchermataLetturaRevisione.tsx`, rotte `app/revisioni/index.tsx` e `app/revisioni/[id].tsx`.
+- Regole sui dati (censimento `~/Desktop/censimenti-app/step7-censimento-revisioni.md`): il ciclo lo fa il trigger
+  del diario, l'app non crea né conta nulla; lettura leggera dello stato per `user_id` senza testo (anche all'avvio
+  dell'app dell'abbonato e dopo la condivisione di un diario, per il pallino sulla barra), testi solo per `sent`,
+  `opened`, `read` e solo se non già in memoria; mai leggere né mostrare il testo di `unlocked` o `draft`; le uniche
+  scritture sono `status = 'opened'` + `opened_at` (da `sent`) e `status = 'read'` + `read_at` (da `opened`/`sent`),
+  mai altre colonne; cache aggiornata subito, scritture fallite riprovate in silenzio.
+- Pagina di sviluppo: `/sviluppo/stati?stato=revisioni-1-in-corso|…|revisioni-errore`; esiti dei confronti in
+  `~/Desktop/censimenti-app/step7-confronti/`.
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

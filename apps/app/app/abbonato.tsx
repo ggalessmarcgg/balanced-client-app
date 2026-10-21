@@ -5,6 +5,8 @@ import { andamentoSettimana } from '@/core/diario/andamento';
 import { dataValida } from '@/core/diario/data';
 import { giorniSettimana } from '@/core/diario/settimana';
 import type { Profilo } from '@/core/stato/stato';
+import { useNuovaRevisione } from '@/servizi/memoriaRevisioni';
+import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useDiario } from '@/servizi/useDiario';
 import { usePannelloGiornata } from '@/servizi/usePannelloGiornata';
@@ -13,7 +15,7 @@ import { SchermataOggi } from '@/ui/schermate/SchermataOggi';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 
 /**
- * Stato J: app dell'abbonato, pagina Oggi (step 5). Piano, Revisioni, campanella e menu restano segnaposti.
+ * Stato J: app dell'abbonato, pagina Oggi (step 5). Revisioni dallo step 7; Piano, campanella e menu restano segnaposti.
  * `/abbonato?giornata=YYYY-MM-DD` apre direttamente il pannello di quella giornata (per la push del commento, step 6).
  */
 export default function RottaAbbonato() {
@@ -29,6 +31,12 @@ function Oggi({ profilo }: { profilo: Profilo }) {
   const { giornata: giornataRichiesta } = useLocalSearchParams<{ giornata?: string }>();
   const diario = useDiario(profilo.clientId, profilo.nutrizionista);
   const pannello = usePannelloGiornata(profilo.clientId, profilo.nutrizionista, diario.mostraNotifica);
+  // Pallino "Nuova revisione" sulla barra: una lettura leggera dello stato delle revisioni all'avvio dell'app
+  // dell'abbonato (e dopo la condivisione di un diario, in useDiario); nessun testo.
+  const revisioneNuova = useNuovaRevisione();
+  useEffect(() => {
+    aggiornaStatoRevisioni(profilo.clientId);
+  }, [profilo.clientId]);
 
   // Rotta diretta: appena la pagina è pronta si apre il pannello della data richiesta, una volta per valore.
   const giornataAperta = useRef<string | null>(null);
@@ -41,8 +49,10 @@ function Oggi({ profilo }: { profilo: Profilo }) {
 
   const onNavigazione = useCallback(
     (voce: VoceNavigazione) => {
-      // Account è l'unica pagina già esistente (segnaposto con "Esci"); Piano e Revisioni arrivano con gli step successivi.
+      // Account è un segnaposto con "Esci"; Piano arriva con uno step successivo. Tra le voci della barra si passa
+      // senza impilare le pagine.
       if (voce === 'account') router.push('/account');
+      if (voce === 'revisioni') router.replace('/revisioni');
     },
     [router],
   );
@@ -88,6 +98,7 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       onAggiorna={diario.aggiorna}
       onCondividi={diario.condividi}
       onNavigazione={onNavigazione}
+      revisioneNuova={revisioneNuova}
       onApriStorico={onApriStorico}
       notifica={notifica}
       giornata={{

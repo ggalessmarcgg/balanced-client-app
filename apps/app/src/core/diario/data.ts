@@ -72,3 +72,9 @@ export function etichettaData(data: string): string {
   const d = aUtc(data);
   return `${GIORNI[d.getUTCDay()]} ${d.getUTCDate()} ${MESI[d.getUTCMonth()]}`;
 }
+
+/** "2 ottobre": data senza giorno della settimana (elenco delle revisioni passate). */
+export function etichettaGiornoMese(data: string): string {
+  const d = aUtc(data);
+  return `${d.getUTCDate()} ${MESI[d.getUTCMonth()]}`;
+}

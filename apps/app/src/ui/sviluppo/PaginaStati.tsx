@@ -12,10 +12,11 @@ import { SchermataRaccontaSegnaposto, SchermataSegnapostoPrenotazione } from '@/
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
+import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
 import { StoricoSviluppo } from '@/ui/sviluppo/StoricoSviluppo';
 import { colori, margine, spazio, testi, tocco } from '@/ui/theme';
 
-// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3 e 5 con dati finti, per i
+// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3, 5 e 7 con dati finti, per i
 // confronti con Figma senza accedere. /sviluppo/stati?stato=<chiave> mostra la sola schermata a tutto schermo.
 
 export const STATI_SVILUPPO = [
@@ -65,6 +66,21 @@ export const STATI_SVILUPPO = [
   ['giornate-caricamento', 'Giornate · pannello in caricamento (segnaposti)'],
   ['giornate-errore', 'Giornate · pannello senza connessione (Riprova)'],
   ['racconta', 'Racconta (segnaposto fino allo step 10)'],
+  ['revisioni-1-in-corso', 'Revisioni · 1 · Revisione in corso (494:1944)'],
+  ['revisioni-2-nuova', 'Revisioni · 2 · Nuova revisione arrivata (494:2060)'],
+  ['revisioni-3-in-preparazione', 'Revisioni · 3 · Revisione in preparazione (494:2165)'],
+  ['revisioni-4-lettura', 'Revisioni · 4 · Lettura della revisione (494:2487)'],
+  ['revisioni-5-prima', 'Revisioni · 5 · Prima revisione in arrivo (494:2528)'],
+  ['revisioni-prima-inizia', 'Revisioni · nessuna riga: Revisione 1 · Inizia 0 su 7 con il testo'],
+  ['revisioni-piu-nuove', 'Revisioni · Da sbloccare 2/7, In elaborazione, due Nuove (9 e 13) ed elenco'],
+  ['revisioni-senza-passate', 'Revisioni · come +test4 oggi: Revisione 1 · Da sbloccare 3 su 7, nessuna passata'],
+  ['revisioni-lettura-elenchi', 'Revisioni · lettura con elenchi puntati, ** residuo e Correlazione vuota nascosta'],
+  ['revisioni-lettura-foto', 'Revisioni · lettura con la foto dell\'autrice (da rete)'],
+  ['revisioni-lettura-caricamento', 'Revisioni · lettura in caricamento (rotta diretta a freddo)'],
+  ['revisioni-lettura-errore', 'Revisioni · lettura senza connessione (Riprova)'],
+  ['revisioni-caricamento', 'Revisioni · sezione in caricamento'],
+  ['revisioni-senza-connessione', 'Revisioni · sezione senza connessione, con il pallino sulla barra'],
+  ['revisioni-errore', 'Revisioni · sezione con errore di caricamento'],
   ['K', 'K · Stati 7 · Percorso concluso (558:4260)'],
   ['L', 'L · Stati 11 · Account non collegato (558:4316)'],
   ['caricamento', "Caricamento all'avvio (senza barra di navigazione)"],
@@ -214,6 +230,36 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="pannelloErrore" />;
     case 'racconta':
       return <SchermataRaccontaSegnaposto onIndietro={nulla} />;
+    case 'revisioni-1-in-corso':
+      return <RevisioniSviluppo scenario="inCorso" />;
+    case 'revisioni-2-nuova':
+      return <RevisioniSviluppo scenario="nuova" />;
+    case 'revisioni-3-in-preparazione':
+      return <RevisioniSviluppo scenario="inPreparazione" />;
+    case 'revisioni-4-lettura':
+      return <RevisioniSviluppo scenario="lettura" />;
+    case 'revisioni-5-prima':
+      return <RevisioniSviluppo scenario="prima" />;
+    case 'revisioni-prima-inizia':
+      return <RevisioniSviluppo scenario="primaInizia" />;
+    case 'revisioni-piu-nuove':
+      return <RevisioniSviluppo scenario="piuNuove" />;
+    case 'revisioni-senza-passate':
+      return <RevisioniSviluppo scenario="senzaPassate" />;
+    case 'revisioni-lettura-elenchi':
+      return <RevisioniSviluppo scenario="letturaElenchi" />;
+    case 'revisioni-lettura-foto':
+      return <RevisioniSviluppo scenario="letturaConFoto" />;
+    case 'revisioni-lettura-caricamento':
+      return <RevisioniSviluppo scenario="letturaCaricamento" />;
+    case 'revisioni-lettura-errore':
+      return <RevisioniSviluppo scenario="letturaErrore" />;
+    case 'revisioni-caricamento':
+      return <RevisioniSviluppo scenario="caricamento" />;
+    case 'revisioni-senza-connessione':
+      return <RevisioniSviluppo scenario="senzaConnessione" />;
+    case 'revisioni-errore':
+      return <RevisioniSviluppo scenario="errore" />;
     case 'K':
       return <SchermataPercorsoConcluso profilo={PROFILO} onAccount={nulla} onEsci={nulla} />;
     case 'L':

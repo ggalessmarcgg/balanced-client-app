@@ -38,6 +38,8 @@ export default function RootLayout() {
         <Stack.Screen name="stato/percorso-concluso" />
         <Stack.Screen name="stato/account-non-collegato" />
         <Stack.Screen name="abbonato" />
+        <Stack.Screen name="revisioni/index" />
+        <Stack.Screen name="revisioni/[id]" options={{ animation: 'default' }} />
         <Stack.Screen name="racconta" options={{ animation: 'default' }} />
         <Stack.Screen name="storico" options={{ animation: 'default' }} />
         <Stack.Screen name="account" options={{ animation: 'default' }} />
