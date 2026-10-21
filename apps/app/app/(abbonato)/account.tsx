@@ -41,10 +41,11 @@ function Account({ profilo }: { profilo: Profilo }) {
   const [passo, setPasso] = useState<PassoEliminazione | null>(null);
   const [avviso, setAvviso] = useState<{ chiave: number; testo: string } | null>(null);
 
-  // "Revisioni ricevute" dalle revisioni già in memoria: una lettura leggera se non ci sono ancora.
+  // "Revisioni ricevute": una lettura leggera dello stato all'apertura (una per montaggio, mai innescata dal
+  // proprio risultato: l'effetto dipende solo dal cliente). Il valore in memoria si mostra subito.
   useEffect(() => {
-    if (revisioni.clientId !== profilo.clientId || revisioni.righe === null) aggiornaStatoRevisioni(profilo.clientId);
-  }, [profilo.clientId, revisioni.clientId, revisioni.righe]);
+    aggiornaStatoRevisioni(profilo.clientId);
+  }, [profilo.clientId]);
 
   useEffect(() => {
     let attivo = true;

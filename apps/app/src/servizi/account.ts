@@ -1,7 +1,7 @@
 // Account (step 11, lotto 3): abbonamento dalla edge function get-client-subscription (Stripe, solo lettura, cache in
 // memoria di un'ora come la web app), promemoria del diario scritti su clients (due colonne, cascata in core/account),
 // pagine web di privacy e termini. Le statistiche e il profilo vengono dallo stato già letto all'avvio.
-import { Linking } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 
 import { abbonamentoDa, DURATA_CACHE_ABBONAMENTO_MS, FUNZIONE_ABBONAMENTO, type Abbonamento, type RispostaAbbonamento, type ScritturaPromemoria } from '@/core/account/account';
 import { dataOraRoma } from '@/core/stato/orarioRoma';
@@ -51,13 +51,10 @@ export async function scriviPromemoria(clientId: string, scrittura: ScritturaPro
   }
 }
 
-/**
- * Informativa privacy e termini: pagine del sito. Oggi si aprono nel browser del sistema (Linking); il browser
- * interno (expo-web-browser) è una dipendenza nuova e aspetta l'approvazione: quando arriva, cambia solo questa funzione.
- */
+/** Informativa privacy e termini: pagine del sito nel browser interno all'app (expo-web-browser, approvato il 21/10/2026). */
 export async function apriPaginaWeb(url: string): Promise<boolean> {
   try {
-    await Linking.openURL(url);
+    await WebBrowser.openBrowserAsync(url, { presentationStyle: WebBrowser.WebBrowserPresentationStyle.PAGE_SHEET, dismissButtonStyle: 'close' });
     return true;
   } catch {
     return false;

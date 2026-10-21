@@ -8,21 +8,14 @@ import { useSyncExternalStore } from 'react';
 
 import type { RigaRevisione } from '@/core/revisioni/letture';
 import type { ModificaRevisione } from '@/core/revisioni/lettura';
+import { fondiMemoria, MEMORIA_VUOTA, type MemoriaRevisioni } from '@/core/revisioni/memoria';
 import { nuovaPresente } from '@/core/revisioni/stato';
 import type { TestoRevisione } from '@/core/revisioni/testo';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 
-export type MemoriaRevisioni = {
-  clientId: string | null;
-  /** null = stato mai letto in questa sessione (né dalla cache). */
-  righe: RigaRevisione[] | null;
-  /** Testi per id, solo revisioni inviate (sent, opened, read). */
-  testi: Record<string, TestoRevisione>;
-  /** Aperture e letture mostrate ma non ancora confermate dal server: si riprovano in silenzio. */
-  scrittureInAttesa: ModificaRevisione[];
-};
+export type { MemoriaRevisioni };
 
-const VUOTA: MemoriaRevisioni = { clientId: null, righe: null, testi: {}, scrittureInAttesa: [] };
+const VUOTA: MemoriaRevisioni = MEMORIA_VUOTA;
 
 let memoria: MemoriaRevisioni = VUOTA;
 const ascoltatori = new Set<() => void>();
@@ -31,8 +24,11 @@ export function memoriaRevisioni(): MemoriaRevisioni {
   return memoria;
 }
 
+/** Fonde la modifica e avvisa chi ascolta solo se qualcosa è cambiato davvero (core/revisioni/memoria). */
 export function aggiornaMemoriaRevisioni(modifica: Partial<MemoriaRevisioni>): void {
-  memoria = { ...memoria, ...modifica };
+  const nuova = fondiMemoria(memoria, modifica);
+  if (nuova === memoria) return;
+  memoria = nuova;
   for (const a of ascoltatori) a();
 }
 

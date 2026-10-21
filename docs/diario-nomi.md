@@ -174,7 +174,7 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 | Nome | Dove | Effetto sui dati |
 |---|---|---|
 | `account · promemoria del diario` / `account · promemoria nel weekend` | interruttori della card Notifiche | una modifica su `clients` per `id` con le sole colonne `diary_reminder_enabled` e/o `diary_reminder_weekend_enabled` (spegnere il diario spegne anche il weekend); in memoria subito, ripristino e Notifica breve se la scrittura fallisce |
-| `account · informativa privacy` / `account · termini del servizio` | righe di Privacy e dati | aprono `https://www.joinbalanced.it/privacy-policy` e `/termini-e-condizioni` (browser del sistema; browser interno in attesa di approvazione); nessuna scrittura |
+| `account · informativa privacy` / `account · termini del servizio` | righe di Privacy e dati | aprono `https://www.joinbalanced.it/privacy-policy` e `/termini-e-condizioni` nel browser interno all'app (`expo-web-browser`, foglio con "Chiudi"); nessuna scrittura |
 | `account · elimina account` | riga "Elimina account" | solo il percorso di interfaccia (avviso → conferma → Notifica breve); nessuna scrittura |
 | `notifiche · apri` | campanella | apre l'elenco; all'apertura una modifica `viewed_at = now()` su `client_notifications` dove `user_id = auth.uid()` e `viewed_at is null` (come la web app) |
 | `notifiche · tocca` | riga con destinazione | `clicked_at = now()` su quella riga (per `id`); apre il pannello della giornata (`/abbonato?giornata=`, con una lettura di `daily_submissions` per `id` se la data non è in memoria), la lettura della revisione (`/revisione/<id>`), Revisioni o La tua nutrizionista |

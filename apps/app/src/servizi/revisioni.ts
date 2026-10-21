@@ -6,6 +6,7 @@
 import { classificaErrore } from '@/core/accesso/errori';
 import { haTesto, SELEZIONE_STATO_REVISIONI, SELEZIONE_TESTO_REVISIONI, STATI_CON_TESTO, TABELLA_REVISIONI, type RigaRevisione, type RigaTestoRevisione } from '@/core/revisioni/letture';
 import { applicaModifiche, pianificaApertura, pianificaLetta, statiDiPartenza, unisciConLocale, type ModificaRevisione } from '@/core/revisioni/lettura';
+import { modificaDaCache } from '@/core/revisioni/memoria';
 import { testoRevisione, type TestoRevisione } from '@/core/revisioni/testo';
 import { precaricaAutori } from '@/servizi/diario';
 import { aggiornaMemoriaRevisioni, cacheRevisioni, memoriaRevisioni, persistiRevisioni } from '@/servizi/memoriaRevisioni';
@@ -45,12 +46,13 @@ async function leggiTesti(userId: string, ids: string[]): Promise<{ tipo: 'ok'; 
   return { tipo: 'ok', testi };
 }
 
-/** Porta in memoria la cache del portachiavi, una volta per sessione e per cliente. */
+/** Porta in memoria la copia su file, una volta per sessione e per cliente; con la copia vuota non tocca nulla. */
 async function preparaMemoria(clientId: string): Promise<void> {
   const m = memoriaRevisioni();
   if (m.clientId === clientId && m.righe !== null) return;
   const cache = await cacheRevisioni(clientId);
-  aggiornaMemoriaRevisioni({ clientId, righe: cache.righe, testi: cache.testi, scrittureInAttesa: cache.scrittureInAttesa });
+  const modifica = modificaDaCache(memoriaRevisioni(), clientId, cache);
+  if (modifica) aggiornaMemoriaRevisioni(modifica);
 }
 
 /** Id delle revisioni inviate senza testo in memoria. */
@@ -97,9 +99,18 @@ export async function caricaRevisioni(clientId: string, nutrizionistaFoto: strin
   return { tipo: 'ok', daCache: false };
 }
 
-/** Solo lo stato leggero (pallino della barra): all'avvio dell'app dell'abbonato e dopo la condivisione di un diario. */
+// Una sola lettura leggera alla volta: chi la chiede mentre è in corso riusa quella (Oggi e Account all'avvio).
+let letturaStatoInCorso: { clientId: string; promessa: Promise<unknown> } | null = null;
+
+/** Solo lo stato leggero (pallino della barra, contatore dell'Account): all'avvio dell'app dell'abbonato, al rientro, dopo la condivisione di un diario. */
 export function aggiornaStatoRevisioni(clientId: string): void {
-  void caricaRevisioni(clientId, null, { soloStato: true }).catch(() => {});
+  if (letturaStatoInCorso?.clientId === clientId) return;
+  const promessa = caricaRevisioni(clientId, null, { soloStato: true })
+    .catch(() => {})
+    .finally(() => {
+      if (letturaStatoInCorso?.promessa === promessa) letturaStatoInCorso = null;
+    });
+  letturaStatoInCorso = { clientId, promessa };
 }
 
 /** Il testo di una sola revisione (rotta diretta su una revisione non ancora in memoria). */
