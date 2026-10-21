@@ -20,10 +20,11 @@ function Revisioni({ profilo }: { profilo: Profilo }) {
   const router = useRouter();
   const revisioni = useRevisioni(profilo.clientId, profilo.nutrizionista);
   const onApri = useCallback((id: string) => router.push({ pathname: '/revisione/[id]', params: { id } }), [router]);
+  const onMenu = useCallback(() => router.push('/menu'), [router]);
 
   if (revisioni.fase.tipo === 'rete') return <SchermataSenzaConnessione onRiprova={revisioni.carica} {...STRUTTURA} revisioneNuova={revisioni.nuovaPresente} />;
   if (revisioni.fase.tipo === 'errore') return <SchermataErroreCaricamento onRiprova={revisioni.carica} titolo="Revisioni" descrizione="Non riusciamo a caricare le tue revisioni. Riprova tra poco." {...STRUTTURA} />;
   if (revisioni.fase.tipo === 'caricamento') return <SchermataCaricamento {...STRUTTURA} />;
 
-  return <SchermataRevisioni attive={revisioni.attive} nuove={revisioni.nuove} passate={revisioni.passate} nuovaPresente={revisioni.nuovaPresente} onApri={onApri} />;
+  return <SchermataRevisioni attive={revisioni.attive} nuove={revisioni.nuove} passate={revisioni.passate} nuovaPresente={revisioni.nuovaPresente} onApri={onApri} onMenu={onMenu} />;
 }

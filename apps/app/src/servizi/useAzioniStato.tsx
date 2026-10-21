@@ -22,6 +22,7 @@ export const TESTI_USCITA = {
 export function useAzioniStato(): {
   onEsci: () => void;
   onAccount: () => void;
+  onNutrizionista: () => void;
   onEmailSupporto: () => void;
   onTelefonoSupporto: () => void;
   sovrapposti: ReactNode;
@@ -51,6 +52,7 @@ export function useAzioniStato(): {
   }, [uscendo, esegui]);
   const annullaUscita = useCallback(() => setChiediConferma(false), []);
   const onAccount = useCallback(() => router.push('/account'), [router]);
+  const onNutrizionista = useCallback(() => router.push('/nutrizionista'), [router]);
   const copia = useCallback(async (contatto: ContattoCopiato) => {
     setCopiato(null);
     if (await copiaContattoSupporto(contatto)) setCopiato(contatto);
@@ -71,5 +73,5 @@ export function useAzioniStato(): {
       {copiato ? <NotificaInBasso key={copiato} tipo="conferma" testo={TESTO_COPIATO[copiato]} onScomparsa={nascondi} /> : null}
     </>
   );
-  return { onEsci, onAccount, onEmailSupporto, onTelefonoSupporto, sovrapposti };
+  return { onEsci, onAccount, onNutrizionista, onEmailSupporto, onTelefonoSupporto, sovrapposti };
 }

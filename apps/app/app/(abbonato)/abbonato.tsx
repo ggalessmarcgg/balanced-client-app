@@ -53,6 +53,7 @@ function Oggi({ profilo }: { profilo: Profilo }) {
   }, [diario.fase.tipo, giornataRichiesta, apriGiornata]);
 
   const onRacconta = useCallback(() => router.push('/racconta'), [router]);
+  const onMenu = useCallback(() => router.push('/menu'), [router]);
   const onApriStorico = useCallback(() => router.push('/storico'), [router]);
   const { riprova: riprovaBozza } = diario;
   const { salvaModifiche } = pannello;
@@ -94,6 +95,7 @@ function Oggi({ profilo }: { profilo: Profilo }) {
       onAggiorna={diario.aggiorna}
       onCondividi={diario.condividi}
       revisioneNuova={revisioneNuova}
+      onMenu={onMenu}
       onApriStorico={onApriStorico}
       notifica={notifica}
       giornata={{

@@ -1,10 +1,11 @@
-# Nomi stabili del diario e delle revisioni (schermate e azioni)
+# Nomi stabili del diario, delle revisioni e del menu (schermate e azioni)
 
 Decisione del 19/10/2026 (step 5, lotto 1), estesa il 20/10/2026 con il lotto 2 (settimana, pannello della
 giornata e commenti), il 21/10/2026 con il lotto 3 (storico delle giornate), il lotto 4 (andamento della
 settimana e durate dello sport) e lo step 7 (revisioni). Nomi da usare in futuro per gli eventi di misurazione: non
 cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/nomi.ts` (`SCHERMATE_DIARIO`,
-`AZIONI_DIARIO`) e `apps/app/src/core/revisioni/nomi.ts` (`SCHERMATE_REVISIONI`, `AZIONI_REVISIONI`).
+`AZIONI_DIARIO`), `apps/app/src/core/revisioni/nomi.ts` (`SCHERMATE_REVISIONI`, `AZIONI_REVISIONI`) e
+`apps/app/src/core/menu/nomi.ts` (`SCHERMATE_MENU`, `AZIONI_MENU`, step 11).
 
 ## Schermate
 
@@ -107,3 +108,39 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 - Rotta diretta a freddo: lettura leggera dello stato più il testo della sola revisione richiesta.
 - Autrice: `nutritionist_profiles` per `review_author_id` dalla stessa memoria dei profili dei commenti (30 giorni nel
   portachiavi); numero di diari mostrato = `submissions_count` della revisione.
+
+## Menu (step 11, lotto 1)
+
+### Schermate
+
+| Nome | Figma | Cosa mostra |
+|---|---|---|
+| `menu` | Menu · 1 (`508:2614`) | menu a tutta pagina dall'icona Menu della barra superiore: righe "La tua nutrizionista", "Appuntamenti" (poi "Peso e misure" e "Contenuti" dal lotto 2; "Le tue ricette" solo quando esisterà), in fondo "Esci" e "Versione x.y.z" (dalla configurazione dell'app). Rotta `/menu` |
+| `menu · la tua nutrizionista` | Menu · 3 prenotato (`514:2530`), abbonato (`515:2957`), 3.1 in ferie (`596:5846`) | foto, nome con titolo, specializzazione (`expertise`), numero di albo con la nota; "Contatto diretto" con il numero WhatsApp e "Scrivi alla nutrizionista" solo con il percorso attivo (stato J), altrimenti numero oscurato e "Disponibile con il percorso attivo"; "Chi sono", "Competenze" (pillole), "Certificazioni", "Orari di lavoro" (giorni presenti in `working_hours`) con la nota; le sezioni vuote si nascondono. In ferie: profilo attenuato, frase "La Dott.ssa X è assente dal gg.mm al gg.mm.", card "Sostituzione" con la sostituta (o l'avviso che sarà assegnata). Rotta `/nutrizionista`, anche dalla card degli stati H e K |
+| `menu · appuntamenti` | Menu · 4 (`517:2616`), 4.1 visita oggi (`517:2680`), 4.2 nessuna visita (`517:2741`) | "Prossimo appuntamento": giorno ("Oggi" se è oggi in ora italiana), fascia oraria, tipo (prima visita da `appointments` o `control_visits.is_initial`, altrimenti visita di controllo), "Videochiamata, N minuti" dalla durata reale, nutrizionista, "Entra" (disabilitato "Link in arrivo" finché `meeting_url` manca), "Gestisci appuntamento"; senza visite "Nessuna visita in programma al momento." e "Prenota una consulenza" disabilitato (step 12). "Appuntamenti passati": `completed`, `no_show` e `scheduled` già finite, dalla più recente, al massimo 12; le cancellate non compaiono. Rotta `/appuntamenti` |
+
+### Azioni
+
+| Nome | Dove | Effetto sui dati |
+|---|---|---|
+| `menu · apri` / `menu · chiudi` | icona Menu della barra superiore / X del menu | nessuna scrittura |
+| `menu · voce` | riga del menu | apre la schermata della voce |
+| `nutrizionista · scrivi` | "Scrivi alla nutrizionista" | apre WhatsApp (`wa.me/<numero>?text=Salve Dott.ssa`), come la web app; nessuna scrittura |
+| `nutrizionista · scrivi alla sostituta` | "Scrivi alla Dott.ssa X" nella card Sostituzione | come sopra, con il numero della sostituta |
+| `appuntamenti · entra` | "Entra" | apre `meeting_url` (Meet) con il tocco; nessuna finestra oraria |
+| `appuntamenti · gestisci` | "Gestisci appuntamento" | copia il numero WhatsApp del supporto negli appunti con la Notifica breve (nessun reindirizzamento, come negli stati) |
+
+### Letture (nessuna scrittura)
+
+- La tua nutrizionista: all'apertura due richieste in parallelo, `clients` per `user_id` con il profilo incorporato
+  (`nutritionist_profiles!clients_nutritionist_id_fkey`: `id, title, full_name, expertise, registration_number,
+  app_photo_url, app_square_photo_url, who_are_you, competences, certifications, working_hours, phone`; mai
+  `profile_image_url` né `email`) e `holiday_replacements` per `client_id` con le ferie incorporate (`!inner`, filtrate
+  su oggi in ora italiana come `is_active_replacement_for_client`) e la sostituta (`id, title, full_name,
+  app_square_photo_url, phone`). Copia su file nella cache per un giorno (e per la data italiana delle ferie): nello
+  stesso giorno la schermata si riapre senza rete; al ritorno in primo piano si rilegge solo se la copia è scaduta.
+- Appuntamenti: all'apertura e a ogni ritorno in primo piano una richiesta su `clients` per `user_id` con
+  `appointments` (`id, appointment_date, start_time, end_time, status, meeting_url`) e `control_visits` (`id,
+  scheduled_date, start_time, end_time, status, is_initial, meeting_url`, dalla più recente, al massimo 24)
+  incorporate; prossimo e passati si calcolano nell'app in ora italiana. Copia su file nella cache per ripartire
+  senza rete.

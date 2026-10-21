@@ -14,10 +14,12 @@ export type OpzioneProps = {
   cresce?: boolean;
   /** Non toccabile (l'opacità al 50 % la applica il contenitore, come nella Card diario · Sport riposo). */
   disabilitato?: boolean;
+  /** Sfondo da non selezionata: card (predefinito) o campo quando la pillola sta su una card crema (competenze, Figma 516:2770). */
+  fondo?: 'card' | 'campo';
 };
 
 /** Opzione selezionabile a pillola (Figma 439:96): sfondo card / verde quando selezionata, testo Body details. */
-export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, cresce = false, disabilitato = false }: OpzioneProps) {
+export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, cresce = false, disabilitato = false, fondo = 'card' }: OpzioneProps) {
   const { hitSlop, onLayout } = useAreaToccabile();
   return (
     <Pressable
@@ -28,7 +30,7 @@ export function Opzione({ etichetta, forma = 'standard', selezionata, onPress, c
       accessibilityRole="button"
       accessibilityLabel={etichetta}
       accessibilityState={{ selected: selezionata, disabled: disabilitato }}
-      style={[stili.base, stili[forma], selezionata ? stili.selezionata : stili.nonSelezionata, cresce && stili.cresce]}
+      style={[stili.base, stili[forma], selezionata ? stili.selezionata : fondo === 'campo' ? stili.nonSelezionataSuCard : stili.nonSelezionata, cresce && stili.cresce]}
     >
       <Testo stile="bodyDetails" colore={selezionata ? colori.testo.suAzione : colori.testo.primario} style={stili.etichetta}>
         {etichetta}
@@ -43,6 +45,7 @@ const stili = StyleSheet.create({
   compatta: { minHeight: tocco.minimoIos, paddingHorizontal: spazio[4] },
   suPiuRighe: { paddingVertical: spazio[8], paddingHorizontal: spazio[16] },
   nonSelezionata: { backgroundColor: colori.sfondo.card },
+  nonSelezionataSuCard: { backgroundColor: colori.sfondo.campo },
   selezionata: { backgroundColor: colori.azione.primaria },
   cresce: { flex: 1, alignSelf: 'stretch' },
   etichetta: { flexShrink: 1, textAlign: 'center' },

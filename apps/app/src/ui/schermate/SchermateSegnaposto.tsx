@@ -84,10 +84,10 @@ export function SchermataRaccontaSegnaposto({ onIndietro }: SchermataRaccontaSeg
 }
 
 /** Segnaposto della scheda Piano (sezione Figma 4 · Piano, step successivo): titolo in Accento serif e testo, con la barra di navigazione. */
-export function SchermataPianoSegnaposto() {
+export function SchermataPianoSegnaposto({ onMenu }: { onMenu?: () => void } = {}) {
   return (
     <Pagina sovrapposti={<BarraNavigazioneFissa attiva="piano" />}>
-      <BarraSuperiore />
+      <BarraSuperiore onAzione={onMenu} />
       <View style={stili.contenutoScheda}>
         <Testo stile="accentoSerif" accessibilityRole="header">
           Piano

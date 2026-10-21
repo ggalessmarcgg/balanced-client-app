@@ -335,6 +335,21 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Pagina di sviluppo: `/sviluppo/stati?stato=revisioni-1-in-corso|…|revisioni-errore`; esiti dei confronti in
   `~/Desktop/censimenti-app/step7-confronti/`.
 
+## Menu, Account e notifiche (step 11)
+
+- Lotto 1 (menu, La tua nutrizionista, Appuntamenti): logica pura in `src/core/nutrizionista/profilo.ts`
+  (profilo, telefono, ferie e sostituta, orari) e `src/core/appuntamenti/appuntamenti.ts` (prossimo e passati in
+  ora italiana, etichette), nomi in `src/core/menu/nomi.ts` → `docs/diario-nomi.md`; servizi
+  `src/servizi/nutrizionista.ts` (cache su file di un giorno), `appuntamenti.ts`, hook `useMenu.ts`; schermate
+  `SchermataMenu`, `SchermataNutrizionista`, `SchermataAppuntamenti`; rotte `app/menu.tsx` (dall'icona Menu,
+  `slide_from_bottom`), `app/nutrizionista.tsx` (anche dalla card degli stati), `app/appuntamenti.tsx`.
+- Regole (censimento `~/Desktop/censimenti-app/step11-censimento-menu-account.md`): letture con colonne esplicite
+  filtrate per cliente, mai `profile_image_url` né `email` del profilo; profilo e ferie incorporati, niente catene di
+  query; "oggi" sempre in Europe/Rome; contatto diretto visibile solo con il percorso attivo (stato J); contatti
+  del supporto copiati, mai aperti; "Entra" apre `meeting_url` con il tocco; nessuna scrittura in questo lotto.
+- Pagina di sviluppo: `/sviluppo/stati?stato=menu-1|menu-3-abbonato|menu-3-prenotato|menu-3.1-ferie|menu-4-appuntamenti|…`;
+  esiti dei confronti in `~/Desktop/censimenti-app/step11-confronti/lotto1/`.
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

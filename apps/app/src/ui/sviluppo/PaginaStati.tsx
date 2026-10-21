@@ -13,6 +13,7 @@ import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
 import { SchermataRaccontaSegnaposto, SchermataSegnapostoPrenotazione } from '@/ui/schermate/SchermateSegnaposto';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
+import { MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
 import { StoricoSviluppo } from '@/ui/sviluppo/StoricoSviluppo';
@@ -92,6 +93,21 @@ export const STATI_SVILUPPO = [
   ['senza-connessione-abbonato', 'Trasversali 1 · Senza connessione nell app dell abbonato (563:4517)'],
   ['errore-caricamento-abbonato', 'Trasversali 3 · Errore di caricamento nell app dell abbonato (563:4978)'],
   ['copia-contatto', 'H con Notifica breve dopo la copia di un contatto'],
+  ['menu-1', 'Menu · 1 · Menu a tutta pagina (508:2614), con tutte le voci'],
+  ['menu-uscita', 'Menu con il Dialogo di uscita aperto'],
+  ['menu-3-abbonato', 'Menu · 3 · La tua nutrizionista · abbonato (515:2957)'],
+  ['menu-3-prenotato', 'Menu · 3 · La tua nutrizionista · prenotato, contatto oscurato (514:2530)'],
+  ['menu-3.1-ferie', 'Menu · 3.1 · La tua nutrizionista · in ferie (596:5846)'],
+  ['menu-3-ferie-senza-sostituta', 'La tua nutrizionista in ferie senza sostituta assegnata'],
+  ['menu-3-minima', 'La tua nutrizionista con il solo nome (sezioni vuote nascoste, senza telefono)'],
+  ['menu-3-caricamento', 'La tua nutrizionista in caricamento'],
+  ['menu-3-errore', 'La tua nutrizionista senza connessione'],
+  ['menu-4-appuntamenti', 'Menu · 4 · Appuntamenti (517:2616)'],
+  ['menu-4.1-oggi', 'Menu · 4.1 · Appuntamenti · visita oggi, prima visita (517:2680)'],
+  ['menu-4.2-nessuno', 'Menu · 4.2 · Appuntamenti · nessuna visita in programma (517:2741)'],
+  ['menu-4-link-in-arrivo', 'Appuntamenti con la prossima visita senza link (pulsante "Link in arrivo" disabilitato)'],
+  ['menu-4-senza-passati', 'Appuntamenti senza visite passate'],
+  ['menu-4-caricamento', 'Appuntamenti in caricamento'],
   ['uscita-avviso', 'Esci con modifiche non inviate: Dialogo "Hai modifiche non ancora salvate" (Pannello dal basso di 499:2568)'],
   ['barra-animata', 'Barra di navigazione: la voce attiva cambia da sola ogni 2 s (sfondo che scorre, colori in dissolvenza)'],
 ] as const;
@@ -280,6 +296,36 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <SchermataSenzaConnessione onRiprova={nulla} barraSuperiore="completa" barraNavigazione="oggi" />;
     case 'errore-caricamento-abbonato':
       return <SchermataErroreCaricamento onRiprova={nulla} titolo="Piano" barraSuperiore="completa" barraNavigazione="piano" />;
+    case 'menu-1':
+      return <MenuSviluppo scenario="menu" />;
+    case 'menu-uscita':
+      return <MenuSviluppo scenario="menuUscita" />;
+    case 'menu-3-abbonato':
+      return <MenuSviluppo scenario="nutrizionistaAbbonato" />;
+    case 'menu-3-prenotato':
+      return <MenuSviluppo scenario="nutrizionistaPrenotato" />;
+    case 'menu-3.1-ferie':
+      return <MenuSviluppo scenario="nutrizionistaFerie" />;
+    case 'menu-3-ferie-senza-sostituta':
+      return <MenuSviluppo scenario="nutrizionistaFerieSenzaSostituta" />;
+    case 'menu-3-minima':
+      return <MenuSviluppo scenario="nutrizionistaMinima" />;
+    case 'menu-3-caricamento':
+      return <MenuSviluppo scenario="nutrizionistaCaricamento" />;
+    case 'menu-3-errore':
+      return <MenuSviluppo scenario="nutrizionistaErrore" />;
+    case 'menu-4-appuntamenti':
+      return <MenuSviluppo scenario="appuntamenti" />;
+    case 'menu-4.1-oggi':
+      return <MenuSviluppo scenario="appuntamentiOggi" />;
+    case 'menu-4.2-nessuno':
+      return <MenuSviluppo scenario="appuntamentiNessuno" />;
+    case 'menu-4-link-in-arrivo':
+      return <MenuSviluppo scenario="appuntamentiLinkInArrivo" />;
+    case 'menu-4-senza-passati':
+      return <MenuSviluppo scenario="appuntamentiSenzaPassati" />;
+    case 'menu-4-caricamento':
+      return <MenuSviluppo scenario="appuntamentiCaricamento" />;
     case 'uscita-avviso':
       return (
         <SchermataPercorsoNonAttivo

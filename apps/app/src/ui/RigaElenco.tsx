@@ -43,13 +43,15 @@ export function RigaElenco(props: RigaElencoProps) {
       );
     case 'valore':
       return (
-        <View style={stili.rigaSemplice} accessible accessibilityLabel={`${props.etichetta}: ${props.valore}`}>
+        <View style={stili.rigaSemplice} accessible accessibilityLabel={props.valore ? `${props.etichetta}: ${props.valore}` : props.etichetta}>
           <Testo stile="body" style={stili.cresce}>
             {props.etichetta}
           </Testo>
-          <Testo stile="body" colore={colori.testo.secondario}>
-            {props.valore}
-          </Testo>
+          {props.valore ? (
+            <Testo stile="body" colore={colori.testo.secondario}>
+              {props.valore}
+            </Testo>
+          ) : null}
         </View>
       );
     case 'copia':
