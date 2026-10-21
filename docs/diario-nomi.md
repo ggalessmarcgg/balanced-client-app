@@ -57,7 +57,8 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
   condivisi prendono il colore della valutazione (verde, senape, bianco) e il pallino del commento si combina come
   prima; oggi resta con le varianti "Oggi". Si aggiorna con la rilettura all'apertura e al ritorno in primo piano.
 - Storico (lotto 3): all'apertura una lettura minima del primo diario del cliente (`submission_date`, ordinata, un
-  solo risultato, per `client_id`), poi in memoria e nel portachiavi con la cache del diario; una lettura per mese
+  solo risultato, per `client_id`), poi in memoria e nella copia locale del diario (dal 21/10/2026 su file nella
+  sandbox dell'app, non più nel portachiavi; i file dei giorni passati si cancellano quando si scrive quello di oggi); una lettura per mese
   (`submission_date, status` per `client_id` e intervallo del mese) solo quando il mese entra, o sta per entrare, nello
   schermo, tenuta in memoria per la sessione; il mese corrente riusa la settimana già in memoria e legge solo la parte
   del mese che la precede (nulla se la settimana corrente comincia nel mese). Nessuna scrittura oltre a "letto" e
@@ -86,7 +87,7 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 | `revisioni · apri` | riga dell'elenco delle passate | apre `revisione · lettura`; nessuna scrittura |
 | `revisioni · leggi la revisione` | "Leggi la revisione" nella card Nuova | apre `revisione · lettura` |
 | `revisione · aperta` | automatico: apertura della lettura | una sola modifica `status = 'opened'`, `opened_at = adesso`, filtrata su `status = 'sent'` (0 righe = già aperta altrove, nulla da riscrivere); la cache passa subito ad aperta (la card Nuova sparisce, la revisione va nell'elenco e il pallino sulla barra si spegne); se la scrittura fallisce resta in attesa e si riprova in silenzio |
-| `revisione · letta` | automatico: il piè di pagina è entrato nello schermo E sono passati almeno 25 caratteri al secondo di tempo in pagina (minimo 5 secondi) | una sola modifica `status = 'read'`, `read_at = adesso`, filtrata su `status in ('opened', 'sent')`; stessa cache e stesso ritentativo. Nessun pulsante "Ho capito!" |
+| `revisione · letta` | automatico: il piè di pagina "Hai letto tutta la revisione." è entrato nello schermo (nessun tempo minimo, decisione del 21/10/2026; una volta per apertura) | una sola modifica `status = 'read'`, `read_at = adesso`, filtrata su `status in ('opened', 'sent')`; stessa cache e stesso ritentativo. Nessun pulsante "Ho capito!" |
 | `revisione · indietro` | icona Indietro dell'intestazione | torna alla sezione; nessuna scrittura |
 
 ### Letture
@@ -94,10 +95,11 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 - All'apertura della sezione e a ogni ritorno in primo piano: una lettura leggera di `client_reviews` per `user_id`
   (`id, review_number, status, submissions_count, review_author_id, sent_at, opened_at, read_at`, senza testo) e una
   seconda lettura con `review_text` solo per le revisioni `sent`, `opened`, `read` il cui testo non è già in memoria
-  (il testo non cambia dopo l'invio). Mai il testo di `unlocked` o `draft`. Memoria di sessione e cache nel
-  portachiavi (`balanced.revisioni.<clientId>`), svuotate all'uscita.
-- All'avvio dell'app dell'abbonato (pagina Oggi) e dopo la condivisione di un diario: solo la lettura leggera dello
-  stato, per il pallino rosso sulla voce Revisioni (almeno una `sent`).
+  (il testo non cambia dopo l'invio). Mai il testo di `unlocked` o `draft`. Memoria di sessione e copia locale su
+  file nella sandbox dell'app (`balanced.revisioni.<clientId>.json` nella cartella cache, `src/servizi/archivioFile.ts`;
+  non nel portachiavi, riservato a sessione e piccoli dati), cancellata all'uscita.
+- All'avvio dell'app dell'abbonato (pagina Oggi), a ogni ritorno in primo piano e dopo la condivisione di un diario:
+  solo la lettura leggera dello stato, per il pallino rosso sulla voce Revisioni (almeno una `sent`).
 - Rotta diretta a freddo: lettura leggera dello stato più il testo della sola revisione richiesta.
 - Autrice: `nutritionist_profiles` per `review_author_id` dalla stessa memoria dei profili dei commenti (30 giorni nel
   portachiavi); numero di diari mostrato = `submissions_count` della revisione.

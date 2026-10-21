@@ -18,8 +18,6 @@ export type SezioneRevisione = { chiave: ChiaveSezione; etichetta: string; blocc
 export type TestoRevisione = {
   /** Solo le sezioni con contenuto, nell'ordine generale, correlazione, spunti e consigli. */
   sezioni: SezioneRevisione[];
-  /** Caratteri di testo mostrati (per il tempo minimo di lettura). */
-  caratteri: number;
   /** Prima riga del testo (Generale, o la prima sezione piena), per l'elenco delle revisioni passate. */
   incipit: string;
   /** Testo della sezione Generale con gli a capo, per la Card revisione "Nuova" (ritagliato dalla card). */
@@ -89,6 +87,5 @@ export function testoRevisione(review_text: unknown): TestoRevisione {
   const prima = sezioni[0];
   if (!anteprima && prima) anteprima = prima.blocchi.map(testoDiBlocco).join('\n');
   const incipit = (anteprima.split('\n').find((r) => r.trim() !== '') ?? '').replace(/\s+/g, ' ').trim();
-  const caratteri = sezioni.reduce((n, s) => n + s.etichetta.length + s.blocchi.reduce((m, b) => m + testoDiBlocco(b).length, 0), 0);
-  return { sezioni, caratteri, incipit, anteprima };
+  return { sezioni, incipit, anteprima };
 }

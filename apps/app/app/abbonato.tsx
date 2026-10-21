@@ -1,5 +1,6 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef } from 'react';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import { andamentoSettimana } from '@/core/diario/andamento';
 import { dataValida } from '@/core/diario/data';
@@ -32,10 +33,14 @@ function Oggi({ profilo }: { profilo: Profilo }) {
   const diario = useDiario(profilo.clientId, profilo.nutrizionista);
   const pannello = usePannelloGiornata(profilo.clientId, profilo.nutrizionista, diario.mostraNotifica);
   // Pallino "Nuova revisione" sulla barra: una lettura leggera dello stato delle revisioni all'avvio dell'app
-  // dell'abbonato (e dopo la condivisione di un diario, in useDiario); nessun testo.
+  // dell'abbonato, a ogni ritorno in primo piano (e dopo la condivisione di un diario, in useDiario); nessun testo.
   const revisioneNuova = useNuovaRevisione();
   useEffect(() => {
     aggiornaStatoRevisioni(profilo.clientId);
+    const sub = AppState.addEventListener('change', (stato: AppStateStatus) => {
+      if (stato === 'active') aggiornaStatoRevisioni(profilo.clientId);
+    });
+    return () => sub.remove();
   }, [profilo.clientId]);
 
   // Rotta diretta: appena la pagina è pronta si apre il pannello della data richiesta, una volta per valore.

@@ -1,14 +1,15 @@
 // Memoria di sessione delle revisioni, condivisa tra la sezione Revisioni, la lettura e la barra di navigazione
 // (pallino "Nuova"): righe leggere dello stato, testi delle revisioni inviate già letti, scritture in attesa di
 // conferma. Un solo posto che cambia (aggiornaMemoriaRevisioni); chi la mostra si iscrive con useMemoriaRevisioni;
-// il tutto si persiste nel portachiavi per ripartire anche senza rete (persistiRevisioni).
+// il tutto si persiste su file nella sandbox dell'app (archivioFile.ts, non nel portachiavi: i testi crescono con il
+// cliente) per ripartire anche senza rete (persistiRevisioni); il file si cancella all'uscita.
 import { useSyncExternalStore } from 'react';
 
 import type { RigaRevisione } from '@/core/revisioni/letture';
 import type { ModificaRevisione } from '@/core/revisioni/lettura';
 import { nuovaPresente } from '@/core/revisioni/stato';
 import type { TestoRevisione } from '@/core/revisioni/testo';
-import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
+import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 
 export type MemoriaRevisioni = {
   clientId: string | null;
@@ -54,7 +55,7 @@ export function useNuovaRevisione(): boolean {
   return useSyncExternalStore(iscriviti, nuova);
 }
 
-// ---- Cache nel portachiavi -------------------------------------------------------------------------------------
+// ---- Cache su file ----------------------------------------------------------------------------------------------
 
 const PREFISSO_CACHE = 'balanced.revisioni';
 type Cache = { righe: RigaRevisione[]; testi: Record<string, TestoRevisione>; scrittureInAttesa: ModificaRevisione[]; letto: string };
@@ -65,7 +66,7 @@ function chiaveCache(clientId: string): string {
 
 export async function cacheRevisioni(clientId: string): Promise<Omit<Cache, 'letto'> | null> {
   try {
-    const testo = await leggi(chiaveCache(clientId));
+    const testo = await leggiFile(chiaveCache(clientId));
     if (!testo) return null;
     const cache = JSON.parse(testo) as Partial<Cache>;
     if (!Array.isArray(cache.righe)) return null;
@@ -75,11 +76,11 @@ export async function cacheRevisioni(clientId: string): Promise<Omit<Cache, 'let
   }
 }
 
-// Scritture nel portachiavi serializzate: se ne arrivano molte mentre una è in corso si scrive solo l'ultima.
+// Scritture su file serializzate: se ne arrivano molte mentre una è in corso si scrive solo l'ultima.
 let scritturaCache: Promise<void> = Promise.resolve();
 let inCoda: { chiave: string; cache: Cache } | null = null;
 
-/** Persiste righe, testi e scritture in attesa (non blocca; gli errori del portachiavi si ignorano). */
+/** Persiste righe, testi e scritture in attesa (non blocca; gli errori di scrittura si ignorano). */
 export function persistiRevisioni(): void {
   if (!memoria.clientId || !memoria.righe) return;
   const daScrivere = { chiave: chiaveCache(memoria.clientId), cache: { righe: memoria.righe, testi: memoria.testi, scrittureInAttesa: memoria.scrittureInAttesa, letto: new Date().toISOString() } };
@@ -90,7 +91,7 @@ export function persistiRevisioni(): void {
     while (inCoda) {
       const { chiave, cache } = inCoda;
       inCoda = null;
-      await scrivi(chiave, JSON.stringify(cache)).catch(() => {});
+      await scriviFile(chiave, JSON.stringify(cache)).catch(() => {});
     }
   });
 }
@@ -100,5 +101,5 @@ export async function svuotaRevisioni(): Promise<void> {
   const clientId = memoria.clientId;
   memoria = VUOTA;
   for (const a of ascoltatori) a();
-  if (clientId) await rimuovi(chiaveCache(clientId)).catch(() => {});
+  if (clientId) await rimuoviFile(chiaveCache(clientId));
 }

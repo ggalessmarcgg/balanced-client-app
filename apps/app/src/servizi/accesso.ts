@@ -4,6 +4,7 @@ import { ATTESA_REINVIO_SECONDI, URL_CONFERMA_EMAIL, URL_RECUPERO_PASSWORD } fro
 import { classificaErrore, normalizzaEmail, type TipoErroreAccesso } from '@/core/accesso/errori';
 import { svuotaAutoriInMemoria } from '@/servizi/diario';
 import { svuotaMemoriaDiario } from '@/servizi/memoriaDiario';
+import { svuotaArchivioFile } from '@/servizi/archivioFile';
 import { svuotaRevisioni } from '@/servizi/memoriaRevisioni';
 import { svuotaCacheStato, svuotaStatoInMemoria } from '@/servizi/statoCliente';
 import { supabase } from '@/servizi/supabase';
@@ -47,7 +48,7 @@ export async function richiediRecupero(email: string): Promise<Esito> {
 
 /**
  * Esci: chiude la sessione su tutti i dispositivi (signOut globale, come la web app) e svuota cache e dati
- * locali. Se la revoca globale non riesce (es. offline), la sessione locale viene comunque chiusa.
+ * locali (memoria, portachiavi dello stato, file delle copie locali di diario e revisioni). Se la revoca globale non riesce (es. offline), la sessione locale viene comunque chiusa.
  */
 export async function esci(): Promise<{ revocaGlobale: boolean }> {
   let revocaGlobale = true;
@@ -62,6 +63,7 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   svuotaAutoriInMemoria();
   svuotaMemoriaDiario();
   await svuotaRevisioni();
+  await svuotaArchivioFile();
   return { revocaGlobale };
 }
 

@@ -28,7 +28,6 @@ describe('testo della revisione', () => {
       const t = testoRevisione(v);
       assert.deepEqual(t.sezioni, []);
       assert.equal(t.incipit, '');
-      assert.equal(t.caratteri, 0);
     }
   });
   it('a capo preservati nei paragrafi; una riga vuota separa i paragrafi', () => {
@@ -47,11 +46,10 @@ describe('testo della revisione', () => {
   it('un trattino senza spazio non è un elenco; il "**" residuo sparisce; i ritorni a capo di Windows si normalizzano', () => {
     assert.deepEqual(blocchiDiSezione('-5 kg in un mese\r\n**Bene** così'), [{ tipo: 'paragrafo', testo: '-5 kg in un mese\nBene così' }]);
   });
-  it('incipit: prima riga di Generale senza marcatori; anteprima con gli a capo; caratteri = etichette + testi', () => {
+  it('incipit: prima riga di Generale senza marcatori; anteprima con gli a capo', () => {
     const t = testoRevisione({ generale: '- Ottima settimana!\nContinua così.', correlazione: '', spunti_consigli: 'Spunto' });
     assert.equal(t.incipit, 'Ottima settimana!');
     assert.equal(t.anteprima, 'Ottima settimana!\nContinua così.');
-    assert.equal(t.caratteri, 'Generale'.length + 'Ottima settimana!'.length + 'Continua così.'.length + 'Spunti e consigli'.length + 'Spunto'.length);
   });
   it('senza Generale l\'incipit viene dalla prima sezione piena', () => {
     assert.equal(testoRevisione({ generale: '', correlazione: 'Nesso chiaro.' }).incipit, 'Nesso chiaro.');

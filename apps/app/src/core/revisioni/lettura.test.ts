@@ -2,27 +2,10 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { RigaRevisione } from './letture.ts';
-import { applicaModifica, applicaModifiche, attesaPrimaDiLetta, leggibile, pianificaApertura, pianificaLetta, posizioneNelCiclo, statiDiPartenza, tempoMinimoLetturaMs, TEMPO_MINIMO_LETTURA_MS, unisciConLocale } from './lettura.ts';
+import { applicaModifica, applicaModifiche, leggibile, pianificaApertura, pianificaLetta, posizioneNelCiclo, statiDiPartenza, unisciConLocale } from './lettura.ts';
 
 const ADESSO = new Date('2026-10-21T10:00:00.000Z');
 const riga = (status: string): RigaRevisione => ({ id: 'r', review_number: 1, status, submissions_count: 7, review_author_id: null, sent_at: '2026-10-20T10:00:00Z', opened_at: null, read_at: null });
-
-describe('regola del letto', () => {
-  it('tempo minimo: 25 caratteri al secondo, con un minimo di qualche secondo', () => {
-    assert.equal(tempoMinimoLetturaMs(0), TEMPO_MINIMO_LETTURA_MS);
-    assert.equal(tempoMinimoLetturaMs(100), TEMPO_MINIMO_LETTURA_MS);
-    assert.equal(tempoMinimoLetturaMs(1500), 60_000);
-  });
-  it('senza il fondo non si segna mai, anche dopo molto tempo', () => {
-    assert.equal(attesaPrimaDiLetta({ apertaAlle: 0, caratteri: 100, fondoRaggiunto: false }, 10_000_000), null);
-  });
-  it('fondo raggiunto troppo presto: resta l\'attesa che manca; poi 0', () => {
-    const stato = { apertaAlle: 1000, caratteri: 2500, fondoRaggiunto: true }; // 100 s
-    assert.equal(attesaPrimaDiLetta(stato, 1000 + 30_000), 70_000);
-    assert.equal(attesaPrimaDiLetta(stato, 1000 + 100_000), 0);
-    assert.equal(attesaPrimaDiLetta(stato, 1000 + 500_000), 0);
-  });
-});
 
 describe('le due scritture del cliente', () => {
   it('apertura solo da sent: status = opened e opened_at, nient\'altro', () => {
@@ -30,7 +13,7 @@ describe('le due scritture del cliente', () => {
     assert.deepEqual(op, { tipo: 'scrivi', modifica: { tipo: 'apertura', id: 'r', campi: { status: 'opened', opened_at: ADESSO.toISOString() } } });
     for (const s of ['opened', 'read', 'unlocked', 'draft', 'on_going']) assert.deepEqual(pianificaApertura(riga(s), ADESSO), { tipo: 'nessuna' });
   });
-  it('letta da opened o sent: status = read e read_at', () => {
+  it('letta appena il piè di pagina è raggiunto, da opened o sent: status = read e read_at, nessuna attesa', () => {
     for (const s of ['opened', 'sent']) {
       assert.deepEqual(pianificaLetta(riga(s), ADESSO), { tipo: 'scrivi', modifica: { tipo: 'letta', id: 'r', campi: { status: 'read', read_at: ADESSO.toISOString() } } });
     }

@@ -255,6 +255,12 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (`src/servizi/archivio.ts`, logica in `src/core/sessione/pezzi.ts`), rinnovata
   in automatico con l'app in primo piano. "Esci" = `signOut` globale + svuotamento
   della cache locale.
+- **Due archivi locali** (decisione del 21/10/2026): nel portachiavi solo ciò che è
+  piccolo e sensibile (sessione, stato del cliente, profili delle nutrizioniste);
+  le copie locali che crescono con i dati del cliente (diario di oggi con settimana
+  e giornate, revisioni con i testi) stanno su file JSON nella sandbox dell'app
+  (`src/servizi/archivioFile.ts`, `expo-file-system`, cartella cache
+  `balanced-cache/`), cancellati all'uscita.
 - Smistamento: una sola lettura all'avvio (`clients` per `user_id` con lead,
   appuntamenti e nutrizionista incorporati, colonne esplicite in
   `src/core/stato/letture.ts`) → `calcolaStato` (`src/core/stato/stato.ts`,
@@ -291,8 +297,11 @@ npx expo install --fix                   # riallinea versioni alla SDK
   del diario, l'app non crea né conta nulla; lettura leggera dello stato per `user_id` senza testo (anche all'avvio
   dell'app dell'abbonato e dopo la condivisione di un diario, per il pallino sulla barra), testi solo per `sent`,
   `opened`, `read` e solo se non già in memoria; mai leggere né mostrare il testo di `unlocked` o `draft`; le uniche
-  scritture sono `status = 'opened'` + `opened_at` (da `sent`) e `status = 'read'` + `read_at` (da `opened`/`sent`),
-  mai altre colonne; cache aggiornata subito, scritture fallite riprovate in silenzio.
+  scritture sono `status = 'opened'` + `opened_at` (da `sent`, all'apertura della lettura) e `status = 'read'` +
+  `read_at` (da `opened`/`sent`, appena il piè di pagina "Hai letto tutta la revisione." entra nello schermo, senza
+  tempo minimo né pulsante; regola in `pianificaLetta`), mai altre colonne; cache aggiornata subito, scritture fallite
+  riprovate in silenzio. Pallino sulla voce Revisioni: lettura leggera all'avvio, al ritorno in primo piano e dopo
+  la condivisione di un diario.
 - Pagina di sviluppo: `/sviluppo/stati?stato=revisioni-1-in-corso|…|revisioni-errore`; esiti dei confronti in
   `~/Desktop/censimenti-app/step7-confronti/`.
 

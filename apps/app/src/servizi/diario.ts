@@ -1,5 +1,5 @@
-// Diario di oggi e giornate della settimana: letture mirate su daily_submissions, copia locale nel portachiavi
-// finché il server non conferma, salvataggio della bozza senza status e condivisione in una sola modifica (logica
+// Diario di oggi e giornate della settimana: letture mirate su daily_submissions, copia locale su file nella sandbox
+// dell'app (archivioFile.ts; fino al 21/10/2026 nel portachiavi) finché il server non conferma, salvataggio della bozza senza status e condivisione in una sola modifica (logica
 // pura in src/core/diario). Lotto 2: la settimana corrente (lunedì–domenica) porta anche commento e "letto" per i
 // pallini; la giornata completa si legge al tocco (o viene dalla cache); "letto" e modifica di una giornata
 // condivisa scrivono solo le colonne del cliente. client_id viene dallo stato letto una volta per sessione
@@ -36,7 +36,8 @@ import {
 } from '@/core/diario/letture';
 import { campiDaSalvare, DIARIO_VUOTO, diarioDaCampi } from '@/core/diario/modello';
 import { SELEZIONE_STORICO, type RigaStorico } from '@/core/diario/storico';
-import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
+import { leggi, scrivi } from '@/servizi/archivio';
+import { leggiFile, rimuoviFile, rimuoviFilePerPrefisso, scriviFile } from '@/servizi/archivioFile';
 import { precaricaFoto } from '@/servizi/foto';
 import { supabase } from '@/servizi/supabase';
 
@@ -64,7 +65,7 @@ function chiaveCache(clientId: string, data: string): string {
 
 async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null> {
   try {
-    const testo = await leggi(chiaveCache(clientId, data));
+    const testo = await leggiFile(chiaveCache(clientId, data));
     if (!testo) return null;
     const cache = JSON.parse(testo) as Partial<Cache>;
     if (!copiaValida(cache.locale, clientId, data)) return null;
@@ -74,12 +75,13 @@ async function cacheDi(clientId: string, data: string): Promise<DatiOggi | null>
   }
 }
 
-// La copia locale si aggiorna a ogni modifica (tasto, tocco, trascinamento): le scritture nel portachiavi sono
-// serializzate e, se ne arrivano molte mentre una è in corso, si scrive solo l'ultima.
+// La copia locale si aggiorna a ogni modifica (tasto, tocco, trascinamento): le scritture su file sono
+// serializzate e, se ne arrivano molte mentre una è in corso, si scrive solo l'ultima. Le copie dei giorni passati
+// dello stesso cliente si cancellano quando si scrive quella di oggi.
 let scritturaCache: Promise<void> = Promise.resolve();
 let cacheInCoda: Cache | null = null;
 
-/** Salva la copia locale (diario di oggi, settimana, giornate aperte, letture in attesa). Non blocca: gli errori del portachiavi si ignorano. */
+/** Salva la copia locale (diario di oggi, settimana, giornate aperte, letture in attesa). Non blocca: gli errori di scrittura si ignorano. */
 export function salvaCache(dati: DatiOggi): void {
   const cache: Cache = { ...dati, letto: new Date().toISOString() };
   const primaInCoda = cacheInCoda === null;
@@ -89,13 +91,15 @@ export function salvaCache(dati: DatiOggi): void {
     while (cacheInCoda) {
       const daScrivere = cacheInCoda;
       cacheInCoda = null;
-      await scrivi(chiaveCache(daScrivere.locale.clientId, daScrivere.locale.data), JSON.stringify(daScrivere)).catch(() => {});
+      const chiave = chiaveCache(daScrivere.locale.clientId, daScrivere.locale.data);
+      await scriviFile(chiave, JSON.stringify(daScrivere)).catch(() => {});
+      await rimuoviFilePerPrefisso(`${PREFISSO_CACHE}.${daScrivere.locale.clientId}.`, [chiave]);
     }
   });
 }
 
 export async function svuotaCacheDiario(clientId: string, data: string): Promise<void> {
-  await rimuovi(chiaveCache(clientId, data));
+  await rimuoviFile(chiaveCache(clientId, data));
 }
 
 function erroreDiRete(error: { code?: string | null; message?: string | null; name?: string | null; status?: number | null }): boolean {

@@ -1,10 +1,10 @@
 // Lettura di una revisione: apertura segnata subito (la revisione smette di essere Nuova), testo dalla memoria o
-// letto per id (rotta diretta), autrice con ripiego, e la regola del letto: fondo raggiunto + tempo minimo in pagina.
+// letto per id (rotta diretta), autrice con ripiego, e "letta" appena il piè di pagina entra nello schermo.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { RigaAutore } from '@/core/diario/letture';
 import { autoreRevisione, type AutoreRevisione } from '@/core/revisioni/autore';
-import { attesaPrimaDiLetta, leggibile, type StatoLettura } from '@/core/revisioni/lettura';
+import { leggibile } from '@/core/revisioni/lettura';
 import { dataRoma } from '@/core/revisioni/stato';
 import type { TestoRevisione } from '@/core/revisioni/testo';
 import { leggiAutore } from '@/servizi/diario';
@@ -44,8 +44,9 @@ export function useLetturaRevisione(id: string, clientId: string, nutrizionista:
   const [esitoNegativo, setEsitoNegativo] = useState<'rete' | 'errore' | 'nonLeggibile' | null>(null);
   const [tentativo, setTentativo] = useState(0);
   const [autore, setAutore] = useState<{ id: string; profilo: RigaAutore | null; fotoPronta: boolean } | null>(null);
-  const lettura = useRef<StatoLettura | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** La revisione è pronta a schermo: il piè di pagina conta solo da qui, una volta per apertura. */
+  const prontaPerIlFondo = useRef(false);
+  const fondoSegnalato = useRef(false);
   const montato = useRef(true);
   const nutrizionistaRef = useRef(nutrizionista);
   useEffect(() => {
@@ -75,8 +76,7 @@ export function useLetturaRevisione(id: string, clientId: string, nutrizionista:
         if (!memoriaRevisioni().testi[id]) return setEsitoNegativo(esito.tipo === 'rete' ? 'rete' : 'errore');
       }
       segnaAperta(id);
-      const t = memoriaRevisioni().testi[id];
-      lettura.current = { apertaAlle: Date.now(), caratteri: t?.caratteri ?? 0, fondoRaggiunto: false };
+      prontaPerIlFondo.current = true;
       if (r.review_author_id) {
         const profilo = await leggiAutore(r.review_author_id);
         const fotoPronta = profilo?.app_square_photo_url ? await fotoInCache(profilo.app_square_photo_url) : false;
@@ -90,9 +90,8 @@ export function useLetturaRevisione(id: string, clientId: string, nutrizionista:
     return () => {
       attivo = false;
       montato.current = false;
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = null;
-      lettura.current = null;
+      prontaPerIlFondo.current = false;
+      fondoSegnalato.current = false;
       void riprovaScritture();
     };
   }, [id, clientId, tentativo]);
@@ -105,21 +104,11 @@ export function useLetturaRevisione(id: string, clientId: string, nutrizionista:
     fase = { tipo: 'pronto', revisione: { numero: riga.review_number, data: dataRoma(riga.sent_at), autore: a, testo } };
   }
 
-  const segna = useCallback(() => {
-    timer.current = null;
-    if (!montato.current) return;
+  const onFondoRaggiunto = useCallback(() => {
+    if (!prontaPerIlFondo.current || fondoSegnalato.current) return;
+    fondoSegnalato.current = true;
     segnaLetta(id);
   }, [id]);
-
-  const onFondoRaggiunto = useCallback(() => {
-    const stato = lettura.current;
-    if (!stato || stato.fondoRaggiunto) return;
-    stato.fondoRaggiunto = true;
-    const attesa = attesaPrimaDiLetta(stato, Date.now());
-    if (attesa === null) return;
-    if (attesa === 0) segna();
-    else timer.current = setTimeout(segna, attesa);
-  }, [segna]);
 
   const riprova = useCallback(() => {
     setEsitoNegativo(null);
