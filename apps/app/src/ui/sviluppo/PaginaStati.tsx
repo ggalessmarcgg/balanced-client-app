@@ -48,6 +48,7 @@ export const STATI_SVILUPPO = [
   ['stati-4-caricamento', 'Pannello scelta orario in caricamento'],
   ['stati-4-errore', 'Pannello scelta orario senza connessione (Riprova)'],
   ['stati-4-confermando', 'Pannello scelta orario con "Conferma orario" in caricamento'],
+  ['stati-4-molti-orari', 'Pannello scelta orario con molti orari: la griglia scorre, le azioni restano fisse'],
   ['stati-5-confermata', 'G · Stati 5 · Consulenza prenotata (550:3890)'],
   ['H', 'H · Stati 6 · Percorso non ancora attivo (558:4206)'],
   ['I', 'I · Stati 12 · Consulenza non svolta (562:4195)'],
@@ -242,6 +243,8 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <StatiSviluppo scenario="pannelloErrore" />;
     case 'stati-4-confermando':
       return <StatiSviluppo scenario="pannelloConfermando" />;
+    case 'stati-4-molti-orari':
+      return <StatiSviluppo scenario="pannelloMoltiOrari" />;
     case 'stati-5-confermata':
       return <StatiSviluppo scenario="confermata" />;
     case 'H':

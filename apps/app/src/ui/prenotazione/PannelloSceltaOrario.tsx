@@ -36,7 +36,9 @@ export type PannelloSceltaOrarioProps = {
 // Misure dal componente Figma 555:422: pannello pt 12 / px 20 / pb 34, gap 20; selettore gap 16; schede e chip
 // px 16 / py 8 con raggio badge (10), bordo 1 azione/primaria da non selezionate, piene da selezionate; griglia a 5
 // colonne con gap 8, testata del giorno su sfondo/card (py 8, raggio 10) con Etichetta piccola 130 + Caption; "N/A" in
-// Caption al 40 %; nota con "Nota:" in grassetto; azioni "Conferma orario" + "Annulla" (gap 4).
+// Caption al 40 %; nota con "Nota:" in grassetto; azioni "Conferma orario" + "Annulla" (gap 4) nel piede fisso del
+// pannello (decisione del 22/10/2026): il foglio si apre alto quanto il contenuto, con molti orari scorre solo la parte
+// sopra le azioni, che restano sempre visibili come nel diario; `distanzaPiede` 0 tiene i 20 di Figma dalla nota.
 const BORDO = 1;
 const nulla = () => {};
 
@@ -48,7 +50,17 @@ export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, co
 
   if (nessunOrario) {
     return (
-      <PannelloDalBasso aperto={aperto} onChiudi={onAnnulla} etichetta={TESTI_NESSUN_ORARIO.titolo}>
+      <PannelloDalBasso
+        aperto={aperto}
+        onChiudi={onAnnulla}
+        etichetta={TESTI_NESSUN_ORARIO.titolo}
+        distanzaPiede={0}
+        piede={
+          <View style={stili.azioni}>
+            <Pulsante etichetta={TESTI_CONFERMA.chiudi} livello="terziario" onPress={onAnnulla} style={stili.centrato} />
+          </View>
+        }
+      >
         <Testo stile="h2" accessibilityRole="header">
           {TESTI_NESSUN_ORARIO.titolo}
         </Testo>
@@ -57,16 +69,24 @@ export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, co
           <RigaElenco tipo="copia" etichetta={SUPPORTO.email} onPress={onEmailSupporto} />
           <RigaElenco tipo="copia" etichetta={SUPPORTO.telefono} onPress={onTelefonoSupporto} />
         </View>
-        <View style={stili.azioni}>
-          <Pulsante etichetta={TESTI_CONFERMA.chiudi} livello="terziario" onPress={onAnnulla} style={stili.centrato} />
-        </View>
       </PannelloDalBasso>
     );
   }
 
   const confermabile = orari.tipo === 'pronto' && scelta !== null;
   return (
-    <PannelloDalBasso aperto={aperto} onChiudi={confermando ? nulla : onAnnulla} etichetta={testi.titolo}>
+    <PannelloDalBasso
+      aperto={aperto}
+      onChiudi={confermando ? nulla : onAnnulla}
+      etichetta={testi.titolo}
+      distanzaPiede={0}
+      piede={
+        <View style={stili.azioni}>
+          <Pulsante etichetta={TESTI_CONFERMA.confermaOrario} stato={confermando ? 'caricamento' : confermabile ? 'normale' : 'disabilitato'} onPress={onConferma} />
+          <Pulsante etichetta={TESTI_CONFERMA.annulla} livello="terziario" onPress={confermando ? undefined : onAnnulla} style={stili.centrato} />
+        </View>
+      }
+    >
       <Testo stile="h2" accessibilityRole="header">
         {testi.titolo}
       </Testo>
@@ -102,11 +122,6 @@ export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, co
         <Text style={stiliTesto.grassetto}>{NOTA_ANTICIPO.etichetta}</Text>
         {NOTA_ANTICIPO.testo}
       </Testo>
-      {/* Le azioni stanno nel contenuto, come in Figma (gap 20 dalla nota, 34 dal bordo): con molti orari scorrono con la griglia. */}
-      <View style={stili.azioni}>
-        <Pulsante etichetta={TESTI_CONFERMA.confermaOrario} stato={confermando ? 'caricamento' : confermabile ? 'normale' : 'disabilitato'} onPress={onConferma} />
-        <Pulsante etichetta={TESTI_CONFERMA.annulla} livello="terziario" onPress={confermando ? undefined : onAnnulla} style={stili.centrato} />
-      </View>
     </PannelloDalBasso>
   );
 }

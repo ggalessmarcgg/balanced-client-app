@@ -401,7 +401,9 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `usePrenotazione.ts`; `impostaStatoConfermato` in `statoCliente.ts` mette G in memoria (mai nel portachiavi).
 - Componenti in `src/ui/prenotazione/` (card "I tuoi dati", "La tua Nutrizionista", "La tua consulenza" anche barrata;
   `PannelloSceltaOrario` con le varianti del componente Figma `555:422`: orario passato, non disponibile, modifica,
-  nessun orario) e `src/ui/appuntamenti/CardAppuntamento.tsx` (contenuto della card condiviso con Appuntamenti);
+  nessun orario; "Conferma orario" / "Annulla" e "Chiudi" nel `piede` fisso del `PannelloDalBasso` con `distanzaPiede`
+  0, sempre visibili come nel diario, il foglio si apre alto quanto il contenuto e con molti orari scorre solo la
+  griglia, decisione del 22/10/2026) e `src/ui/appuntamenti/CardAppuntamento.tsx` (contenuto della card condiviso con Appuntamenti);
   schermate `SchermataPrenotazione` (C e D), `SchermataPrenotato` (F), `SchermataConsulenzaConfermata` (G); rotte
   `app/stato/prenotazione.tsx` e `app/stato/prenotato.tsx`. Il menu (`app/menu.tsx`) negli stati C, D, F, G ha la sola
   voce "La tua nutrizionista" oltre a "Esci".
@@ -416,7 +418,7 @@ npx expo install --fix                   # riallinea versioni alla SDK
   calendario: prima visita 40 minuti, visita di controllo 20 (`DURATA_VISITA_MINUTI`, `fasciaOraria` in
   `src/core/appuntamenti/appuntamenti.ts`); fascia = inizio – inizio + durata (es. 18:30 – 19:10); `end_time` serve solo
   a decidere se la visita è in corso. Gli orari si scelgono a ore intere.
-- Pagina di sviluppo: `/sviluppo/stati?stato=stati-1-da-confermare|stati-2-prima|stati-3-orario-passato|stati-4-scegli|stati-4.1-non-disponibile|stati-4.2-cambia|stati-4.3-nessun-orario|stati-5-confermata|…`;
+- Pagina di sviluppo: `/sviluppo/stati?stato=stati-1-da-confermare|stati-2-prima|stati-3-orario-passato|stati-4-scegli|stati-4.1-non-disponibile|stati-4.2-cambia|stati-4.3-nessun-orario|stati-4-molti-orari|stati-5-confermata|…`;
   esiti dei confronti in `~/Desktop/censimenti-app/step12-confronti/`.
 
 ## Note su Xcode 27 / Device Hub

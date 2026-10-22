@@ -18,6 +18,11 @@ export type PannelloDalBassoProps = {
   pieno?: boolean;
   /** Blocco fisso in fondo al foglio (es. "Chiudi" / "Avanti"), sopra l'area sicura inferiore; con la tastiera aperta resta coperto. */
   piede?: ReactNode;
+  /**
+   * Spazio tra il contenuto e il piede oltre ai 20 di fondo del contenuto: 20 (40 in tutto) per i comandi del diario,
+   * 0 quando Figma disegna le azioni a gap 20 dall'ultimo elemento (Pannello scelta orario 555:422).
+   */
+  distanzaPiede?: number;
 };
 
 // Misure dalle schermate con pannello (es. 474:1430, 499:2709): raggi superiori 24, padding 12 / 20 / 34 (= area
@@ -37,7 +42,7 @@ const SOGLIA_INIZIO = 6;
  * con un gesto veloce) la maniglia o, quando il contenuto non scorre, il foglio intero; se espandibile, trascinando
  * verso l'alto si porta a schermo pieno e verso il basso si riduce prima di chiudersi.
  */
-export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espandibile = false, pieno = false, piede }: PannelloDalBassoProps) {
+export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espandibile = false, pieno = false, piede, distanzaPiede = spazio[20] }: PannelloDalBassoProps) {
   const { height: altezzaSchermo } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const altezzaMax = altezzaSchermo - insets.top - DISTANZA_DALL_ALTO;
@@ -96,7 +101,8 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
   }, [pieno, estensione]);
 
   const paddingInferiore = Math.max(insets.bottom, spazio[20]);
-  const altezzaFoglio = Math.min(altezzaMax, altezzaContenuto + spazio[12] + paddingInferiore);
+  // Il foglio è alto quanto il contenuto (più maniglia e piede, che include la sua area sicura) e mai oltre il massimo.
+  const altezzaFoglio = Math.min(altezzaMax, altezzaContenuto + spazio[12] + (piede ? altezzaPiede : paddingInferiore));
   const gesti = useMemo(() => {
     const verticale = (dy: number, dx: number) => Math.abs(dy) > SOGLIA_INIZIO && Math.abs(dy) > Math.abs(dx) * 1.5;
     const comuni: PanResponderCallbacks = {
@@ -161,7 +167,7 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
             onScroll={segnaPosizione}
             scrollEventThrottle={16}
             style={riempie ? stili.scorrimentoPieno : stili.scorrimento}
-            contentContainerStyle={[stili.contenuto, { paddingBottom: piede ? spazio[20] : paddingInferiore }]}
+            contentContainerStyle={[stili.contenitore, { paddingBottom: piede ? spazio[20] : paddingInferiore }]}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="none"
             showsVerticalScrollIndicator={false}
@@ -170,11 +176,14 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
             onContentSizeChange={(_, h) => setAltezzaContenuto(h)}
             onLayout={(e) => setAltezzaArea(e.nativeEvent.layout.height)}
           >
-            <FornitoreCampi value={campi}>{children}</FornitoreCampi>
+            {/* Il gap sta su un contenitore interno: lo spazio per la tastiera (alto 0 da chiusa) non deve aggiungere un gap in fondo. */}
+            <View style={stili.interno}>
+              <FornitoreCampi value={campi}>{children}</FornitoreCampi>
+            </View>
             <Reanimated.View style={spazioTastiera} />
           </Reanimated.ScrollView>
           {piede && (
-            <View style={[stili.piede, { paddingBottom: paddingInferiore }]} onLayout={(e) => setAltezzaPiede(e.nativeEvent.layout.height)}>
+            <View style={[stili.piede, { paddingTop: distanzaPiede, paddingBottom: paddingInferiore }]} onLayout={(e) => setAltezzaPiede(e.nativeEvent.layout.height)}>
               {piede}
             </View>
           )}
@@ -210,8 +219,12 @@ const stili = StyleSheet.create({
   // Area della maniglia: alta quanto basta per essere afferrata (12 + 5 + 12); il contenuto parte 20 sotto la maniglia (Figma: titolo a 37).
   areaManiglia: { alignItems: 'center', marginTop: -spazio[12], paddingVertical: spazio[12] },
   maniglia: { width: MANIGLIA.larghezza, height: MANIGLIA.altezza, borderRadius: raggio.pieno, backgroundColor: colori.maniglia },
-  scorrimento: { flexGrow: 0 },
+  // Lo scorrimento è alto quanto il contenuto e si restringe (flexShrink) quando il foglio tocca il massimo: così il
+  // piede resta sempre visibile e scorre solo il contenuto (in React Native flexShrink è 0 se non dichiarato).
+  scorrimento: { flexGrow: 0, flexShrink: 1 },
   scorrimentoPieno: { flex: 1 },
+  contenitore: { paddingTop: spazio[8], paddingHorizontal: margine.pagina },
+  interno: { gap: spazio[20] },
   contenuto: { paddingTop: spazio[8], paddingHorizontal: margine.pagina, gap: spazio[20] },
-  piede: { paddingHorizontal: margine.pagina, paddingTop: spazio[20] },
+  piede: { paddingHorizontal: margine.pagina },
 });

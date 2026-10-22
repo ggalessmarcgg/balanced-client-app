@@ -42,6 +42,10 @@ const ORARI_FIGMA: OrarioDisponibile[] = [
   { date: '2026-07-31', time: '09:00' },
 ];
 const SCELTA_FIGMA: OrarioDisponibile = { date: '2026-07-24', time: '16:00' };
+// Caso limite senza disegno: tutte le ore dalle 8 alle 19 in ogni giorno della prima settimana, così il foglio tocca il
+// massimo e la griglia scorre sotto le azioni fisse.
+const ORE_PIENE = Array.from({ length: 12 }, (_, i) => `${String(8 + i).padStart(2, '0')}:00`);
+const ORARI_MOLTI: OrarioDisponibile[] = ['2026-07-20', '2026-07-21', '2026-07-22', '2026-07-23', '2026-07-24'].flatMap((date) => ORE_PIENE.map((time) => ({ date, time })));
 
 export type ScenarioStati =
   | 'daConfermare'
@@ -56,6 +60,7 @@ export type ScenarioStati =
   | 'pannelloSettimanaSuccessiva'
   | 'pannelloNonDisponibile'
   | 'pannelloModifica'
+  | 'pannelloMoltiOrari'
   | 'pannelloNessunOrario'
   | 'pannelloCaricamento'
   | 'pannelloErrore'
@@ -100,6 +105,8 @@ export function StatiSviluppo({ scenario }: { scenario: ScenarioStati }) {
       return C({ sovrapposti: <PannelloFinto motivo="nonDisponibile" orari={PRONTI} /> });
     case 'pannelloModifica':
       return C({ sovrapposti: <PannelloFinto motivo="modifica" orari={PRONTI} /> });
+    case 'pannelloMoltiOrari':
+      return D({ sovrapposti: <PannelloFinto motivo="orarioPassato" orari={{ tipo: 'pronto', orari: ORARI_MOLTI }} scelta={{ date: '2026-07-22', time: '18:00' }} /> });
     case 'pannelloNessunOrario':
       return D({ sovrapposti: <PannelloFinto motivo="orarioPassato" orari={{ tipo: 'pronto', orari: [] }} scelta={null} /> });
     case 'pannelloCaricamento':
