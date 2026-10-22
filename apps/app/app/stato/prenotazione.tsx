@@ -9,8 +9,9 @@ import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataPrenotazione } from '@/ui/schermate/SchermataPrenotazione';
 
 /**
- * Stati C (consulenza da confermare) e D (orario passato senza conferma), step 12: conferma con
- * confirm_initial_appointment, cambio dell'orario dal pannello di scelta (orari da get_nutritionist_available_slots_v2).
+ * Stati C (consulenza da confermare) e D (orario passato senza conferma), step 12: scelta dell'orario dal pannello
+ * (orari da get_nutritionist_available_slots_v2), sempre in due passaggi; la conferma con confirm_initial_appointment
+ * parte solo da "Conferma la consulenza".
  */
 export default function Rotta() {
   const stato = statoCorrente();
@@ -23,14 +24,14 @@ function Prenotazione({ stato }: { stato: StatoPrenotazione }) {
   const { onEmailSupporto, onTelefonoSupporto, sovrapposti } = useAzioniStato();
   const p = usePrenotazione(stato);
   const onMenu = useCallback(() => router.push('/menu'), [router]);
-  // In D (orario passato o assente) la card è barrata; in C si mostra l'orario del lead o quello scelto con "Modifica".
-  const variante = stato.codice === 'C' ? 'daConfermare' : 'orarioPassato';
+  // La card è barrata in D (orario passato o assente) finché non si sceglie un nuovo orario nel pannello; appena c'è un
+  // orario in memoria (scelto con "Modifica" o "Scegli un nuovo orario") la schermata è "da confermare".
   return (
     <SchermataPrenotazione
-      variante={variante}
+      variante={p.variante}
       profilo={stato.profilo}
       slot={p.slot}
-      confermando={p.confermando && !p.pannello.aperto}
+      confermando={p.confermando}
       onConferma={p.onConferma}
       onModifica={p.onModifica}
       onScegliNuovo={p.onScegliNuovo}
@@ -43,7 +44,6 @@ function Prenotazione({ stato }: { stato: StatoPrenotazione }) {
             orari={p.orari}
             scheda={p.scheda}
             scelta={p.scelta}
-            confermando={p.confermando}
             onScheda={p.onScheda}
             onOrario={p.onOrario}
             onConferma={p.onConfermaOrario}

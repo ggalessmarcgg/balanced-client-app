@@ -21,8 +21,6 @@ export type PannelloSceltaOrarioProps = {
   orari: StatoOrari;
   scheda: number;
   scelta: OrarioDisponibile | null;
-  /** Durante la chiamata di conferma il pulsante mostra il caricamento e la griglia non si tocca. */
-  confermando?: boolean;
   onScheda: (scheda: number) => void;
   onOrario: (orario: OrarioDisponibile) => void;
   onConferma: () => void;
@@ -39,10 +37,10 @@ export type PannelloSceltaOrarioProps = {
 // Caption al 40 %; nota con "Nota:" in grassetto; azioni "Conferma orario" + "Annulla" (gap 4) nel piede fisso del
 // pannello (decisione del 22/10/2026): il foglio si apre alto quanto il contenuto, con molti orari scorre solo la parte
 // sopra le azioni, che restano sempre visibili come nel diario; `distanzaPiede` 0 tiene i 20 di Figma dalla nota.
+// "Conferma orario" non chiama nulla: passa l'orario scelto alla card (due passaggi in ogni variante, 22/10/2026).
 const BORDO = 1;
-const nulla = () => {};
 
-export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, confermando = false, onScheda, onOrario, onConferma, onAnnulla, onRiprova, onEmailSupporto, onTelefonoSupporto }: PannelloSceltaOrarioProps) {
+export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, onScheda, onOrario, onConferma, onAnnulla, onRiprova, onEmailSupporto, onTelefonoSupporto }: PannelloSceltaOrarioProps) {
   const giorni = useMemo(() => (orari.tipo === 'pronto' ? giorniDagliOrari(orari.orari) : []), [orari]);
   const perData = useMemo(() => (orari.tipo === 'pronto' ? raggruppaPerData(orari.orari) : new Map<string, string[]>()), [orari]);
   const nessunOrario = orari.tipo === 'pronto' && orari.orari.length === 0;
@@ -77,13 +75,13 @@ export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, co
   return (
     <PannelloDalBasso
       aperto={aperto}
-      onChiudi={confermando ? nulla : onAnnulla}
+      onChiudi={onAnnulla}
       etichetta={testi.titolo}
       distanzaPiede={0}
       piede={
         <View style={stili.azioni}>
-          <Pulsante etichetta={TESTI_CONFERMA.confermaOrario} stato={confermando ? 'caricamento' : confermabile ? 'normale' : 'disabilitato'} onPress={onConferma} />
-          <Pulsante etichetta={TESTI_CONFERMA.annulla} livello="terziario" onPress={confermando ? undefined : onAnnulla} style={stili.centrato} />
+          <Pulsante etichetta={TESTI_CONFERMA.confermaOrario} stato={confermabile ? 'normale' : 'disabilitato'} onPress={onConferma} />
+          <Pulsante etichetta={TESTI_CONFERMA.annulla} livello="terziario" onPress={onAnnulla} style={stili.centrato} />
         </View>
       }
     >
@@ -113,7 +111,7 @@ export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, co
           </View>
           <View style={stili.griglia}>
             {giorniDellaScheda(giorni, scheda).map((giorno) => (
-              <Colonna key={giorno.data} giorno={giorno} ore={perData.get(giorno.data) ?? []} scelta={scelta} disabilitata={confermando} onOrario={onOrario} />
+              <Colonna key={giorno.data} giorno={giorno} ore={perData.get(giorno.data) ?? []} scelta={scelta} onOrario={onOrario} />
             ))}
           </View>
         </View>
@@ -137,7 +135,7 @@ function Scheda({ etichetta, selezionata, onPress }: { etichetta: string; selezi
   );
 }
 
-function Colonna({ giorno, ore, scelta, disabilitata, onOrario }: { giorno: GiornoGriglia; ore: string[]; scelta: OrarioDisponibile | null; disabilitata: boolean; onOrario: (orario: OrarioDisponibile) => void }) {
+function Colonna({ giorno, ore, scelta, onOrario }: { giorno: GiornoGriglia; ore: string[]; scelta: OrarioDisponibile | null; onOrario: (orario: OrarioDisponibile) => void }) {
   return (
     <View style={stili.colonna}>
       <View style={stili.testataGiorno} accessible accessibilityLabel={`${giorno.giorno} ${giorno.etichetta}`}>
@@ -151,17 +149,17 @@ function Colonna({ giorno, ore, scelta, disabilitata, onOrario }: { giorno: Gior
       ) : (
         ore.map((ora) => {
           const orario = { date: giorno.data, time: ora };
-          return <Chip key={ora} etichetta={ora} selezionato={stessoOrario(scelta, orario)} disabilitato={disabilitata} onPress={() => onOrario(orario)} />;
+          return <Chip key={ora} etichetta={ora} selezionato={stessoOrario(scelta, orario)} onPress={() => onOrario(orario)} />;
         })
       )}
     </View>
   );
 }
 
-function Chip({ etichetta, selezionato, disabilitato, onPress }: { etichetta: string; selezionato: boolean; disabilitato: boolean; onPress: () => void }) {
+function Chip({ etichetta, selezionato, onPress }: { etichetta: string; selezionato: boolean; onPress: () => void }) {
   const { hitSlop, onLayout } = useAreaToccabile();
   return (
-    <Pressable onPress={onPress} disabled={disabilitato} hitSlop={hitSlop} onLayout={onLayout} accessibilityRole="button" accessibilityLabel={etichetta} accessibilityState={{ selected: selezionato, disabled: disabilitato }} style={[stili.chip, selezionato ? stili.pieno : stili.contorno]}>
+    <Pressable onPress={onPress} hitSlop={hitSlop} onLayout={onLayout} accessibilityRole="button" accessibilityLabel={etichetta} accessibilityState={{ selected: selezionato }} style={[stili.chip, selezionato ? stili.pieno : stili.contorno]}>
       <Testo stile={selezionato ? 'etichettaPiccola130' : 'bodyDetails130'} colore={selezionato ? colori.testo.suAzione : colori.testo.primario}>
         {etichetta}
       </Testo>

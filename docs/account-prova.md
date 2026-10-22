@@ -11,10 +11,10 @@ nutrizionista reale.
 |---|---|---|---|
 | A | Login | nessuno | app senza sessione |
 | B | Email non confermata | `+capi1` | utente auth non confermato, `clients.status = not_confirmed` (già così) |
-| C | Consulenza da confermare | `+testdmarc` | dopo la prova di D: slot desiderato del lead spostato nel futuro |
-| D | Orario passato senza conferma | `+testdmarc` | `not_confirmed` con slot del lead passato (già così) |
+| C | Consulenza da confermare | `+testdmarc` | `not_confirmed` con slot desiderato del lead nel futuro: dal 22/10/2026 consulenza da confermare il 4/11/2026 alle 11:00 |
+| D | Orario passato senza conferma | `+testdmarc` | `not_confirmed` con slot del lead passato (spostato nel passato dalla chat di progetto per la prova) |
 | E | Orario non più disponibile | `+testdmarc` | transitorio: esito `slot_taken`/`day_full` della conferma (riga fittizia in `appointments` alla stessa ora, censimento step 12 §8) o elenco degli orari vuoto |
-| F | Prenotato, prima della consulenza | `+testdmarc` dopo la conferma nell'app | la conferma crea l'appuntamento vero: la nutrizionista dell'alias deve essere "Alessandra Marchina" o "Guest Test" (censimento step 12 §8, SQL dalla chat di progetto) |
+| F | Prenotato, prima della consulenza | `+testdmarc` dopo la conferma nell'app | la conferma crea l'appuntamento vero nel calendario della nutrizionista dell'alias (vedi sotto); dopo la prova la chat di progetto riporta l'alias a C/D |
 | G | Appena prenotata | `+testdmarc` | stato di interfaccia subito dopo la conferma fatta nell'app (step 12) |
 | H | Percorso non ancora attivo | `+test` (consulenza `completed`) e `+test2` (`scheduled` passata, euristica dei 45 minuti) | già così |
 | I | Consulenza non svolta | `+test7` | unico appuntamento messo a `no_show` |
@@ -26,6 +26,14 @@ Nutrizioniste assegnate agli alias: profili reali e attivi (Nanni, Gritti, Chiad
 Damiani, Zobbi, Boselli, Pinzani); nessuna delle operazioni sopra invia loro email o inviti.
 Per entrare nell'app con un alias serve la sua password (impostabile dalla dashboard Auth
 senza email).
+
+## Prenotazione (stati C, D, E, F, G, step 12)
+
+Decisione del 22/10/2026, dopo le prove dello step 12 (orario passato, modifica, orario non più
+disponibile, verificate sul database): **`+testdmarc` è assegnato a Margherita Chiadò** (scheda
+cliente e lead) e resta su di lei per le prove future; la consulenza da confermare è il
+**4/11/2026 alle 11:00**. Le prove di conferma scrivono una riga vera in `appointments` nel suo
+calendario: dopo ogni prova la chat di progetto riporta l'alias allo stato di partenza.
 
 ## Diario (stato J, step 5)
 

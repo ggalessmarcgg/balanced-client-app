@@ -410,8 +410,11 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Regole (censimento `~/Desktop/censimenti-app/step12-censimento-stati.md`): nessuna logica di prenotazione nuova,
   nessuna scrittura diretta dell'app (scrive solo la funzione del database); orari letti all'apertura del pannello,
   dopo `slot_taken`/`day_full`/`slot_in_past` e su "Riprova", mai al cambio di scheda; elenco vuoto → variante
-  "Nessun orario" con il supporto da copiare; "Modifica" in C tiene la scelta solo in memoria e **non scrive mai sul
-  lead**; `p_start_time` in `HH:MM:00`; G compare solo dopo una conferma nell'app e "Torna alla home" rilegge lo
+  "Nessun orario" con il supporto da copiare; **scelta dell'orario sempre in due passaggi** (decisione del 22/10/2026,
+  macchina a stati pura in `src/core/prenotazione/pannello.ts`): "Conferma orario" chiude il pannello e aggiorna la card
+  con l'orario scelto, tenuto solo in memoria e **mai scritto sul lead**, in ogni variante (modifica, orario passato,
+  non più disponibile); prenota soltanto "Conferma la consulenza"; dopo `slot_in_past`/`no_desired_slot` la card resta
+  barrata finché non si sceglie un nuovo orario; `p_start_time` in `HH:MM:00`; G compare solo dopo una conferma nell'app e "Torna alla home" rilegge lo
   stato; in F senza link lo stato si rilegge al ritorno in primo piano. Lettura dello stato estesa a `phone_number`,
   `appointments.end_time`, `expertise`, `registration_number`.
 - **Durate (decisione del 22/10/2026, tutta l'app)**: al cliente si mostra la durata della visita, non il blocco in

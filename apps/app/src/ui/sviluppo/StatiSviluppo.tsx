@@ -64,14 +64,13 @@ export type ScenarioStati =
   | 'pannelloNessunOrario'
   | 'pannelloCaricamento'
   | 'pannelloErrore'
-  | 'pannelloConfermando'
   | 'confermata';
 
-function PannelloFinto({ motivo, orari, scheda: schedaIniziale = 0, scelta: sceltaIniziale = SCELTA_FIGMA, confermando = false }: { motivo: MotivoPannello; orari: StatoOrari; scheda?: number; scelta?: OrarioDisponibile | null; confermando?: boolean }) {
+function PannelloFinto({ motivo, orari, scheda: schedaIniziale = 0, scelta: sceltaIniziale = SCELTA_FIGMA }: { motivo: MotivoPannello; orari: StatoOrari; scheda?: number; scelta?: OrarioDisponibile | null }) {
   const [scheda, setScheda] = useState(schedaIniziale);
   const [scelta, setScelta] = useState<OrarioDisponibile | null>(sceltaIniziale);
   return (
-    <PannelloSceltaOrario aperto motivo={motivo} orari={orari} scheda={scheda} scelta={scelta} confermando={confermando} onScheda={setScheda} onOrario={(o) => setScelta((s) => alternaScelta(s, o))} onConferma={nulla} onAnnulla={nulla} onRiprova={nulla} onEmailSupporto={nulla} onTelefonoSupporto={nulla} />
+    <PannelloSceltaOrario aperto motivo={motivo} orari={orari} scheda={scheda} scelta={scelta} onScheda={setScheda} onOrario={(o) => setScelta((s) => alternaScelta(s, o))} onConferma={nulla} onAnnulla={nulla} onRiprova={nulla} onEmailSupporto={nulla} onTelefonoSupporto={nulla} />
   );
 }
 
@@ -113,8 +112,6 @@ export function StatiSviluppo({ scenario }: { scenario: ScenarioStati }) {
       return D({ sovrapposti: <PannelloFinto motivo="orarioPassato" orari={{ tipo: 'caricamento' }} scelta={null} /> });
     case 'pannelloErrore':
       return D({ sovrapposti: <PannelloFinto motivo="orarioPassato" orari={{ tipo: 'errore' }} scelta={null} /> });
-    case 'pannelloConfermando':
-      return D({ sovrapposti: <PannelloFinto motivo="orarioPassato" orari={PRONTI} confermando /> });
     case 'confermata':
       return <SchermataConsulenzaConfermata onTornaAllaHome={nulla} />;
   }
