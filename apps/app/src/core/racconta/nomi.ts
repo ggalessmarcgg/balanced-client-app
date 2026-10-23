@@ -6,11 +6,15 @@ export const SCHERMATE_RACCONTA = {
   microfonoDisattivato: 'racconta · microfono disattivato',
   pronto: 'racconta · pronto',
   registra: 'racconta · registra',
+  terminata: 'racconta · registrazione terminata',
   trascrizione: 'racconta · trascrizione',
   racconto: 'racconta · il tuo racconto',
   senzaConnessione: 'racconta · senza connessione',
   nonHoCapito: 'racconta · non ho capito',
   errore: 'racconta · errore',
+  tutorialPronto: 'racconta · tutorial · racconta',
+  tutorialTerminata: 'racconta · tutorial · trascrizione',
+  tutorialRacconto: 'racconta · tutorial · crea il diario',
 } as const;
 
 export const AZIONI_RACCONTA = {
@@ -22,7 +26,10 @@ export const AZIONI_RACCONTA = {
   arrestoAutomatico: 'racconta · arresto a 3 minuti',
   pausa: 'racconta · pausa',
   riprendi: 'racconta · riprendi',
+  invia: 'racconta · invia la registrazione',
   trascrivi: 'racconta · trascrivi',
+  uscitaConfermata: 'racconta · interrompi e scarta',
+  tutorialHoCapito: 'racconta · tutorial · ho capito',
   modificaTesto: 'racconta · modifica il racconto',
   ricomincia: 'racconta · ricomincia',
   riprova: 'racconta · riprova trascrizione',

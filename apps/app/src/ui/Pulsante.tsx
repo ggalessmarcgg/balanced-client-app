@@ -1,6 +1,8 @@
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { useAreaToccabile } from '@/ui/areaToccabile';
+import { useRiduciMovimento } from '@/ui/riduciMovimento';
 import { Testo } from '@/ui/Testo';
 import { colori, opacita, raggio, spazio, type NomeStileTesto } from '@/ui/theme';
 
@@ -63,17 +65,58 @@ export function Pulsante({ etichetta, livello = 'primario', stato = 'normale', o
       ]}
     >
       {caricamento && !compatto ? (
-        <View style={stili.puntini} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-          <View style={[stili.puntino, { backgroundColor: testo.colore }]} />
-          <View style={[stili.puntino, stili.puntinoMedio, { backgroundColor: testo.colore }]} />
-          <View style={[stili.puntino, stili.puntinoChiaro, { backgroundColor: testo.colore }]} />
-        </View>
+        <PuntiniCaricamento colore={testo.colore} />
       ) : (
         <Testo stile={testo.stile} colore={testo.colore} style={stiliTesto.etichetta}>
           {etichetta}
         </Testo>
       )}
     </Pressable>
+  );
+}
+
+// Pallini del caricamento: a saltello sfalsato come nel funnel (onboarding-v2, loading.css: 1,2 s ease-in-out,
+// picco al 30 % del ciclo, ritardi di 0,15 s e 0,3 s; lì −8 px su pallini da 12, qui in proporzione −5 su 8).
+// Con "Riduci movimento" restano fermi.
+const SALTELLO = { durataMs: 1200, ritardoMs: 150, altezza: -5, picco: 0.3, fine: 0.6 };
+
+function PuntiniCaricamento({ colore }: { colore: string }) {
+  const riduci = useRiduciMovimento();
+  const [salti] = useState(() => [new Animated.Value(0), new Animated.Value(0), new Animated.Value(0)]);
+  useEffect(() => {
+    if (riduci) {
+      for (const s of salti) {
+        s.stopAnimation();
+        s.setValue(0);
+      }
+      return;
+    }
+    // Un ciclo: fermo → su (fino al 30 %) → giù (fino al 60 %) → fermo; ogni pallino parte 150 ms dopo il precedente.
+    const su = SALTELLO.durataMs * SALTELLO.picco;
+    const giu = SALTELLO.durataMs * (SALTELLO.fine - SALTELLO.picco);
+    const pausa = SALTELLO.durataMs * (1 - SALTELLO.fine);
+    const cicli = salti.map((s, i) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(i * SALTELLO.ritardoMs),
+          Animated.timing(s, { toValue: 1, duration: su, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.timing(s, { toValue: 0, duration: giu, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+          Animated.delay(pausa - i * SALTELLO.ritardoMs),
+        ]),
+      ),
+    );
+    for (const c of cicli) c.start();
+    return () => {
+      for (const c of cicli) c.stop();
+    };
+  }, [riduci, salti]);
+  const opacitaPuntini = [1, opacita.caricamentoPuntoMedio, opacita.caricamentoPuntoChiaro];
+  return (
+    <View style={stili.puntini} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      {salti.map((s, i) => (
+        <Animated.View key={i} style={[stili.puntino, { backgroundColor: colore, opacity: opacitaPuntini[i], transform: [{ translateY: s.interpolate({ inputRange: [0, 1], outputRange: [0, SALTELLO.altezza] }) }] }]} />
+      ))}
+    </View>
   );
 }
 
@@ -107,7 +150,5 @@ const stili = StyleSheet.create({
   disabilitato: { opacity: opacita.pulsantePrimarioDisabilitato },
   puntini: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spazio[4] },
   puntino: { width: spazio[8], height: spazio[8], borderRadius: raggio.pieno },
-  puntinoMedio: { opacity: opacita.caricamentoPuntoMedio },
-  puntinoChiaro: { opacity: opacita.caricamentoPuntoChiaro },
 });
 const stiliTesto = StyleSheet.create({ etichetta: { textAlign: 'center' }, nascosta: { opacity: 0 } });

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { fileDaCancellare, leggiNotaAttesa, nomeFileRegistrazione, notaAudioInAttesa } from './attesa.ts';
+import { fileDaCancellare, leggiNotaAttesa, leggiNotaTesto, nomeFileRegistrazione, notaAudioInAttesa, notaTestoInAttesa } from './attesa.ts';
 
 const AUDIO = { uri: 'file:///doc/ExpoAudio/racconto-2026-10-23.m4a', durataMs: 88_000, data: '2026-10-23' };
 
@@ -28,5 +28,16 @@ describe('audio in attesa', () => {
     assert.equal(nomeFileRegistrazione('2026-10-23'), 'racconto-2026-10-23');
     assert.deepEqual(fileDaCancellare(['racconto-2026-10-22.m4a', 'racconto-2026-10-23.m4a', 'altro.m4a'], 'racconto-2026-10-23.m4a'), ['racconto-2026-10-22.m4a']);
     assert.deepEqual(fileDaCancellare(['racconto-2026-10-22.m4a', 'racconto-2026-10-23.m4a'], null), ['racconto-2026-10-22.m4a', 'racconto-2026-10-23.m4a']);
+  });
+});
+
+describe('testo in attesa', () => {
+  const RACCONTO = { testo: 'A colazione…', durataMs: 88_000, data: '2026-10-23' };
+  it('il testo di oggi dello stesso cliente si riprende; di un altro giorno è scaduto; altrimenti nulla', () => {
+    const nota = notaTestoInAttesa(RACCONTO, 'c1', '2026-10-23T10:00:00.000Z');
+    assert.deepEqual(leggiNotaTesto(nota, 'c1', '2026-10-23'), { tipo: 'daRiprendere', racconto: RACCONTO });
+    assert.deepEqual(leggiNotaTesto(nota, 'c1', '2026-10-24'), { tipo: 'scaduto' });
+    assert.deepEqual(leggiNotaTesto(nota, 'c2', '2026-10-23'), { tipo: 'nessuno' });
+    assert.deepEqual(leggiNotaTesto({ testo: 1 }, 'c1', '2026-10-23'), { tipo: 'nessuno' });
   });
 });

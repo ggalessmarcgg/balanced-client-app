@@ -246,25 +246,30 @@ Contratto del server: `balanced-client-agents/docs/server-diario-vocale.md`; pro
 | `racconta · permesso microfono` | Racconta · 2 (`459:643`) | consenso all'uso del servizio esterno di trascrizione e dell'intelligenza artificiale, prima della richiesta di sistema; compare finché il permesso non è concesso e il consenso non è ricordato sul telefono |
 | `racconta · microfono disattivato` | Racconta · 3 (`459:681`) | permesso negato nelle impostazioni: "Apri le impostazioni" e "Scrivi il diario"; al rientro dalle impostazioni il permesso si ricontrolla |
 | `racconta · pronto` | Racconta · 4 (`459:719`) | "Parla liberamente e racconta", i sei argomenti, "Tocca per iniziare", timer 0:00 / 3:00 |
-| `racconta · registra` | Racconta · 5 (`459:779`) | stessi argomenti, livello voce, timer che avanza, stop con l'alone che pulsa; "In pausa" al posto del livello quando l'app è in secondo piano, lo schermo è bloccato o una chiamata interrompe |
-| `racconta · trascrizione` | Racconta · 7 (`459:922`, titolo "Trascrivendo il tuo racconto") | audio in invio al server (`POST /v1/diario-vocale/trascrivi`) |
-| `racconta · il tuo racconto` | Racconta · 6 (`459:856`) | card "Il tuo racconto · m:ss" con il testo trascritto modificabile a mano; "Crea il mio diario" (lotto 2) e "Ricomincia" |
+| `racconta · registra` | Racconta · 5 (`459:779`) | stessi argomenti, livello voce che segue il microfono (onda continua sul thread dell'interfaccia, ferma con "Riduci movimento"), timer che avanza, stop senza alone; "In pausa" al posto del livello quando l'app è in secondo piano, lo schermo è bloccato o una chiamata interrompe |
+| `racconta · registrazione terminata` | Racconta · 5.2 (`756:7628`) | "Hai finito? Genera trascrizione del racconto.", timer fermo, pulsante "Da inviare" (penna) e "Ricomincia"; l'audio è sul telefono e non parte nulla finché non si tocca la penna. Riaprendo "Racconta" con un audio di oggi non inviato si riparte da qui |
+| `racconta · trascrizione` | Racconta · 7.1 (`756:7718`) | audio in invio al server (`POST /v1/diario-vocale/trascrivi`), pallini a saltello come nel funnel |
+| `racconta · il tuo racconto` | Racconta · 6 (`459:856`) | card "Il tuo racconto · m:ss" con il testo trascritto modificabile a mano; "Crea il mio diario" (lotto 2) e "Ricomincia". Il testo (anche corretto) è salvato nella cartella documenti fino a fine giornata o alla creazione del diario: riaprendo "Racconta" lo stesso giorno si riparte da qui |
 | `racconta · senza connessione` | Racconta · 10 (`459:1629`) | l'audio è salvato nella cartella documenti; si riprova da soli ogni 15 s e al ritorno in primo piano, senza cambiare schermata, finché il server risponde |
-| `racconta · non ho capito` | Racconta · 11 (`459:1669`) | variante di Pronto con l'avviso (dal lotto 2: esito `non_ho_capito` della compilazione) |
+| `racconta · non ho capito` | Racconta · 11 (`459:1669`) | variante di Pronto con l'avviso: trascrizione vuota o quasi (silenzio, meno di dieci caratteri utili) e, dal lotto 2, esito `non_ho_capito` della compilazione |
+| `racconta · tutorial · racconta` / `· trascrizione` / `· crea il diario` | Tutorial · 3 (`586:5739`), · 4 (`758:7670`), · 5 (`758:7728`) | suggerimento con velo al 40 % ed elemento evidenziato (pulsante di registrazione, penna "Da inviare", "Crea il mio diario") al primo arrivo su Pronto, Registrazione terminata e Il tuo racconto; una sola volta per account (`balanced.racconta.tutorial.<client_id>` nel portachiavi) |
 | `racconta · errore` | Racconta · 12 (`459:1712`) e varianti senza disegno | errore del server: con "Riprova" (`trascrizione_fallita`, `trascrizione_timeout`, `identita_non_verificabile`, `errore_interno`, tempo scaduto nell'app), oppure definitivo senza "Riprova" (`abbonamento_non_attivo`, `cliente_non_trovato`, `token_*` non rinnovabile, `audio_troppo_lungo`, `audio_troppo_grande`, richieste rifiutate), con il riferimento `x-request-id` per l'assistenza |
 
 ### Azioni
 
 | Nome | Dove | Effetto sui dati |
 |---|---|---|
-| `racconta · consenti microfono` | "Consenti" (2) | registra il consenso nel portachiavi del telefono (`balanced.racconta.consenso`, resta anche dopo l'uscita) e chiede il permesso di sistema |
+| `racconta · consenti microfono` | "Consenti" (2) | registra il consenso per l'account nel portachiavi (`balanced.racconta.consenso.<client_id>`, resta anche dopo l'uscita; un altro account lo rifà) e chiede il permesso di sistema |
 | `racconta · preferisco scrivere` / `racconta · apri impostazioni` | 2 e 3 | torna a Oggi / apre le impostazioni dell'app; nessuna scrittura |
 | `racconta · avvia registrazione` | Pulsante registrazione (4) | registra in mono AAC 24 kHz 48 kbit/s nella cartella documenti (`ExpoAudio/racconto-<data>.m4a` su iOS, `Audio/` su Android) |
-| `racconta · ferma registrazione` / `racconta · arresto a 3 minuti` | stop (5) / automatico | chiude il file, scrive la nota dell'audio in attesa (`balanced.racconta.<client_id>` nella cartella documenti) e invia l'audio al server |
+| `racconta · ferma registrazione` / `racconta · arresto a 3 minuti` | stop (5) / automatico | chiude il file e scrive la nota dell'audio in attesa (`balanced.racconta.<client_id>` nella cartella documenti); si passa a Registrazione terminata senza inviare nulla |
+| `racconta · invia la registrazione` | penna "Da inviare" (5.2) | avvia `racconta · trascrivi` |
+| `racconta · interrompi e scarta` | "Interrompi" nell'avviso di sistema all'uscita (freccia, gesto, tasto indietro) con una registrazione in corso o terminata e non inviata | ferma il registratore, cancella l'audio e la nota, lascia la schermata; "Annulla" resta |
+| `racconta · tutorial · ho capito` | "Ho capito" del suggerimento | segna il punto come visto per l'account |
 | `racconta · pausa` / `racconta · riprendi` | app in secondo piano, schermo bloccato, chiamata | il registratore si ferma e riparte; il tempo in pausa non conta |
 | `racconta · trascrivi` | fine registrazione, ritorno della rete, "Riprova" | una `POST /v1/diario-vocale/trascrivi` con `Authorization: Bearer <access_token>`, `Content-Type: audio/mp4`, `X-Diary-Date`, `X-Audio-Duration-Ms` (mai oltre 180 000), `X-Request-Id`; con 401 si rinnova la sessione e si ripete una volta. Dopo il testo l'audio e la nota si cancellano subito |
-| `racconta · modifica il racconto` | campo della card (6) | solo in memoria |
-| `racconta · ricomincia` | "Ricomincia" (6, 12) | torna a Pronto e cancella l'audio rimasto; nessun dialogo |
+| `racconta · modifica il racconto` | campo della card (6) | aggiorna il testo salvato nella cartella documenti (`balanced.racconta.testo.<client_id>`) |
+| `racconta · ricomincia` | "Ricomincia" (5.2, 6, 12) | torna a Pronto e cancella l'audio o il testo rimasti; nessun dialogo |
 | `racconta · riprova trascrizione` | "Riprova" (12) | ripete `racconta · trascrivi` con lo stesso file |
 | `racconta · crea il mio diario` | "Crea il mio diario" (6) | lotto 2 (`POST /v1/diario-vocale/compila`); oggi una Notifica breve |
 
@@ -273,5 +278,8 @@ Contratto del server: `balanced-client-agents/docs/server-diario-vocale.md`; pro
 - L'audio non è mai in cache: sta nella cartella documenti finché non è trascritto; a fine giornata (data del diario in
   ora italiana diversa da oggi) si cancella all'apertura successiva di "Racconta", insieme a ogni altro file di
   registrazione rimasto. Un audio di oggi in attesa riparte dalla trascrizione, senza registrare di nuovo.
-- Uscire dalla schermata durante la registrazione ferma il registratore e scarta il file (Figma non prevede un dialogo).
+- Uscire dalla schermata con una registrazione in corso o terminata e non inviata chiede conferma con l'avviso di sistema
+  ("Vuoi interrompere la registrazione?" / "La registrazione andrà persa." · "Annulla" / "Interrompi"): solo "Interrompi"
+  scarta il file ed esce. Negli altri stati si esce senza avvisi.
+- Il testo trascritto resta nella cartella documenti fino a fine giornata o alla creazione del diario.
 - Nessuna scrittura sul database in questo lotto; il server registra solo consumi ed esiti (`voice_diary_events`).

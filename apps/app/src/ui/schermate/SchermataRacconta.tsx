@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import type { PuntoTutorial } from '@/servizi/racconta';
+import { PulsanteRegistrazione } from '@/ui/racconta/PulsanteRegistrazione';
+import { Tutorial, useRiquadroTutorial } from '@/ui/Tutorial';
+
 import type { StatoRacconta } from '@/core/racconta/flusso';
 import { testiErrore } from '@/core/racconta/server';
 import type { AzioniRacconta } from '@/servizi/useRacconta';
@@ -18,6 +22,8 @@ import { colori, margine, opacita, raggio, spazio } from '@/ui/theme';
 export type SchermataRaccontaProps = {
   stato: StatoRacconta;
   azioni: AzioniRacconta;
+  /** Suggerimento del tutorial da mostrare (una volta per account): Pronto, Registrazione terminata o Il tuo racconto. */
+  tutorial?: PuntoTutorial | null;
   onIndietro: () => void;
   /** "Preferisco scrivere" / "Scrivi il diario": torna a Oggi per compilare a mano. */
   onScrivi: () => void;
@@ -25,6 +31,8 @@ export type SchermataRaccontaProps = {
   onCreaDiario: () => void;
   /** Campo del racconto a fuoco all'avvio (pagina di sviluppo: verifica della tastiera). */
   raccontoAFuoco?: boolean;
+  /** Livello voce fermo sulle altezze del disegno (pagina di sviluppo: confronto con Figma). */
+  livelloVoceFermo?: boolean;
   sovrapposti?: ReactNode;
 };
 
@@ -39,6 +47,7 @@ const TESTI = {
     testo: 'Per attivarlo vai alle impostazioni del telefono. Nel frattempo puoi sempre scrivere il tuo diario.',
   },
   pronto: 'Parla liberamente e racconta',
+  terminata: 'Hai finito? Genera trascrizione del racconto.',
   nonHoCapito: {
     messaggio: 'Non sono riuscito a capire bene. Prova a parlare un po’ più vicino al telefono.',
     corpo: 'Il racconto era molto breve o con molto rumore intorno. Puoi riprovare oppure scrivere il diario.',
@@ -51,16 +60,35 @@ const TESTI = {
   attesaRete: 'La registrazione è al sicuro sul telefono. Il testo comparirà appena torni online.',
 } as const;
 
+/** Testi dei suggerimenti del tutorial (Figma Tutorial · 3 `586:5739`, · 4 `758:7670`, · 5 `758:7728`). */
+export const TESTI_TUTORIAL: Record<PuntoTutorial, string> = {
+  pronto: 'Racconta liberamente la tua giornata: compileremo il diario per te e potrai controllarlo prima di inviarlo.',
+  terminata: 'Tocca qui per trasformare il tuo racconto in testo: potrai rileggerlo e correggerlo prima di creare il diario.',
+  racconto: 'Con un tocco compiliamo il tuo diario partendo da quello che hai raccontato.',
+};
+
 /**
  * "Racconta la tua giornata" (sezione Figma 3.1 · Diario vocale, lotto 1): le schermate 2 (permesso), 3 (microfono
- * disattivato), 4 (pronto, anche con l'avviso della 11), 5 (in registrazione), 6 (il tuo racconto), 7 (caricamento,
- * qui per la trascrizione), 10 (senza connessione) e 12 (errore) dallo stesso stato del flusso. Intestazione con la
- * freccia indietro e il titolo; i comandi stanno nel piede fisso della pagina.
+ * disattivato), 4 (pronto, anche con l'avviso della 11), 5 (in registrazione), 5.2 (registrazione terminata), 7.1
+ * (trascrizione in corso), 6 (il tuo racconto), 10 (senza connessione) e 12 (errore) dallo stesso stato del flusso.
+ * Intestazione con la freccia indietro e il titolo; i comandi stanno nel piede fisso della pagina. I tre suggerimenti
+ * del tutorial (sezione 1.1) evidenziano il pulsante di registrazione, quello "Da inviare" e "Crea il mio diario".
  */
-export function SchermataRacconta({ stato, azioni, onIndietro, onScrivi, onCreaDiario, raccontoAFuoco = false, sovrapposti }: SchermataRaccontaProps) {
-  const { corpo, piede } = contenuto(stato, azioni, onScrivi, onCreaDiario, raccontoAFuoco);
+export function SchermataRacconta({ stato, azioni, tutorial = null, onIndietro, onScrivi, onCreaDiario, raccontoAFuoco = false, livelloVoceFermo = false, sovrapposti }: SchermataRaccontaProps) {
+  const misura = useRiquadroTutorial(tutorial !== null);
+  const { corpo, piede } = contenuto(stato, azioni, onScrivi, onCreaDiario, raccontoAFuoco, livelloVoceFermo, tutorial ? misura : undefined);
+  const elementoTutorial =
+    tutorial === 'pronto' ? <PulsanteRegistrazione stato="pronto" /> : tutorial === 'terminata' ? <PulsanteRegistrazione stato="daInviare" /> : tutorial === 'racconto' ? <Pulsante etichetta="Crea il mio diario" /> : null;
   return (
-    <Pagina piede={piede} sovrapposti={sovrapposti}>
+    <Pagina
+      piede={piede}
+      sovrapposti={
+        <>
+          {tutorial && elementoTutorial && <Tutorial riquadro={misura.riquadro} elemento={elementoTutorial} testo={TESTI_TUTORIAL[tutorial]} onHoCapito={azioni.hoCapito} />}
+          {sovrapposti}
+        </>
+      }
+    >
       <View style={stili.intestazione}>
         <Intestazione titolo={TITOLO} onIndietro={onIndietro} />
       </View>
@@ -69,7 +97,10 @@ export function SchermataRacconta({ stato, azioni, onIndietro, onScrivi, onCreaD
   );
 }
 
-function contenuto(stato: StatoRacconta, azioni: AzioniRacconta, onScrivi: () => void, onCreaDiario: () => void, raccontoAFuoco: boolean): { corpo: ReactNode; piede?: ReactNode } {
+type Misura = ReturnType<typeof useRiquadroTutorial>;
+
+function contenuto(stato: StatoRacconta, azioni: AzioniRacconta, onScrivi: () => void, onCreaDiario: () => void, raccontoAFuoco: boolean, livelloVoceFermo: boolean, misura?: Misura): { corpo: ReactNode; piede?: ReactNode } {
+  const misuraPulsante = misura ? { ref: misura.ref, onLayout: misura.onLayout } : undefined;
   switch (stato.tipo) {
     case 'avvio':
       return { corpo: <View style={stili.corpoCentrato} /> };
@@ -109,13 +140,25 @@ function contenuto(stato: StatoRacconta, azioni: AzioniRacconta, onScrivi: () =>
               </Testo>
             </View>
           ),
-        piede: <ComandiRegistrazione stato="pronto" onAvvia={azioni.avvia} />,
+        piede: <ComandiRegistrazione stato="pronto" onAvvia={azioni.avvia} misura={misuraPulsante} />,
       };
 
     case 'registrazione':
       return {
         corpo: <CorpoArgomenti />,
-        piede: <ComandiRegistrazione stato="registrazione" durataMs={stato.durataMs} inPausa={stato.inPausa} livelli={stato.livelli} onFerma={azioni.ferma} />,
+        piede: <ComandiRegistrazione stato="registrazione" durataMs={stato.durataMs} inPausa={stato.inPausa} livello={livelloVoceFermo ? null : stato.livello} onFerma={azioni.ferma} />,
+      };
+
+    case 'terminata':
+      return {
+        corpo: (
+          <View style={stili.corpoArgomenti}>
+            <Testo stile="heading" style={stili.testoCentrato} accessibilityRole="header">
+              {TESTI.terminata}
+            </Testo>
+          </View>
+        ),
+        piede: <ComandiRegistrazione stato="terminata" durataMs={stato.audio.durataMs} onInvia={azioni.invia} onRicomincia={azioni.ricomincia} misura={misuraPulsante} />,
       };
 
     case 'trascrizione':
@@ -144,7 +187,9 @@ function contenuto(stato: StatoRacconta, azioni: AzioniRacconta, onScrivi: () =>
         ),
         piede: (
           <View style={stili.comandiStretti}>
-            <Pulsante etichetta="Crea il mio diario" onPress={onCreaDiario} accessibilityHint="Compila il diario dal racconto" />
+            <View ref={misuraPulsante?.ref} onLayout={misuraPulsante?.onLayout} collapsable={false} style={stili.testoLargo}>
+              <Pulsante etichetta="Crea il mio diario" onPress={onCreaDiario} accessibilityHint="Compila il diario dal racconto" />
+            </View>
             <Pulsante etichetta="Ricomincia" livello="terziario" onPress={azioni.ricomincia} accessibilityHint="Scarta il racconto e registra di nuovo" style={stili.centrato} />
           </View>
         ),

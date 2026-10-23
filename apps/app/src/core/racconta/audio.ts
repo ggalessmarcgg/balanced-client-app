@@ -56,9 +56,17 @@ export function titoloRacconto(durataMs: number): string {
 
 // Livello voce (Figma "Livello voce", 8 barrette alte da 5 a 16): il livello misurato dal registratore è in dB
 // (0 = massimo, −160 = silenzio). Tra −50 dB e 0 dB si va da barretta minima a piena; sotto −50 dB è silenzio.
+// Le barrette seguono il livello reale con un'onda continua (una fase per barretta) la cui ampiezza è il livello:
+// nel silenzio restano quasi ferme, parlando si muovono.
 export const BARRETTE_LIVELLO = 8;
 export const ALTEZZA_BARRETTA = { minima: 4, massima: 16 } as const;
 const SILENZIO_DB = -50;
+/** Altezze di riferimento del disegno (barrette ferme con "Riduci movimento" e nella pagina di sviluppo). */
+export const ALTEZZE_FIGMA = [6, 12, 16, 8, 5, 11, 14, 7] as const;
+/** Onda: velocità angolare (rad/s) e fase iniziale di ogni barretta, diverse per non muoversi in blocco. */
+export const ONDA_BARRETTE = ALTEZZE_FIGMA.map((h, i) => ({ velocita: 4 + (i % 4) * 1.3, fase: (h / 16) * Math.PI * 2 }));
+/** Quota del livello che le barrette tengono sempre, il resto oscilla con l'onda. */
+export const QUOTA_FISSA = 0.25;
 
 /** Da dB (o assente) a 0–1. */
 export function livelloDaDecibel(db: number | undefined | null): number {
@@ -66,14 +74,11 @@ export function livelloDaDecibel(db: number | undefined | null): number {
   return Math.min(1, Math.max(0, (db - SILENZIO_DB) / -SILENZIO_DB));
 }
 
-/** Aggiunge un livello alla storia e tiene gli ultimi `BARRETTE_LIVELLO`. */
-export function aggiungiLivello(storia: readonly number[], livello: number): number[] {
-  return [...storia, livello].slice(-BARRETTE_LIVELLO);
-}
-
-/** Altezze delle barrette (sempre 8): le più vecchie a sinistra; senza storia, barrette minime. */
-export function altezzeBarrette(storia: readonly number[]): number[] {
+/** Altezza della barretta `i` all'istante `t` (secondi) con il livello 0–1 corrente. Pura: la usa anche il thread dell'interfaccia. */
+export function altezzaBarretta(i: number, livello: number, t: number): number {
+  'worklet';
   const { minima, massima } = ALTEZZA_BARRETTA;
-  const riempite = [...Array<number>(Math.max(0, BARRETTE_LIVELLO - storia.length)).fill(0), ...storia.slice(-BARRETTE_LIVELLO)];
-  return riempite.map((l) => Math.round(minima + (massima - minima) * l));
+  const onda = ONDA_BARRETTE[i] ?? { velocita: 5, fase: 0 };
+  const oscillazione = QUOTA_FISSA + (1 - QUOTA_FISSA) * (0.5 + 0.5 * Math.sin(t * onda.velocita + onda.fase));
+  return minima + (massima - minima) * Math.min(1, Math.max(0, livello)) * oscillazione;
 }

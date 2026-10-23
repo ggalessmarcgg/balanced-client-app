@@ -44,3 +44,30 @@ export function nomeFileRegistrazione(data: string): string {
 export function fileDaCancellare(nomi: readonly string[], daTenere: string | null): string[] {
   return nomi.filter((n) => n.startsWith('racconto-') && n !== daTenere);
 }
+
+// ---- Testo trascritto in attesa della creazione del diario ------------------------------------------------------------
+// Il racconto trascritto (anche corretto a mano) resta nella cartella documenti fino a fine giornata o alla creazione
+// del diario (decisione del 23/10/2026): chiudendo l'app non si perde e, riaprendo "Racconta" lo stesso giorno, si
+// riparte da "Il tuo racconto".
+
+export type TestoRacconto = { testo: string; durataMs: number; data: string };
+export type TestoInAttesa = TestoRacconto & { clientId: string; salvatoAlle: string };
+
+export function notaTestoInAttesa(racconto: TestoRacconto, clientId: string, adesso: string): TestoInAttesa {
+  return { ...racconto, clientId, salvatoAlle: adesso };
+}
+
+export type LetturaTesto = { tipo: 'nessuno' } | { tipo: 'daRiprendere'; racconto: TestoRacconto } | { tipo: 'scaduto' };
+
+function notaTestoValida(grezzo: unknown): grezzo is TestoInAttesa {
+  if (typeof grezzo !== 'object' || grezzo === null) return false;
+  const n = grezzo as Partial<TestoInAttesa>;
+  return typeof n.testo === 'string' && typeof n.durataMs === 'number' && typeof n.data === 'string' && typeof n.clientId === 'string';
+}
+
+/** La nota del testo letta da disco: da riprendere solo se dello stesso cliente e di oggi; di un altro giorno è scaduta. */
+export function leggiNotaTesto(grezzo: unknown, clientId: string, oggi: string): LetturaTesto {
+  if (!notaTestoValida(grezzo) || grezzo.clientId !== clientId) return { tipo: 'nessuno' };
+  if (grezzo.data !== oggi) return { tipo: 'scaduto' };
+  return { tipo: 'daRiprendere', racconto: { testo: grezzo.testo, durataMs: grezzo.durataMs, data: grezzo.data } };
+}

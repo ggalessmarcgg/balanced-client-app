@@ -2,8 +2,8 @@
 // riceve lo stato e un evento, restituisce il nuovo stato e gli effetti da eseguire (chiedere il permesso, avviare
 // o fermare il registratore, trascrivere, salvare o cancellare l'audio). Chi la usa (src/servizi/racconta.ts) esegue
 // gli effetti e rimanda qui gli esiti come eventi.
-import { aggiungiLivello, limiteRaggiunto, livelloDaDecibel } from './audio.ts';
-import type { AudioRacconto } from './attesa.ts';
+import { limiteRaggiunto, livelloDaDecibel } from './audio.ts';
+import type { AudioRacconto, TestoRacconto } from './attesa.ts';
 import type { ErroreTrascrizione } from './server.ts';
 
 export type PermessoMicrofono = 'concesso' | 'negato' | 'daChiedere';
@@ -20,9 +20,11 @@ export type StatoRacconta =
   | { tipo: 'microfonoDisattivato' }
   /** Racconta · 4 (e 11 con l'avviso). */
   | { tipo: 'pronto'; avviso: AvvisoPronto }
-  /** Racconta · 5: `inPausa` quando l'app è in secondo piano o una chiamata interrompe; `fermando` dopo lo stop, in attesa del file. */
-  | { tipo: 'registrazione'; durataMs: number; inPausa: boolean; fermando: boolean; livelli: number[] }
-  /** Caricamento (Figma 7): audio inviato al server. */
+  /** Racconta · 5: `inPausa` quando l'app è in secondo piano o una chiamata interrompe; `fermando` dopo lo stop, in attesa del file; `livello` 0–1 dal microfono. */
+  | { tipo: 'registrazione'; durataMs: number; inPausa: boolean; fermando: boolean; livello: number }
+  /** Racconta · 5.2: registrazione terminata, l'audio è sul telefono; la trascrizione parte solo con il pulsante "Da inviare". */
+  | { tipo: 'terminata'; audio: AudioRacconto }
+  /** Racconta · 7.1: audio inviato al server. */
   | { tipo: 'trascrizione'; audio: AudioRacconto }
   /** Racconta · 10: audio salvato sul telefono, si riprova da soli al ritorno della rete. */
   | { tipo: 'senzaConnessione'; audio: AudioRacconto; inRiprova: boolean }
@@ -32,7 +34,7 @@ export type StatoRacconta =
   | { tipo: 'racconto'; testo: string; durataMs: number; data: string };
 
 export type EventoRacconta =
-  | { tipo: 'avviato'; permesso: PermessoMicrofono; audioInAttesa: AudioRacconto | null }
+  | { tipo: 'avviato'; permesso: PermessoMicrofono; audioInAttesa: AudioRacconto | null; testoInAttesa: TestoRacconto | null }
   | { tipo: 'consenti' }
   | { tipo: 'permessoRisposto'; concesso: boolean }
   | { tipo: 'avvia' }
@@ -44,6 +46,8 @@ export type EventoRacconta =
   | { tipo: 'riprendi' }
   | { tipo: 'ferma' }
   | { tipo: 'registrata'; audio: AudioRacconto }
+  /** Il pulsante "Da inviare" della 5.2: parte la trascrizione. */
+  | { tipo: 'invia' }
   | { tipo: 'trascritta'; testo: string; durataMs: number }
   | { tipo: 'trascrizioneFallita'; errore: ErroreTrascrizione }
   /** "Riprova" (dalla schermata d'errore, con caricamento visibile) o nuovo tentativo silenzioso senza rete. */
@@ -60,7 +64,10 @@ export type EffettoRacconta =
   | { tipo: 'riprendiRegistrazione' }
   | { tipo: 'salvaAudio'; audio: AudioRacconto }
   | { tipo: 'trascrivi'; audio: AudioRacconto }
-  | { tipo: 'cancellaAudio'; uri: string };
+  | { tipo: 'cancellaAudio'; uri: string }
+  /** Il testo trascritto (o corretto) va nella cartella documenti fino a fine giornata o alla creazione del diario. */
+  | { tipo: 'salvaTesto'; racconto: TestoRacconto }
+  | { tipo: 'cancellaTesto' };
 
 export type Transizione = { stato: StatoRacconta; effetti: EffettoRacconta[] };
 
@@ -86,8 +93,10 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
 
     case 'avviato': {
       if (stato.tipo !== 'avvio') return resta(stato);
-      // Un audio di oggi non ancora trascritto ha la precedenza: si riparte dalla trascrizione, senza registrare di nuovo.
-      if (evento.audioInAttesa) return trascrivi(evento.audioInAttesa);
+      // Un racconto di oggi già trascritto si riprende da "Il tuo racconto"; un audio di oggi non ancora inviato dalla
+      // schermata "Registrazione terminata" (la trascrizione parte solo su richiesta), senza registrare di nuovo.
+      if (evento.testoInAttesa) return resta({ tipo: 'racconto', ...evento.testoInAttesa });
+      if (evento.audioInAttesa) return resta({ tipo: 'terminata', audio: evento.audioInAttesa });
       if (evento.permesso === 'concesso') return resta(pronto());
       if (evento.permesso === 'negato') return resta({ tipo: 'microfonoDisattivato' });
       return resta({ tipo: 'permesso', inRichiesta: false });
@@ -103,7 +112,7 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
 
     case 'avvia':
       if (stato.tipo !== 'pronto') return resta(stato);
-      return { stato: { tipo: 'registrazione', durataMs: 0, inPausa: false, fermando: false, livelli: [] }, effetti: [{ tipo: 'avviaRegistrazione' }] };
+      return { stato: { tipo: 'registrazione', durataMs: 0, inPausa: false, fermando: false, livello: 0 }, effetti: [{ tipo: 'avviaRegistrazione' }] };
 
     case 'avviataRegistrazione':
       return resta(stato);
@@ -115,12 +124,12 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
     case 'avanzamento': {
       if (stato.tipo !== 'registrazione' || stato.fermando) return resta(stato);
       const durataMs = Math.max(stato.durataMs, evento.durataMs);
-      const livelli = evento.registrando ? aggiungiLivello(stato.livelli, livelloDaDecibel(evento.livelloDb)) : stato.livelli;
+      const livello = evento.registrando ? livelloDaDecibel(evento.livelloDb) : 0;
       // Allo scadere dei 3 minuti si ferma da sola (contratto §1.2).
       if (limiteRaggiunto(durataMs)) {
-        return { stato: { ...stato, durataMs, livelli, fermando: true }, effetti: [{ tipo: 'fermaRegistrazione', motivo: 'limite' }] };
+        return { stato: { ...stato, durataMs, livello, fermando: true }, effetti: [{ tipo: 'fermaRegistrazione', motivo: 'limite' }] };
       }
-      return resta({ ...stato, durataMs, livelli, inPausa: !evento.registrando });
+      return resta({ ...stato, durataMs, livello, inPausa: !evento.registrando });
     }
 
     case 'pausa':
@@ -136,14 +145,23 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
       return { stato: { ...stato, fermando: true }, effetti: [{ tipo: 'fermaRegistrazione', motivo: 'tocco' }] };
 
     case 'registrata':
-      // Arriva sia dalla promessa dello stop sia dall'ascoltatore del registratore: conta la prima.
+      // Arriva sia dalla promessa dello stop sia dall'ascoltatore del registratore: conta la prima. Il file resta sul
+      // telefono e la trascrizione parte solo dal pulsante "Da inviare" (decisione del 23/10/2026).
       if (stato.tipo !== 'registrazione') return resta(stato);
-      return { stato: { tipo: 'trascrizione', audio: evento.audio }, effetti: [{ tipo: 'salvaAudio', audio: evento.audio }, { tipo: 'trascrivi', audio: evento.audio }] };
+      return { stato: { tipo: 'terminata', audio: evento.audio }, effetti: [{ tipo: 'salvaAudio', audio: evento.audio }] };
+
+    case 'invia':
+      if (stato.tipo !== 'terminata') return resta(stato);
+      return trascrivi(stato.audio);
 
     case 'trascritta': {
       if (stato.tipo !== 'trascrizione' && stato.tipo !== 'senzaConnessione') return resta(stato);
       // L'audio si cancella dal telefono subito dopo una trascrizione riuscita (contratto §1.6).
-      return { stato: { tipo: 'racconto', testo: evento.testo, durataMs: evento.durataMs, data: stato.audio.data }, effetti: [{ tipo: 'cancellaAudio', uri: stato.audio.uri }] };
+      const cancella: EffettoRacconta = { tipo: 'cancellaAudio', uri: stato.audio.uri };
+      // Silenzio o quasi: "Non ho capito" (Figma 11) senza passare da un racconto vuoto.
+      if (raccontoVuoto(evento.testo)) return { stato: pronto('nonHoCapito'), effetti: [cancella] };
+      const racconto: TestoRacconto = { testo: evento.testo, durataMs: evento.durataMs, data: stato.audio.data };
+      return { stato: { tipo: 'racconto', ...racconto }, effetti: [cancella, { tipo: 'salvaTesto', racconto }] };
     }
 
     case 'trascrizioneFallita': {
@@ -167,13 +185,18 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
       return resta(stato);
     }
 
-    case 'modificaTesto':
+    case 'modificaTesto': {
       if (stato.tipo !== 'racconto') return resta(stato);
-      return resta({ ...stato, testo: evento.testo });
+      const nuovo = { ...stato, testo: evento.testo };
+      return { stato: nuovo, effetti: [{ tipo: 'salvaTesto', racconto: { testo: nuovo.testo, durataMs: nuovo.durataMs, data: nuovo.data } }] };
+    }
 
     case 'ricomincia': {
-      // Da "Il tuo racconto", da un errore o da "Senza connessione" si torna a Pronto; l'audio rimasto si cancella.
-      if (stato.tipo === 'racconto' || (stato.tipo === 'errore' && !stato.audio)) return resta(pronto());
+      // Da "Il tuo racconto", da una registrazione terminata, da un errore o da "Senza connessione" si torna a Pronto;
+      // l'audio o il testo rimasti si cancellano.
+      if (stato.tipo === 'racconto') return { stato: pronto(), effetti: [{ tipo: 'cancellaTesto' }] };
+      if (stato.tipo === 'errore' && !stato.audio) return resta(pronto());
+      if (stato.tipo === 'terminata') return { stato: pronto(), effetti: [{ tipo: 'cancellaAudio', uri: stato.audio.uri }] };
       if (stato.tipo === 'errore' && stato.audio) return { stato: pronto(), effetti: [{ tipo: 'cancellaAudio', uri: stato.audio.uri }] };
       if (stato.tipo === 'senzaConnessione') return { stato: pronto(), effetti: [{ tipo: 'cancellaAudio', uri: stato.audio.uri }] };
       if (stato.tipo === 'pronto') return resta(pronto());
@@ -182,9 +205,24 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
   }
 }
 
+/** Caratteri minimi perché una trascrizione valga come racconto: sotto è silenzio o rumore ("Non ho capito"). */
+export const CARATTERI_MINIMI_RACCONTO = 10;
+
+/** Vero se la trascrizione è vuota o quasi (silenzio, rumore): meno di dieci caratteri utili o nessuna lettera. */
+export function raccontoVuoto(testo: string): boolean {
+  const pulito = testo.replace(/\s+/g, ' ').trim();
+  return pulito.length < CARATTERI_MINIMI_RACCONTO || !/\p{L}/u.test(pulito);
+}
+
+/** Vero se, uscendo dalla schermata, c'è una registrazione da scartare (in corso o terminata e non inviata): avviso di sistema prima di uscire. */
+export function uscitaDaConfermare(stato: StatoRacconta): boolean {
+  return stato.tipo === 'registrazione' || stato.tipo === 'terminata';
+}
+
 /** Giorno del diario a cui lo stato si riferisce (null per gli stati senza audio né racconto). */
 export function dataDelloStato(stato: StatoRacconta): string | null {
   switch (stato.tipo) {
+    case 'terminata':
     case 'trascrizione':
     case 'senzaConnessione':
       return stato.audio.data;

@@ -86,12 +86,17 @@ export const STATI_SVILUPPO = [
   ['racconta-2-permesso-in-richiesta', 'Racconta · 2 · "Consenti" in caricamento (richiesta di sistema in corso)'],
   ['racconta-3-microfono-disattivato', 'Racconta · 3 · Microfono disattivato (459:681)'],
   ['racconta-4-pronto', 'Racconta · 4 · Pronto (459:719); il tocco avvia una registrazione finta'],
-  ['racconta-5-registrazione', 'Racconta · 5 · In registrazione (459:779): timer e livello voce avanzano, alone che pulsa'],
+  ['racconta-5-registrazione', 'Racconta · 5 · In registrazione (459:779): timer a 0:42 e barrette ferme del disegno'],
+  ['racconta-5-registrazione-animata', 'Racconta · 5 · registrazione finta: timer che avanza e livello voce che segue un parlato finto'],
   ['racconta-5-pausa', 'Racconta · 5 · In registrazione in pausa (app in secondo piano o chiamata; senza disegno)'],
-  ['racconta-5-limite', 'Racconta · 5 · a 5 s dal limite: arresto automatico a 3:00 e passaggio alla trascrizione'],
+  ['racconta-5-limite', 'Racconta · 5 · a 5 s dal limite: arresto automatico a 3:00 e passaggio a "Registrazione terminata"'],
+  ['racconta-5.2-terminata', 'Racconta · 5.2 · Registrazione terminata (756:7628): penna "Da inviare" e Ricomincia'],
+  ['racconta-tutorial-3-pronto', 'Tutorial · 3 · Racconta la tua giornata (586:5739) sulla schermata Pronto'],
+  ['racconta-tutorial-4-trascrizione', 'Tutorial · 4 · Racconta · trascrizione (758:7670) sulla 5.2'],
+  ['racconta-tutorial-5-crea-diario', 'Tutorial · 5 · Racconta · crea il diario (758:7728) su Il tuo racconto'],
   ['racconta-6-racconto', 'Racconta · 6 · Il tuo racconto (459:856), testo modificabile'],
   ['racconta-6-tastiera', 'Racconta · 6 · Il tuo racconto con il campo a fuoco (verifica della tastiera)'],
-  ['racconta-7-trascrizione', 'Racconta · 7 · Caricamento della trascrizione (459:922, titolo della trascrizione)'],
+  ['racconta-7-trascrizione', 'Racconta · 7.1 · Trascrizione in corso (756:7718), pallini a saltello'],
   ['racconta-10-senza-connessione', 'Racconta · 10 · Senza connessione (459:1629)'],
   ['racconta-11-non-ho-capito', 'Racconta · 11 · Non ho capito (459:1669; dal lotto 2)'],
   ['racconta-12-errore', 'Racconta · 12 · Trascrizione non riuscita con "Riprova" (459:1712, testi della trascrizione)'],
@@ -339,8 +344,18 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <RaccontaSviluppo scenario="registrazione" />;
     case 'racconta-5-pausa':
       return <RaccontaSviluppo scenario="registrazionePausa" />;
+    case 'racconta-5-registrazione-animata':
+      return <RaccontaSviluppo scenario="registrazioneAnimata" />;
     case 'racconta-5-limite':
       return <RaccontaSviluppo scenario="registrazioneLimite" />;
+    case 'racconta-5.2-terminata':
+      return <RaccontaSviluppo scenario="terminata" />;
+    case 'racconta-tutorial-3-pronto':
+      return <RaccontaSviluppo scenario="tutorialPronto" />;
+    case 'racconta-tutorial-4-trascrizione':
+      return <RaccontaSviluppo scenario="tutorialTerminata" />;
+    case 'racconta-tutorial-5-crea-diario':
+      return <RaccontaSviluppo scenario="tutorialRacconto" />;
     case 'racconta-6-racconto':
       return <RaccontaSviluppo scenario="racconto" />;
     case 'racconta-6-tastiera':

@@ -2,18 +2,29 @@
 // Registrazione mono AAC a 24 kHz / 48 kbit/s nella cartella documenti (mai in cache), limite di 3 minuti con arresto
 // automatico, lettura del tempo e del livello ogni 250 ms, pausa quando l'app va in secondo piano e ripresa al rientro
 // (le interruzioni di sistema, es. una chiamata, mettono in pausa il registratore da sole e la lettura le mostra).
+// La trascrizione parte solo dal pulsante "Da inviare" (decisione del 23/10/2026); uscire con una registrazione in
+// corso o terminata e non inviata chiede conferma con l'avviso di sistema.
 import { AudioModule, AudioQuality, IOSOutputFormat, setAudioModeAsync, useAudioRecorder, useAudioRecorderState, type RecordingOptions, type RecordingStatus } from 'expo-audio';
+import { useNavigation } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AppState, Linking, type AppStateStatus } from 'react-native';
+import { Alert, AppState, Linking, type AppStateStatus } from 'react-native';
 
 import { dataOggiRoma } from '@/core/diario/data';
 import { nomeFileRegistrazione } from '@/core/racconta/attesa';
 import { INTERVALLO_LETTURA_MS, LIMITE_REGISTRAZIONE_MS, QUALITA_VOCE } from '@/core/racconta/audio';
-import { type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
-import { avviaRacconta, azzeraRacconta, cancellaAudio, collegaRegistratore, invia, registraConsenso, statoRacconta, useStatoRacconta } from '@/servizi/racconta';
+import { uscitaDaConfermare, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
+import { avviaRacconta, cancellaAudio, collegaRegistratore, interrompiRacconta, invia, registraConsenso, segnaTutorialVisto, statoRacconta, useMemoriaRacconta, type PuntoTutorial } from '@/servizi/racconta';
 
 /** Ogni quanto si riprova la trascrizione mentre si è senza rete (oltre che al ritorno in primo piano). */
 const INTERVALLO_RIPROVA_OFFLINE_MS = 15_000;
+
+/** Avviso di sistema prima di uscire con una registrazione da scartare (Alert nativo di iOS e Android, decisione del 23/10/2026). */
+export const AVVISO_USCITA = {
+  titolo: 'Vuoi interrompere la registrazione?',
+  testo: 'La registrazione andrà persa.',
+  annulla: 'Annulla',
+  interrompi: 'Interrompi',
+} as const;
 
 function opzioniRegistrazione(data: string): RecordingOptions {
   return {
@@ -40,22 +51,41 @@ async function permessoMicrofono(): Promise<PermessoMicrofono> {
   }
 }
 
+/** Il poco di react-navigation che serve qui (expo-router non tipizza l'evento `beforeRemove`). */
+type NavigazioneConUscita = {
+  addListener: (evento: 'beforeRemove', ascoltatore: (e: { preventDefault: () => void; data: { action: unknown } }) => void) => () => void;
+  dispatch: (azione: unknown) => void;
+};
+
 export type AzioniRacconta = {
   consenti: () => void;
   apriImpostazioni: () => void;
   avvia: () => void;
   ferma: () => void;
+  /** "Da inviare" (Registrazione terminata): avvia la trascrizione. */
+  invia: () => void;
   riprova: () => void;
   ricomincia: () => void;
   modificaTesto: (testo: string) => void;
+  /** "Ho capito" del suggerimento del tutorial. */
+  hoCapito: () => void;
 };
+
+/** Il suggerimento del tutorial da mostrare in questa schermata (una volta per account), o null. */
+export function tutorialDaMostrare(stato: StatoRacconta, visti: Record<PuntoTutorial, boolean>): PuntoTutorial | null {
+  if (stato.tipo === 'pronto' && stato.avviso === 'nessuno' && !visti.pronto) return 'pronto';
+  if (stato.tipo === 'terminata' && !visti.terminata) return 'terminata';
+  if (stato.tipo === 'racconto' && !visti.racconto) return 'racconto';
+  return null;
+}
 
 /**
  * Stato e azioni della schermata. `clientId` è quello dello stato letto all'avvio; il giorno del diario è quello
  * italiano al momento dell'apertura.
  */
-export function useRacconta(clientId: string): { stato: StatoRacconta; azioni: AzioniRacconta } {
-  const stato = useStatoRacconta();
+export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial: PuntoTutorial | null; azioni: AzioniRacconta } {
+  const { stato, tutorialVisti } = useMemoriaRacconta();
+  const navigation = useNavigation() as unknown as NavigazioneConUscita;
   const [data] = useState(() => dataOggiRoma(new Date()));
   const ultimaDurata = useRef(0);
   const inRegistrazione = useRef(false);
@@ -77,6 +107,16 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; azioni: A
   );
   const recorder = useAudioRecorder(opzioniRegistrazione(data), onStatus);
   const lettura = useAudioRecorderState(recorder, INTERVALLO_LETTURA_MS);
+
+  /** Ferma e scarta una registrazione in corso (uscita confermata, smontaggio). */
+  const scartaRegistrazione = useCallback(async () => {
+    if (!inRegistrazione.current) return;
+    inRegistrazione.current = false;
+    const uri = recorder.uri;
+    await recorder.stop().catch(() => {});
+    if (uri) await cancellaAudio(uri);
+    await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
+  }, [recorder]);
 
   // Il registratore si collega al flusso: gli effetti della macchina a stati lo comandano da qui.
   useEffect(
@@ -117,22 +157,35 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; azioni: A
     invia({ tipo: 'avanzamento', durataMs: lettura.durationMillis, registrando: lettura.isRecording, livelloDb: lettura.metering });
   }, [lettura.durationMillis, lettura.isRecording, lettura.metering]);
 
-  // Avvio e, all'uscita dalla schermata, pulizia: una registrazione in corso si ferma e si scarta.
+  // Avvio; allo smontaggio una registrazione ancora in corso (uscita già confermata) si ferma e si scarta.
   useEffect(() => {
     void avviaRacconta(clientId, permessoMicrofono);
     return () => {
-      if (inRegistrazione.current) {
-        inRegistrazione.current = false;
-        const uri = recorder.uri;
-        void recorder
-          .stop()
-          .catch(() => {})
-          .then(() => (uri ? cancellaAudio(uri) : undefined));
-        void setAudioModeAsync({ allowsRecording: false }).catch(() => {});
-        azzeraRacconta();
-      }
+      void scartaRegistrazione();
     };
-  }, [clientId, recorder]);
+  }, [clientId, scartaRegistrazione]);
+
+  // Uscita (freccia indietro, gesto, tasto indietro di Android) con una registrazione da scartare: avviso di sistema;
+  // solo "Interrompi" scarta l'audio e lascia la schermata.
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (e) => {
+        if (!uscitaDaConfermare(statoRacconta())) return;
+        e.preventDefault();
+        Alert.alert(AVVISO_USCITA.titolo, AVVISO_USCITA.testo, [
+          { text: AVVISO_USCITA.annulla, style: 'cancel' },
+          {
+            text: AVVISO_USCITA.interrompi,
+            style: 'destructive',
+            onPress: () => {
+              void scartaRegistrazione().then(() => interrompiRacconta());
+              navigation.dispatch(e.data.action);
+            },
+          },
+        ]);
+      }),
+    [navigation, scartaRegistrazione],
+  );
 
   // Secondo piano / schermo bloccato: pausa e ripresa al rientro. Al rientro si ricontrolla anche il permesso
   // (ritorno dalle impostazioni) e, senza rete, si riprova la trascrizione.
@@ -168,6 +221,7 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; azioni: A
     return () => clearInterval(timer);
   }, [stato.tipo]);
 
+  const tutorial = tutorialDaMostrare(stato, tutorialVisti);
   const azioni: AzioniRacconta = {
     consenti: useCallback(() => invia({ tipo: 'consenti' }), []),
     apriImpostazioni: useCallback(() => {
@@ -175,10 +229,15 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; azioni: A
     }, []),
     avvia: useCallback(() => invia({ tipo: 'avvia' }), []),
     ferma: useCallback(() => invia({ tipo: 'ferma' }), []),
+    invia: useCallback(() => invia({ tipo: 'invia' }), []),
     riprova: useCallback(() => invia({ tipo: 'riprova' }), []),
     ricomincia: useCallback(() => invia({ tipo: 'ricomincia' }), []),
-    modificaTesto: useCallback((testo: string) => invia({ tipo: 'modificaTesto', testo } satisfies EventoRacconta), []),
+    modificaTesto: useCallback((testo: string) => invia({ tipo: 'modificaTesto', testo }), []),
+    hoCapito: useCallback(() => {
+      const punto = tutorialDaMostrare(statoRacconta(), tutorialVisti);
+      if (punto) segnaTutorialVisto(punto);
+    }, [tutorialVisti]),
   };
 
-  return { stato, azioni };
+  return { stato, tutorial, azioni };
 }

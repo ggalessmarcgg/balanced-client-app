@@ -7,7 +7,7 @@ import { Directory, File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
 
 import { dataOggiRoma } from '@/core/diario/data';
-import { fileDaCancellare, leggiNotaAttesa, notaAudioInAttesa, type AudioRacconto } from '@/core/racconta/attesa';
+import { fileDaCancellare, leggiNotaAttesa, leggiNotaTesto, notaAudioInAttesa, notaTestoInAttesa, type AudioRacconto, type TestoRacconto } from '@/core/racconta/attesa';
 import { durataDichiarata } from '@/core/racconta/audio';
 import { riduci, STATO_INIZIALE, statoScaduto, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
 import { erroreApp, interpretaRispostaTrascrizione, intestazioniTrascrizione, nuovoIdRichiesta, PERCORSO_TRASCRIVI, TEMPO_MASSIMO_TRASCRIZIONE_MS, type EsitoTrascrizione } from '@/core/racconta/server';
@@ -22,13 +22,27 @@ if (!URL_AGENTI) {
 
 // ---- Stato del flusso ---------------------------------------------------------------------------------------------
 
+/** I tre suggerimenti del tutorial di Racconta (Figma 586:5739, 758:7670, 758:7728), una volta per account. */
+export type PuntoTutorial = 'pronto' | 'terminata' | 'racconto';
+export type TutorialVisti = Record<PuntoTutorial, boolean>;
+const TUTORIAL_NESSUNO: TutorialVisti = { pronto: false, terminata: false, racconto: false };
+
+export type MemoriaRacconta = { stato: StatoRacconta; tutorialVisti: TutorialVisti };
+
 let stato: StatoRacconta = STATO_INIZIALE;
+let tutorialVisti: TutorialVisti = TUTORIAL_NESSUNO;
+let memoria: MemoriaRacconta = { stato, tutorialVisti };
 let clienteCorrente: string | null = null;
 const ascoltatori = new Set<() => void>();
 
+function notifica(): void {
+  memoria = { stato, tutorialVisti };
+  for (const a of ascoltatori) a();
+}
+
 function impostaStato(nuovo: StatoRacconta): void {
   stato = nuovo;
-  for (const a of ascoltatori) a();
+  notifica();
 }
 
 function iscriviti(a: () => void): () => void {
@@ -42,9 +56,13 @@ export function statoRacconta(): StatoRacconta {
   return stato;
 }
 
-/** Lo stato del flusso come stato React. */
-export function useStatoRacconta(): StatoRacconta {
-  return useSyncExternalStore(iscriviti, statoRacconta);
+function memoriaRacconta(): MemoriaRacconta {
+  return memoria;
+}
+
+/** Stato del flusso e tutorial visti come stato React. */
+export function useMemoriaRacconta(): MemoriaRacconta {
+  return useSyncExternalStore(iscriviti, memoriaRacconta);
 }
 
 /** Comandi sul registratore, forniti dalla schermata che lo possiede (hook useRacconta). */
@@ -113,6 +131,12 @@ async function esegui(effetto: EffettoRacconta): Promise<void> {
       await cancellaAudio(effetto.uri);
       if (clienteCorrente) await rimuoviFile(chiaveNota(clienteCorrente), DOCUMENTI);
       return;
+    case 'salvaTesto':
+      if (clienteCorrente) salvaNotaTesto(clienteCorrente, effetto.racconto);
+      return;
+    case 'cancellaTesto':
+      if (clienteCorrente) await rimuoviFile(chiaveTesto(clienteCorrente), DOCUMENTI);
+      return;
   }
 }
 
@@ -128,47 +152,116 @@ export async function avviaRacconta(clientId: string, permesso: () => Promise<Pe
     impostaStato(STATO_INIZIALE);
   }
   if (stato.tipo !== 'avvio') return;
-  const [audioInAttesa, statoPermesso, consenso] = await Promise.all([leggiAudioInAttesa(clientId, oggi), permesso(), consensoDato()]);
+  const [audioInAttesa, testoInAttesa, statoPermesso, consenso, visti] = await Promise.all([
+    leggiAudioInAttesa(clientId, oggi),
+    leggiTestoInAttesa(clientId, oggi),
+    permesso(),
+    consensoDato(clientId),
+    leggiTutorialVisti(clientId),
+  ]);
   if (stato.tipo !== 'avvio' || clienteCorrente !== clientId) return;
-  // Senza consenso registrato la schermata del consenso compare anche se il sistema ha già concesso il permesso.
+  tutorialVisti = visti;
+  // Senza consenso registrato per questo account la schermata del consenso compare anche se il sistema ha già concesso il permesso.
   const effettivo: PermessoMicrofono = statoPermesso === 'concesso' && !consenso ? 'daChiedere' : statoPermesso;
-  invia({ tipo: 'avviato', permesso: effettivo, audioInAttesa });
+  invia({ tipo: 'avviato', permesso: effettivo, audioInAttesa, testoInAttesa });
 }
 
-/** Uscita dalla schermata durante la registrazione: si ferma il registratore e si scarta il file (nessun dialogo in Figma). */
-export function azzeraRacconta(): void {
+/**
+ * "Interrompi" nell'avviso di uscita (registrazione in corso o terminata e non inviata): si scarta l'audio e il flusso
+ * riparte dall'avvio. Il registratore lo ferma la schermata che lo possiede.
+ */
+export async function interrompiRacconta(): Promise<void> {
+  const attuale = stato;
   impostaStato(STATO_INIZIALE);
+  if (attuale.tipo === 'terminata') await cancellaAudio(attuale.audio.uri);
+  if (clienteCorrente) await rimuoviFile(chiaveNota(clienteCorrente), DOCUMENTI);
 }
 
 /** All'uscita dall'account. */
 export function svuotaRacconta(): void {
   clienteCorrente = null;
-  impostaStato(STATO_INIZIALE);
+  stato = STATO_INIZIALE;
+  tutorialVisti = TUTORIAL_NESSUNO;
+  notifica();
 }
 
-// ---- Consenso (portachiavi, resta anche dopo l'uscita: vale per il telefono) ----------------------------------------
+// ---- Consenso e tutorial (portachiavi, per account: restano anche dopo l'uscita, un altro account li rifà) -----------
 
-const CHIAVE_CONSENSO = 'balanced.racconta.consenso';
+const PREFISSO_CONSENSO = 'balanced.racconta.consenso';
+const PREFISSO_TUTORIAL = 'balanced.racconta.tutorial';
 
-export async function consensoDato(): Promise<boolean> {
+export async function consensoDato(clientId: string): Promise<boolean> {
   try {
-    return (await leggi(CHIAVE_CONSENSO)) !== null;
+    return (await leggi(`${PREFISSO_CONSENSO}.${clientId}`)) !== null;
   } catch {
     return false;
   }
 }
 
-/** "Consenti" vale come consenso all'uso del servizio esterno di trascrizione e dell'intelligenza artificiale. */
+/** "Consenti" vale come consenso all'uso del servizio esterno di trascrizione e dell'intelligenza artificiale, per questo account. */
 export async function registraConsenso(adesso: Date = new Date()): Promise<void> {
-  await scrivi(CHIAVE_CONSENSO, adesso.toISOString()).catch(() => {});
+  if (!clienteCorrente) return;
+  await scrivi(`${PREFISSO_CONSENSO}.${clienteCorrente}`, adesso.toISOString()).catch(() => {});
+}
+
+async function leggiTutorialVisti(clientId: string): Promise<TutorialVisti> {
+  try {
+    const testo = await leggi(`${PREFISSO_TUTORIAL}.${clientId}`);
+    const grezzo = testo ? (JSON.parse(testo) as Partial<TutorialVisti>) : {};
+    return { pronto: grezzo.pronto === true, terminata: grezzo.terminata === true, racconto: grezzo.racconto === true };
+  } catch {
+    return TUTORIAL_NESSUNO;
+  }
+}
+
+/** "Ho capito": il suggerimento non compare più per questo account. */
+export function segnaTutorialVisto(punto: PuntoTutorial): void {
+  if (tutorialVisti[punto]) return;
+  tutorialVisti = { ...tutorialVisti, [punto]: true };
+  notifica();
+  if (clienteCorrente) scrivi(`${PREFISSO_TUTORIAL}.${clienteCorrente}`, JSON.stringify(tutorialVisti)).catch(() => {});
 }
 
 // ---- Audio in attesa (cartella documenti) ---------------------------------------------------------------------------
 
 const DOCUMENTI = 'documenti' as const;
 const PREFISSO_NOTA = 'balanced.racconta';
+const PREFISSO_TESTO = 'balanced.racconta.testo';
 function chiaveNota(clientId: string): string {
   return `${PREFISSO_NOTA}.${clientId}`;
+}
+function chiaveTesto(clientId: string): string {
+  return `${PREFISSO_TESTO}.${clientId}`;
+}
+
+// Il testo si salva a ogni modifica: scritture serializzate e, se ne arrivano molte, si scrive solo l'ultima.
+let scritturaTesto: Promise<void> = Promise.resolve();
+let testoInCoda: { clientId: string; racconto: TestoRacconto } | null = null;
+function salvaNotaTesto(clientId: string, racconto: TestoRacconto): void {
+  const primaInCoda = testoInCoda === null;
+  testoInCoda = { clientId, racconto };
+  if (!primaInCoda) return;
+  scritturaTesto = scritturaTesto.then(async () => {
+    while (testoInCoda) {
+      const daScrivere = testoInCoda;
+      testoInCoda = null;
+      await scriviFile(chiaveTesto(daScrivere.clientId), JSON.stringify(notaTestoInAttesa(daScrivere.racconto, daScrivere.clientId, new Date().toISOString())), DOCUMENTI).catch(() => {});
+    }
+  });
+}
+
+/** Il racconto di oggi già trascritto, se c'è; una nota di un altro giorno si cancella (fine giornata). */
+export async function leggiTestoInAttesa(clientId: string, oggi: string): Promise<TestoRacconto | null> {
+  let grezzo: unknown = null;
+  try {
+    const testo = await leggiFile(chiaveTesto(clientId), DOCUMENTI);
+    grezzo = testo ? JSON.parse(testo) : null;
+  } catch {
+    grezzo = null;
+  }
+  const lettura = leggiNotaTesto(grezzo, clientId, oggi);
+  if (lettura.tipo === 'scaduto') await rimuoviFile(chiaveTesto(clientId), DOCUMENTI);
+  return lettura.tipo === 'daRiprendere' ? lettura.racconto : null;
 }
 
 /** Cartelle in cui expo-audio scrive i file nella cartella documenti (iOS `ExpoAudio/`, Android `Audio/`). */

@@ -436,24 +436,36 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `attesa.ts` nota dell'audio in attesa, `nomi.ts` → `docs/diario-nomi.md`); servizio `src/servizi/racconta.ts` (stato
   condiviso, consenso nel portachiavi, audio in attesa nella cartella documenti, `trascriviAudio` con `expo/fetch` e
   rinnovo del token su 401), hook `src/servizi/useRacconta.ts` (possiede il registratore expo-audio e lo collega al
-  flusso); componenti `src/ui/racconta/` (PulsanteRegistrazione con l'alone animato, LivelloVoce, Argomenti,
-  CardRacconto, ComandiRegistrazione); schermata `SchermataRacconta.tsx`; rotta `app/racconta.tsx`.
+  flusso, avviso di sistema all'uscita con `beforeRemove`); componenti `src/ui/racconta/` (PulsanteRegistrazione con
+  le varianti Pronto / In registrazione / Da inviare, LivelloVoce con Reanimated, Argomenti, CardRacconto,
+  ComandiRegistrazione), tutorial `src/ui/Suggerimento.tsx` e `src/ui/Tutorial.tsx` (velo al 40 %, elemento misurato e
+  rifatto sopra il velo, "Ho capito"); schermata `SchermataRacconta.tsx`; rotta `app/racconta.tsx`.
 - Registrazione: `expo-audio` 58.0.10 (approvato il 23/10/2026; plugin in `app.json` con il testo italiano del permesso,
   senza modalità in secondo piano), mono AAC-LC in m4a a 24 kHz / 48 kbit/s (`QUALITA_VOCE`; 3 minuti ≈ 1,1 MB, inviato come
   `audio/mp4`), file nella cartella documenti (`directory: 'document'`, nome `racconto-<data>`), limite di 3 minuti con
   arresto automatico un passo di lettura (250 ms) prima e `forDuration` nativo come riserva; pausa quando l'app va in
   secondo piano e ripresa al rientro; le interruzioni di sistema (chiamata) mettono in pausa il registratore da sole e la
-  lettura periodica le mostra come "In pausa". Uscire dalla schermata durante la registrazione scarta il file.
-- Trascrizione a fine registrazione (`POST /v1/diario-vocale/trascrivi`, byte del file, `X-Diary-Date`,
-  `X-Audio-Duration-Ms` mai oltre 180 000, `X-Request-Id`); l'audio si cancella subito dopo un testo ricevuto. Senza rete
-  l'audio resta nella cartella documenti con la nota `balanced.racconta.<client_id>` e si riprova ogni 15 s e al ritorno
-  in primo piano senza cambiare schermata; all'apertura successiva di Racconta un audio di oggi riparte dalla
-  trascrizione, uno di un altro giorno si cancella. Errori: `riprovabile` → schermata 12 con "Riprova" e audio conservato;
-  `sessione`, `nonDisponibile`, `definitivo` → schermata senza "Riprova" e audio cancellato (`testiErrore`).
-- Consenso: la schermata 2 compare finché il permesso non è concesso e il consenso non è ricordato nel portachiavi
-  (`balanced.racconta.consenso`, resta anche dopo "Esci"); "Consenti" registra il consenso e apre la richiesta di sistema.
+  lettura periodica le mostra come "In pausa". Lo stop porta alla 5.2 "Registrazione terminata" (`756:7628`): la
+  trascrizione parte solo dal pulsante "Da inviare" (penna, decisione del 23/10/2026). Uscire con una registrazione in
+  corso o terminata e non inviata chiede conferma con l'`Alert` di sistema ("Vuoi interrompere la registrazione?");
+  solo "Interrompi" scarta il file. Livello voce: il livello reale del microfono (metering) ammorbidito con Reanimated
+  e un'onda per barretta calcolata sul thread dell'interfaccia (`altezzaBarretta`, worklet); ferme con "Riduci movimento".
+  I pallini dei caricamenti (`Pulsante` stato `caricamento`) saltellano come nel funnel (1,2 s, ritardi 0,15 s).
+- Trascrizione su richiesta (`POST /v1/diario-vocale/trascrivi`, byte del file, `X-Diary-Date`, `X-Audio-Duration-Ms`
+  mai oltre 180 000, `X-Request-Id`), schermata 7.1 (`756:7718`); l'audio si cancella subito dopo un testo ricevuto e il
+  testo va nella cartella documenti (`balanced.racconta.testo.<client_id>`) fino a fine giornata o alla creazione del
+  diario: riaprendo Racconta lo stesso giorno si riparte da "Il tuo racconto". Trascrizione vuota o quasi (meno di dieci
+  caratteri utili) → "Non ho capito" (11) senza passare dal racconto. Senza rete l'audio resta nella cartella documenti
+  con la nota `balanced.racconta.<client_id>` e si riprova ogni 15 s e al ritorno in primo piano senza cambiare
+  schermata; all'apertura successiva un audio di oggi non inviato riparte dalla 5.2, uno di un altro giorno si cancella.
+  Errori: `riprovabile` → schermata 12 con "Riprova" e audio conservato; `sessione`, `nonDisponibile`, `definitivo` →
+  schermata senza "Riprova" e audio cancellato (`testiErrore`).
+- Consenso e tutorial per account (portachiavi, restano dopo "Esci", un altro account li rifà):
+  `balanced.racconta.consenso.<client_id>` (la schermata 2 compare finché il permesso non è concesso e il consenso non è
+  registrato; "Consenti" registra il consenso e apre la richiesta di sistema) e `balanced.racconta.tutorial.<client_id>`
+  (Tutorial · 3 su Pronto, · 4 sulla 5.2, · 5 su "Il tuo racconto", una volta ciascuno, chiusi solo da "Ho capito").
 - "Crea il mio diario" (compilazione con `/compila`, riepilogo `747:7517`) è il lotto 2: oggi mostra una Notifica breve.
-- Pagina di sviluppo: `/sviluppo/stati?stato=racconta-2-permesso|racconta-3-microfono-disattivato|racconta-4-pronto|racconta-5-registrazione|racconta-5-pausa|racconta-6-racconto|racconta-6-tastiera|racconta-7-trascrizione|racconta-10-senza-connessione|racconta-11-non-ho-capito|racconta-12-errore|…`
+- Pagina di sviluppo: `/sviluppo/stati?stato=racconta-2-permesso|racconta-3-microfono-disattivato|racconta-4-pronto|racconta-5-registrazione|racconta-5-registrazione-animata|racconta-5-pausa|racconta-5.2-terminata|racconta-tutorial-3-pronto|racconta-tutorial-4-trascrizione|racconta-tutorial-5-crea-diario|racconta-6-racconto|racconta-6-tastiera|racconta-7-trascrizione|racconta-10-senza-connessione|racconta-11-non-ho-capito|racconta-12-errore|…`
   (registrazione finta con timer e livello voce); esiti dei confronti in `~/Desktop/censimenti-app/step10-confronti/lotto1/`.
 
 ## Note su Xcode 27 / Device Hub

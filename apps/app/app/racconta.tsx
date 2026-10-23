@@ -20,7 +20,7 @@ const TESTO_LOTTO_2 = 'La creazione del diario dal racconto arriva a breve.';
 
 function Racconta({ clientId }: { clientId: string }) {
   const router = useRouter();
-  const { stato, azioni } = useRacconta(clientId);
+  const { stato, tutorial, azioni } = useRacconta(clientId);
   const [notifica, setNotifica] = useState<number>(0);
   const onIndietro = useCallback(() => router.back(), [router]);
   const onCreaDiario = useCallback(() => setNotifica((n) => n + 1), []);
@@ -29,6 +29,7 @@ function Racconta({ clientId }: { clientId: string }) {
     <SchermataRacconta
       stato={stato}
       azioni={azioni}
+      tutorial={tutorial}
       onIndietro={onIndietro}
       onScrivi={onIndietro}
       onCreaDiario={onCreaDiario}

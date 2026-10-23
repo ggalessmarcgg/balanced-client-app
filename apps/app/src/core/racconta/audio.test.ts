@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { aggiungiLivello, altezzeBarrette, dimensioneMassimaByte, durataDichiarata, etichettaTimer, formattaDurata, limiteRaggiunto, LIMITE_REGISTRAZIONE_MS, livelloDaDecibel, SOGLIA_ARRESTO_MS, titoloRacconto } from './audio.ts';
+import { ALTEZZA_BARRETTA, altezzaBarretta, BARRETTE_LIVELLO, dimensioneMassimaByte, QUOTA_FISSA, durataDichiarata, etichettaTimer, formattaDurata, limiteRaggiunto, LIMITE_REGISTRAZIONE_MS, livelloDaDecibel, SOGLIA_ARRESTO_MS, titoloRacconto } from './audio.ts';
 
 describe('audio: durate e limite', () => {
   it('formatta i minuti e i secondi troncati', () => {
@@ -46,15 +46,20 @@ describe('audio: livello voce', () => {
     assert.equal(livelloDaDecibel(5), 1);
   });
 
-  it('tiene gli ultimi otto livelli e li rende come altezze da 4 a 16', () => {
-    let storia: number[] = [];
-    for (let i = 0; i < 10; i++) storia = aggiungiLivello(storia, i / 9);
-    assert.equal(storia.length, 8);
-    const altezze = altezzeBarrette(storia);
-    assert.equal(altezze.length, 8);
-    assert.equal(altezze[7], 16);
-    assert.equal(altezze[0], Math.round(4 + 12 * (2 / 9)));
-    assert.deepEqual(altezzeBarrette([]), [4, 4, 4, 4, 4, 4, 4, 4]);
-    assert.deepEqual(altezzeBarrette([1]), [4, 4, 4, 4, 4, 4, 4, 16]);
+  it('le barrette seguono il livello: ferme al minimo nel silenzio, tra la quota fissa e il massimo parlando', () => {
+    for (let i = 0; i < BARRETTE_LIVELLO; i++) {
+      assert.equal(altezzaBarretta(i, 0, 0), ALTEZZA_BARRETTA.minima);
+      assert.equal(altezzaBarretta(i, 0, 3.7), ALTEZZA_BARRETTA.minima);
+      for (const t of [0, 0.3, 1.1, 2.9]) {
+        const h = altezzaBarretta(i, 1, t);
+        assert.ok(h >= ALTEZZA_BARRETTA.minima + (ALTEZZA_BARRETTA.massima - ALTEZZA_BARRETTA.minima) * QUOTA_FISSA - 1e-9 && h <= ALTEZZA_BARRETTA.massima, `barretta ${i} a t=${t}: ${h}`);
+      }
+      const meta = altezzaBarretta(i, 0.5, 0.2);
+      assert.ok(meta > ALTEZZA_BARRETTA.minima && meta < ALTEZZA_BARRETTA.massima);
+    }
+    // Il livello fuori scala viene contenuto.
+    assert.equal(altezzaBarretta(0, 7, 0), altezzaBarretta(0, 1, 0));
+    // Due barrette diverse non si muovono in blocco.
+    assert.notEqual(altezzaBarretta(0, 1, 0.5), altezzaBarretta(1, 1, 0.5));
   });
 });

@@ -44,12 +44,15 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Oggi · 7 · Diario condiviso | `446:3777` | 510 |
 | Oggi · Schermata con componenti (diario da iniziare) (prima versione) | `449:980` | 634 |
 
-### 3.1 · Diario vocale · `459:642` · 14 schermate
+### 3.1 · Diario vocale · `459:642` · 16 schermate
 
 Aggiornata il 23/10/2026 (step 10, lotto 1): la 5 riprende il contenuto della 4 (argomenti sempre visibili mentre si
 registra) e la 5.1 è superata; niente testo in diretta durante la registrazione (la trascrizione avviene a fine
 registrazione, decisione del 22/10/2026); testo del permesso del microfono e schermata 10 aggiornati; la nuova 8
-(`747:7517`, riepilogo modificabile) sostituisce `459:1149` e `459:1393` e serve al lotto 2.
+(`747:7517`, riepilogo modificabile) sostituisce `459:1149` e `459:1393` e serve al lotto 2. Aggiunte da Alessandro il
+23/10/2026 dopo le prove del lotto 1: la 5.2 "Registrazione terminata" (la trascrizione parte solo dal pulsante "Da
+inviare" del componente Pulsante registrazione, variante `756:7620` con la penna) e la 7.1 "Trascrizione in corso"
+("Preparando il tuo diario" della 7 resta per la compilazione del lotto 2).
 
 | Schermata | node-id | Altezza |
 |---|---|---|
@@ -58,8 +61,10 @@ registrazione, decisione del 22/10/2026); testo del permesso del microfono e sch
 | Racconta · 3 · Microfono disattivato | `459:681` | 852 |
 | Racconta · 4 · Pronto | `459:719` | 852 |
 | Racconta · 5 · In registrazione (argomenti visibili, come la 4) | `459:779` | 852 |
+| Racconta · 5.2 · Registrazione terminata (aggiunta il 23/10/2026) | `756:7628` | 852 |
 | Racconta · 6 · Registrazione completata (Il tuo racconto) | `459:856` | 852 |
-| Racconta · 7 · Elaborazione | `459:922` | 852 |
+| Racconta · 7 · Elaborazione (compilazione, lotto 2) | `459:922` | 852 |
+| Racconta · 7.1 · Trascrizione in corso (aggiunta il 23/10/2026) | `756:7718` | 852 |
 | Racconta · 8 · Il tuo diario (riepilogo modificabile) · nuova, lotto 2 | `747:7517` | 2061 |
 | Racconta · 8 · Diario precompilato · Pasti · superata | `459:1149` | 878 |
 | Racconta · 9 · Diario precompilato · Valori · superata | `459:1393` | 1105 |
@@ -68,7 +73,7 @@ registrazione, decisione del 22/10/2026); testo del permesso del microfono e sch
 | Racconta · 12 · Errore · Elaborazione non riuscita | `459:1712` | 852 |
 | Racconta · 5.1 · In registrazione info aperte · superata | `462:1640` | 852 |
 
-Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione, Disabilitato), Card trascrizione
+Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione senza alone, Da inviare `756:7620`, Disabilitato), Card trascrizione
 `467:378` (In ascolto, Completo: le schermate usano copie, non istanze), Livello voce (gruppo `459:833`), Opzione
 `439:96` forma "Su più righe", icone `Icona / 20 / Argomento · …`.
 
@@ -176,7 +181,10 @@ Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione, Di
 | Trasversali · 4 · Notifica breve · conferma | `563:5122` | 852 |
 | Trasversali · 5 · Notifica breve · errore | `563:5191` | 852 |
 
-### 1.1 · Primo accesso e tutorial · `586:4904` · 8 schermate
+### 1.1 · Primo accesso e tutorial · `586:4904` · 11 schermate
+
+Tutorial · 4, 5 e 6 aggiunti il 23/10/2026 (step 10): schema comune delle schermate Tutorial (velo testo/primario al
+40 %, elemento evidenziato sopra il velo, Suggerimento con "Ho capito"); il 6 serve al lotto 2.
 
 | Schermata | node-id | Altezza |
 |---|---|---|
@@ -188,6 +196,9 @@ Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione, Di
 | Tutorial · 1 · Piano · sostituzione | `586:5457` | 852 |
 | Tutorial · 2 · Piano · ricette | `586:5598` | 852 |
 | Tutorial · 3 · Racconta la tua giornata | `586:5739` | 852 |
+| Tutorial · 4 · Racconta · trascrizione | `758:7670` | 852 |
+| Tutorial · 5 · Racconta · crea il diario | `758:7728` | 852 |
+| Tutorial · 6 · Racconta · invio del diario (lotto 2) | `758:7773` | 2061 |
 
 ### 10 · Tema scuro · pronto per dopo la v1 · `588:5413` · 5 schermate
 
