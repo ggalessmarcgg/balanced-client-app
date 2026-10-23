@@ -424,6 +424,38 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Pagina di sviluppo: `/sviluppo/stati?stato=stati-1-da-confermare|stati-2-prima|stati-3-orario-passato|stati-4-scegli|stati-4.1-non-disponibile|stati-4.2-cambia|stati-4.3-nessun-orario|stati-4-molti-orari|stati-5-confermata|…`;
   esiti dei confronti in `~/Desktop/censimenti-app/step12-confronti/`.
 
+## Diario vocale "Racconta" (step 10, lotto 1)
+
+- Riferimenti: `~/Desktop/censimenti-app/step10-censimento-voce.md`, contratto di prodotto
+  `~/Desktop/balanced-client-agents/docs/contratti/contratto-diario-vocale-v0_4.md`, contratto delle funzioni del server
+  `~/Desktop/balanced-client-agents/docs/server-diario-vocale.md` (si leggono, non si modificano). Server su Railway,
+  indirizzo pubblico in `EXPO_PUBLIC_AGENTI_URL` (`.env`, nome in `.env.example`); ogni chiamata porta
+  `Authorization: Bearer <access_token>` della sessione Supabase, mai il `client_id`.
+- Logica pura in `src/core/racconta/` (`flusso.ts` macchina a stati con effetti, `audio.ts` qualità, limite dei 3 minuti,
+  timer e livello voce, `server.ts` intestazioni, lettura della risposta e traduzione dei codici d'errore in esiti,
+  `attesa.ts` nota dell'audio in attesa, `nomi.ts` → `docs/diario-nomi.md`); servizio `src/servizi/racconta.ts` (stato
+  condiviso, consenso nel portachiavi, audio in attesa nella cartella documenti, `trascriviAudio` con `expo/fetch` e
+  rinnovo del token su 401), hook `src/servizi/useRacconta.ts` (possiede il registratore expo-audio e lo collega al
+  flusso); componenti `src/ui/racconta/` (PulsanteRegistrazione con l'alone animato, LivelloVoce, Argomenti,
+  CardRacconto, ComandiRegistrazione); schermata `SchermataRacconta.tsx`; rotta `app/racconta.tsx`.
+- Registrazione: `expo-audio` 58.0.10 (approvato il 23/10/2026; plugin in `app.json` con il testo italiano del permesso,
+  senza modalità in secondo piano), mono AAC-LC in m4a a 24 kHz / 48 kbit/s (`QUALITA_VOCE`; 3 minuti ≈ 1,1 MB, inviato come
+  `audio/mp4`), file nella cartella documenti (`directory: 'document'`, nome `racconto-<data>`), limite di 3 minuti con
+  arresto automatico un passo di lettura (250 ms) prima e `forDuration` nativo come riserva; pausa quando l'app va in
+  secondo piano e ripresa al rientro; le interruzioni di sistema (chiamata) mettono in pausa il registratore da sole e la
+  lettura periodica le mostra come "In pausa". Uscire dalla schermata durante la registrazione scarta il file.
+- Trascrizione a fine registrazione (`POST /v1/diario-vocale/trascrivi`, byte del file, `X-Diary-Date`,
+  `X-Audio-Duration-Ms` mai oltre 180 000, `X-Request-Id`); l'audio si cancella subito dopo un testo ricevuto. Senza rete
+  l'audio resta nella cartella documenti con la nota `balanced.racconta.<client_id>` e si riprova ogni 15 s e al ritorno
+  in primo piano senza cambiare schermata; all'apertura successiva di Racconta un audio di oggi riparte dalla
+  trascrizione, uno di un altro giorno si cancella. Errori: `riprovabile` → schermata 12 con "Riprova" e audio conservato;
+  `sessione`, `nonDisponibile`, `definitivo` → schermata senza "Riprova" e audio cancellato (`testiErrore`).
+- Consenso: la schermata 2 compare finché il permesso non è concesso e il consenso non è ricordato nel portachiavi
+  (`balanced.racconta.consenso`, resta anche dopo "Esci"); "Consenti" registra il consenso e apre la richiesta di sistema.
+- "Crea il mio diario" (compilazione con `/compila`, riepilogo `747:7517`) è il lotto 2: oggi mostra una Notifica breve.
+- Pagina di sviluppo: `/sviluppo/stati?stato=racconta-2-permesso|racconta-3-microfono-disattivato|racconta-4-pronto|racconta-5-registrazione|racconta-5-pausa|racconta-6-racconto|racconta-6-tastiera|racconta-7-trascrizione|racconta-10-senza-connessione|racconta-11-non-ho-capito|racconta-12-errore|…`
+  (registrazione finta con timer e livello voce); esiti dei confronti in `~/Desktop/censimenti-app/step10-confronti/lotto1/`.
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

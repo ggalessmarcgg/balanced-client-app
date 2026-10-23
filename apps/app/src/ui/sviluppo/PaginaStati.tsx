@@ -10,18 +10,18 @@ import { NotificaBreve } from '@/ui/NotificaBreve';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
 import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
-import { SchermataRaccontaSegnaposto } from '@/ui/schermate/SchermateSegnaposto';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
+import { RaccontaSviluppo } from '@/ui/sviluppo/RaccontaSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
 import { StatiSviluppo } from '@/ui/sviluppo/StatiSviluppo';
 import { StoricoSviluppo } from '@/ui/sviluppo/StoricoSviluppo';
 import { colori, margine, spazio, testi, tocco } from '@/ui/theme';
 
-// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3, 5, 7, 11 e 12 con dati finti, per i
+// Pagina di sviluppo "Stati" (rotta protetta da __DEV__): ogni schermata degli step 3, 5, 7, 10, 11 e 12 con dati finti, per i
 // confronti con Figma senza accedere. /sviluppo/stati?stato=<chiave> mostra la sola schermata a tutto schermo.
 
 export const STATI_SVILUPPO = [
@@ -82,7 +82,24 @@ export const STATI_SVILUPPO = [
   ['giornate-6-storico-caricamento', 'Giornate · 6 · Storico con un mese in caricamento'],
   ['giornate-caricamento', 'Giornate · pannello in caricamento (segnaposti)'],
   ['giornate-errore', 'Giornate · pannello senza connessione (Riprova)'],
-  ['racconta', 'Racconta (segnaposto fino allo step 10)'],
+  ['racconta-2-permesso', 'Racconta · 2 · Permesso microfono (459:643)'],
+  ['racconta-2-permesso-in-richiesta', 'Racconta · 2 · "Consenti" in caricamento (richiesta di sistema in corso)'],
+  ['racconta-3-microfono-disattivato', 'Racconta · 3 · Microfono disattivato (459:681)'],
+  ['racconta-4-pronto', 'Racconta · 4 · Pronto (459:719); il tocco avvia una registrazione finta'],
+  ['racconta-5-registrazione', 'Racconta · 5 · In registrazione (459:779): timer e livello voce avanzano, alone che pulsa'],
+  ['racconta-5-pausa', 'Racconta · 5 · In registrazione in pausa (app in secondo piano o chiamata; senza disegno)'],
+  ['racconta-5-limite', 'Racconta · 5 · a 5 s dal limite: arresto automatico a 3:00 e passaggio alla trascrizione'],
+  ['racconta-6-racconto', 'Racconta · 6 · Il tuo racconto (459:856), testo modificabile'],
+  ['racconta-6-tastiera', 'Racconta · 6 · Il tuo racconto con il campo a fuoco (verifica della tastiera)'],
+  ['racconta-7-trascrizione', 'Racconta · 7 · Caricamento della trascrizione (459:922, titolo della trascrizione)'],
+  ['racconta-10-senza-connessione', 'Racconta · 10 · Senza connessione (459:1629)'],
+  ['racconta-11-non-ho-capito', 'Racconta · 11 · Non ho capito (459:1669; dal lotto 2)'],
+  ['racconta-12-errore', 'Racconta · 12 · Trascrizione non riuscita con "Riprova" (459:1712, testi della trascrizione)'],
+  ['racconta-errore-non-disponibile', 'Racconta · percorso non attivo (abbonamento_non_attivo; senza disegno)'],
+  ['racconta-errore-sessione', 'Racconta · sessione scaduta (token_non_valido; senza disegno)'],
+  ['racconta-errore-troppo-lungo', 'Racconta · audio troppo lungo, "Ricomincia" (senza disegno)'],
+  ['racconta-registrazione-non-riuscita', 'Racconta · 4 con l\'avviso "La registrazione non è partita" (senza disegno)'],
+  ['racconta-crea-diario', 'Racconta · 6 con la Notifica breve di "Crea il mio diario" (lotto 2)'],
   ['revisioni-1-in-corso', 'Revisioni · 1 · Revisione in corso (494:1944)'],
   ['revisioni-2-nuova', 'Revisioni · 2 · Nuova revisione arrivata (494:2060)'],
   ['revisioni-3-in-preparazione', 'Revisioni · 3 · Revisione in preparazione (494:2165)'],
@@ -310,8 +327,42 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="pannelloCaricamento" />;
     case 'giornate-errore':
       return <OggiSviluppo scenario="pannelloErrore" />;
-    case 'racconta':
-      return <SchermataRaccontaSegnaposto onIndietro={nulla} />;
+    case 'racconta-2-permesso':
+      return <RaccontaSviluppo scenario="permesso" />;
+    case 'racconta-2-permesso-in-richiesta':
+      return <RaccontaSviluppo scenario="permessoInRichiesta" />;
+    case 'racconta-3-microfono-disattivato':
+      return <RaccontaSviluppo scenario="microfonoDisattivato" />;
+    case 'racconta-4-pronto':
+      return <RaccontaSviluppo scenario="pronto" />;
+    case 'racconta-5-registrazione':
+      return <RaccontaSviluppo scenario="registrazione" />;
+    case 'racconta-5-pausa':
+      return <RaccontaSviluppo scenario="registrazionePausa" />;
+    case 'racconta-5-limite':
+      return <RaccontaSviluppo scenario="registrazioneLimite" />;
+    case 'racconta-6-racconto':
+      return <RaccontaSviluppo scenario="racconto" />;
+    case 'racconta-6-tastiera':
+      return <RaccontaSviluppo scenario="raccontoTastiera" />;
+    case 'racconta-7-trascrizione':
+      return <RaccontaSviluppo scenario="trascrizione" />;
+    case 'racconta-10-senza-connessione':
+      return <RaccontaSviluppo scenario="senzaConnessione" />;
+    case 'racconta-11-non-ho-capito':
+      return <RaccontaSviluppo scenario="nonHoCapito" />;
+    case 'racconta-12-errore':
+      return <RaccontaSviluppo scenario="errore" />;
+    case 'racconta-errore-non-disponibile':
+      return <RaccontaSviluppo scenario="erroreNonDisponibile" />;
+    case 'racconta-errore-sessione':
+      return <RaccontaSviluppo scenario="erroreSessione" />;
+    case 'racconta-errore-troppo-lungo':
+      return <RaccontaSviluppo scenario="erroreTroppoLungo" />;
+    case 'racconta-registrazione-non-riuscita':
+      return <RaccontaSviluppo scenario="registrazioneNonRiuscita" />;
+    case 'racconta-crea-diario':
+      return <RaccontaSviluppo scenario="creaDiarioNotifica" />;
     case 'revisioni-1-in-corso':
       return <RevisioniSviluppo scenario="inCorso" />;
     case 'revisioni-2-nuova':

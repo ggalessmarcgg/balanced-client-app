@@ -16,7 +16,6 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 | `diario · valori` | Oggi · 3 (`444:2624`) | passaggio 2: energia, sazietà, idratazione |
 | `diario · sport` | Oggi · 4 (`444:2962`) | passaggio 3: sport e durata (o riposo). Durate salvate nel formato storico `<30m`, `30m-1h`, `1h-1.5h`, `>1.5h` (etichette "Meno di 30 min", "30 min – 1 ora", "1 – 1,5 ore", "Più di 1,5 ore"; decisione del 21/10/2026); `<20m` dei diari della web app si legge ("Meno di 20 min") ma non si propone più |
 | `diario · commento` | Oggi · 5 (`444:3247`) | passaggio 4: nota e "Invia alla nutrizionista" |
-| `racconta · segnaposto` | — (sezione 3.1 allo step 10) | segnaposto aperto da "Racconta" |
 | `giornata · pannello` | Giornate · 2, 3, 4 (`474:1430`, `475:1337`, `475:1409`) | pannello dal basso di una giornata condivisa: data, Card commento (se c'è), "La tua giornata" con "Modifica"; si porta a schermo pieno con la maniglia. Rotta diretta: `/abbonato?giornata=YYYY-MM-DD` (per la push del commento, step 6) |
 | `giornata · modifica` | Giornate · 5 (`475:1459`) | i quattro passaggi del diario dentro il pannello, a schermo pieno, per una giornata già condivisa (senza "Invia alla nutrizionista") |
 | `storico` | Giornate · 6 (`475:1917`) | "Le tue condivisioni": i mesi dal primo diario al mese corrente, card con effetto vetro, una riga per settimana con i giorni allineati a sinistra, nessun indicatore di commento. Rotta `/storico` |
@@ -28,7 +27,7 @@ cambiano al cambiare dei testi a schermo. In codice: `apps/app/src/core/diario/n
 | Nome | Dove | Effetto sui dati |
 |---|---|---|
 | `diario · scrivi` | pulsante tondo "Scrivi" | apre il passaggio Pasti; nessuna scrittura |
-| `diario · racconta` | pulsante tondo "Racconta" | apre il segnaposto; nessuna scrittura |
+| `diario · racconta` | pulsante tondo "Racconta" | apre "Racconta la tua giornata" (step 10, nomi `racconta · …` qui sotto); nessuna scrittura |
 | `diario · avanti` | link "Avanti" o scorrimento verso sinistra | passa al blocco successivo e salva la bozza se ci sono modifiche |
 | `diario · indietro` | scorrimento verso destra | torna al blocco precedente e salva la bozza se ci sono modifiche |
 | `diario · vai al blocco` | tocco su una tacchetta dell'indicatore | va a quel blocco (avanti o indietro) e salva la bozza se ci sono modifiche |
@@ -233,3 +232,46 @@ Decisione del 21/10/2026 (censimento `~/Desktop/censimenti-app/step12-censimento
   primo piano ("Torna alla home" da G rilegge comunque).
 - Durate (decisione del 22/10/2026, tutta l'app): prima visita 40 minuti, visita di controllo 20; la fascia mostrata è
   inizio – inizio + durata, non `end_time`; la fine reale del blocco serve solo a decidere se la visita è in corso.
+
+## Racconta (diario vocale, step 10 · lotto 1)
+
+Decisione del 23/10/2026. In codice: `apps/app/src/core/racconta/nomi.ts` (`SCHERMATE_RACCONTA`, `AZIONI_RACCONTA`).
+Contratto del server: `balanced-client-agents/docs/server-diario-vocale.md`; prodotto:
+`docs/contratti/contratto-diario-vocale-v0_4.md`.
+
+### Schermate
+
+| Nome | Figma | Cosa mostra |
+|---|---|---|
+| `racconta · permesso microfono` | Racconta · 2 (`459:643`) | consenso all'uso del servizio esterno di trascrizione e dell'intelligenza artificiale, prima della richiesta di sistema; compare finché il permesso non è concesso e il consenso non è ricordato sul telefono |
+| `racconta · microfono disattivato` | Racconta · 3 (`459:681`) | permesso negato nelle impostazioni: "Apri le impostazioni" e "Scrivi il diario"; al rientro dalle impostazioni il permesso si ricontrolla |
+| `racconta · pronto` | Racconta · 4 (`459:719`) | "Parla liberamente e racconta", i sei argomenti, "Tocca per iniziare", timer 0:00 / 3:00 |
+| `racconta · registra` | Racconta · 5 (`459:779`) | stessi argomenti, livello voce, timer che avanza, stop con l'alone che pulsa; "In pausa" al posto del livello quando l'app è in secondo piano, lo schermo è bloccato o una chiamata interrompe |
+| `racconta · trascrizione` | Racconta · 7 (`459:922`, titolo "Trascrivendo il tuo racconto") | audio in invio al server (`POST /v1/diario-vocale/trascrivi`) |
+| `racconta · il tuo racconto` | Racconta · 6 (`459:856`) | card "Il tuo racconto · m:ss" con il testo trascritto modificabile a mano; "Crea il mio diario" (lotto 2) e "Ricomincia" |
+| `racconta · senza connessione` | Racconta · 10 (`459:1629`) | l'audio è salvato nella cartella documenti; si riprova da soli ogni 15 s e al ritorno in primo piano, senza cambiare schermata, finché il server risponde |
+| `racconta · non ho capito` | Racconta · 11 (`459:1669`) | variante di Pronto con l'avviso (dal lotto 2: esito `non_ho_capito` della compilazione) |
+| `racconta · errore` | Racconta · 12 (`459:1712`) e varianti senza disegno | errore del server: con "Riprova" (`trascrizione_fallita`, `trascrizione_timeout`, `identita_non_verificabile`, `errore_interno`, tempo scaduto nell'app), oppure definitivo senza "Riprova" (`abbonamento_non_attivo`, `cliente_non_trovato`, `token_*` non rinnovabile, `audio_troppo_lungo`, `audio_troppo_grande`, richieste rifiutate), con il riferimento `x-request-id` per l'assistenza |
+
+### Azioni
+
+| Nome | Dove | Effetto sui dati |
+|---|---|---|
+| `racconta · consenti microfono` | "Consenti" (2) | registra il consenso nel portachiavi del telefono (`balanced.racconta.consenso`, resta anche dopo l'uscita) e chiede il permesso di sistema |
+| `racconta · preferisco scrivere` / `racconta · apri impostazioni` | 2 e 3 | torna a Oggi / apre le impostazioni dell'app; nessuna scrittura |
+| `racconta · avvia registrazione` | Pulsante registrazione (4) | registra in mono AAC 24 kHz 48 kbit/s nella cartella documenti (`ExpoAudio/racconto-<data>.m4a` su iOS, `Audio/` su Android) |
+| `racconta · ferma registrazione` / `racconta · arresto a 3 minuti` | stop (5) / automatico | chiude il file, scrive la nota dell'audio in attesa (`balanced.racconta.<client_id>` nella cartella documenti) e invia l'audio al server |
+| `racconta · pausa` / `racconta · riprendi` | app in secondo piano, schermo bloccato, chiamata | il registratore si ferma e riparte; il tempo in pausa non conta |
+| `racconta · trascrivi` | fine registrazione, ritorno della rete, "Riprova" | una `POST /v1/diario-vocale/trascrivi` con `Authorization: Bearer <access_token>`, `Content-Type: audio/mp4`, `X-Diary-Date`, `X-Audio-Duration-Ms` (mai oltre 180 000), `X-Request-Id`; con 401 si rinnova la sessione e si ripete una volta. Dopo il testo l'audio e la nota si cancellano subito |
+| `racconta · modifica il racconto` | campo della card (6) | solo in memoria |
+| `racconta · ricomincia` | "Ricomincia" (6, 12) | torna a Pronto e cancella l'audio rimasto; nessun dialogo |
+| `racconta · riprova trascrizione` | "Riprova" (12) | ripete `racconta · trascrivi` con lo stesso file |
+| `racconta · crea il mio diario` | "Crea il mio diario" (6) | lotto 2 (`POST /v1/diario-vocale/compila`); oggi una Notifica breve |
+
+### Regole
+
+- L'audio non è mai in cache: sta nella cartella documenti finché non è trascritto; a fine giornata (data del diario in
+  ora italiana diversa da oggi) si cancella all'apertura successiva di "Racconta", insieme a ogni altro file di
+  registrazione rimasto. Un audio di oggi in attesa riparte dalla trascrizione, senza registrare di nuovo.
+- Uscire dalla schermata durante la registrazione ferma il registratore e scarta il file (Figma non prevede un dialogo).
+- Nessuna scrittura sul database in questo lotto; il server registra solo consumi ed esiti (`voice_diary_events`).

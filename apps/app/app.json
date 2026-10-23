@@ -10,7 +10,13 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "it.joinbalanced.app",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "CFBundleDevelopmentRegion": "it",
+        "CFBundleLocalizations": [
+          "it"
+        ]
+      }
     },
     "android": {
       "package": "it.joinbalanced.app",
@@ -40,7 +46,16 @@
       ],
       "expo-secure-store",
       "expo-image",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Balanced usa il microfono per registrare il racconto della tua giornata e compilare il diario al posto tuo.",
+          "recordAudioAndroid": true,
+          "enableBackgroundRecording": false,
+          "enableBackgroundPlayback": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

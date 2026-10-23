@@ -44,7 +44,12 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Oggi · 7 · Diario condiviso | `446:3777` | 510 |
 | Oggi · Schermata con componenti (diario da iniziare) (prima versione) | `449:980` | 634 |
 
-### 3.1 · Diario vocale · `459:642` · 13 schermate
+### 3.1 · Diario vocale · `459:642` · 14 schermate
+
+Aggiornata il 23/10/2026 (step 10, lotto 1): la 5 riprende il contenuto della 4 (argomenti sempre visibili mentre si
+registra) e la 5.1 è superata; niente testo in diretta durante la registrazione (la trascrizione avviene a fine
+registrazione, decisione del 22/10/2026); testo del permesso del microfono e schermata 10 aggiornati; la nuova 8
+(`747:7517`, riepilogo modificabile) sostituisce `459:1149` e `459:1393` e serve al lotto 2.
 
 | Schermata | node-id | Altezza |
 |---|---|---|
@@ -52,15 +57,20 @@ Le sezioni sono nell'ordine dei livelli della pagina (dall'alto verso il basso s
 | Racconta · 2 · Permesso microfono | `459:643` | 852 |
 | Racconta · 3 · Microfono disattivato | `459:681` | 852 |
 | Racconta · 4 · Pronto | `459:719` | 852 |
-| Racconta · 5 · In registrazione | `459:779` | 852 |
-| Racconta · 6 · Registrazione completata | `459:856` | 852 |
+| Racconta · 5 · In registrazione (argomenti visibili, come la 4) | `459:779` | 852 |
+| Racconta · 6 · Registrazione completata (Il tuo racconto) | `459:856` | 852 |
 | Racconta · 7 · Elaborazione | `459:922` | 852 |
-| Racconta · 8 · Diario precompilato · Pasti | `459:1149` | 878 |
-| Racconta · 9 · Diario precompilato · Valori | `459:1393` | 1105 |
+| Racconta · 8 · Il tuo diario (riepilogo modificabile) · nuova, lotto 2 | `747:7517` | 2061 |
+| Racconta · 8 · Diario precompilato · Pasti · superata | `459:1149` | 878 |
+| Racconta · 9 · Diario precompilato · Valori · superata | `459:1393` | 1105 |
 | Racconta · 10 · Errore · Senza connessione | `459:1629` | 852 |
 | Racconta · 11 · Errore · Non ho capito | `459:1669` | 852 |
 | Racconta · 12 · Errore · Elaborazione non riuscita | `459:1712` | 852 |
-| Racconta · 5.1 · In registrazione info aperte | `462:1640` | 852 |
+| Racconta · 5.1 · In registrazione info aperte · superata | `462:1640` | 852 |
+
+Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione, Disabilitato), Card trascrizione
+`467:378` (In ascolto, Completo: le schermate usano copie, non istanze), Livello voce (gruppo `459:833`), Opzione
+`439:96` forma "Su più righe", icone `Icona / 20 / Argomento · …`.
 
 ### 3.2 · Giornate e storico · `474:1327` · 6 schermate
 

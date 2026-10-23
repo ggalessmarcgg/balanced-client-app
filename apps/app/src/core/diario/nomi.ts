@@ -7,7 +7,6 @@ export const SCHERMATE_DIARIO = {
   valori: 'diario · valori',
   sport: 'diario · sport',
   commento: 'diario · commento',
-  racconta: 'racconta · segnaposto',
   giornataPannello: 'giornata · pannello',
   giornataModifica: 'giornata · modifica',
   storico: 'storico',
