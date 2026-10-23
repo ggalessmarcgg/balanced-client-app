@@ -1,9 +1,8 @@
-import { PenLine } from 'lucide-react-native';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import { Icona } from '@/ui/icone';
-import { colori, gradienti, opacita, raggio, trattoPerMisura } from '@/ui/theme';
+import { colori, gradienti, opacita, raggio } from '@/ui/theme';
 
 /** Stato del Pulsante registrazione (Figma 458:161, proprietà "Stato"). */
 export type StatoPulsanteRegistrazione = 'pronto' | 'inRegistrazione' | 'daInviare' | 'disabilitato';
@@ -14,11 +13,10 @@ export type PulsanteRegistrazioneProps = {
 };
 
 // Misure di Figma: area 112, cerchio 88 con la sfumatura della Card diario, microfono a 32, quadrato di stop 26 con
-// raggio 6 (metà del raggio piccolo) in stato/registrazione, penna a 26 (variante "Da inviare", 756:7620).
+// raggio 6 (metà del raggio piccolo) in stato/registrazione, "Icona / 24 / Penna" (761:448) nella variante "Da inviare".
 const AREA = 112;
 const CERCHIO = 88;
 const STOP = 26;
-const PENNA = 26;
 const RAGGIO_STOP = raggio.piccolo / 2;
 
 const ETICHETTE: Record<StatoPulsanteRegistrazione, string> = {
@@ -47,9 +45,7 @@ export function PulsanteRegistrazione({ stato, onPress }: PulsanteRegistrazioneP
         {stato === 'inRegistrazione' ? (
           <View style={stili.stop} />
         ) : stato === 'daInviare' ? (
-          // La penna della variante "Da inviare" è un disegno Lucide (pen-line) a 26 nel componente Figma, non
-          // un'istanza "Icona / …": tratto proporzionale alla misura (2 × 26 / 24), colore icona/primaria.
-          <PenLine size={PENNA} color={colori.icona.primaria} strokeWidth={(trattoPerMisura[24] * PENNA) / 24} absoluteStrokeWidth accessible={false} importantForAccessibility="no-hide-descendants" />
+          <Icona misura={24} nome="Penna" />
         ) : (
           <Icona misura={24} nome="Microfono" dimensione={32} />
         )}

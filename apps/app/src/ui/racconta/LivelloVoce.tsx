@@ -7,7 +7,7 @@ import { useRiduciMovimento } from '@/ui/riduciMovimento';
 import { colori, raggio, spazio } from '@/ui/theme';
 
 export type LivelloVoceProps = {
-  /** Livello 0–1 misurato dal microfono (una lettura ogni 250 ms); null = fermo sulle altezze del disegno. */
+  /** Livello 0–1 misurato dal microfono (una lettura ogni 100 ms); null = fermo sulle altezze del disegno. */
   livello: number | null;
 };
 
@@ -16,7 +16,7 @@ const INDICI = Array.from({ length: BARRETTE_LIVELLO }, (_, i) => i);
 
 /**
  * Livello voce (Figma 459:833): otto barrette larghe 2 con gap 2, alte da 4 a 16, color icona/primaria. Le barrette
- * seguono il livello reale del microfono: il livello arriva dal JS ogni 250 ms e viene ammorbidito con una
+ * seguono il livello reale del microfono: il livello arriva dal JS ogni 100 ms e viene ammorbidito con una
  * transizione; l'onda che muove ogni barretta è calcolata fotogramma per fotogramma sul thread dell'interfaccia
  * (Reanimated), così il movimento è continuo e nel silenzio quasi fermo. Con "Riduci movimento" (o senza livello)
  * le barrette restano ferme sulle altezze del disegno.

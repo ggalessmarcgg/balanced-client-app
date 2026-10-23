@@ -54,6 +54,8 @@ export type EventoRacconta =
   | { tipo: 'riprova'; silenzioso?: boolean }
   | { tipo: 'modificaTesto'; testo: string }
   | { tipo: 'ricomincia' }
+  /** La schermata si smonta (qualunque sia il motivo): il registratore che possedeva non esiste più. */
+  | { tipo: 'uscita' }
   | { tipo: 'azzera' };
 
 export type EffettoRacconta =
@@ -90,6 +92,12 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
   switch (evento.tipo) {
     case 'azzera':
       return resta(STATO_INIZIALE);
+
+    case 'uscita':
+      // Una registrazione in corso (o in pausa, o in arresto) vive solo con la schermata che possiede il registratore:
+      // uscendo si riparte dall'avvio, mai da una registrazione "bloccata" senza registratore. Gli altri stati restano
+      // (l'audio terminato e il racconto sono sul telefono, una trascrizione in corso arriva comunque).
+      return resta(stato.tipo === 'registrazione' ? STATO_INIZIALE : stato);
 
     case 'avviato': {
       if (stato.tipo !== 'avvio') return resta(stato);
@@ -233,6 +241,14 @@ export function dataDelloStato(stato: StatoRacconta): string | null {
     default:
       return null;
   }
+}
+
+/**
+ * Vero se all'apertura della schermata il flusso deve ripartire dall'avvio: altro giorno del diario, oppure una
+ * registrazione rimasta senza registratore (la schermata precedente si è smontata senza azzerare).
+ */
+export function ripartiDallAvvio(stato: StatoRacconta, oggi: string): boolean {
+  return stato.tipo === 'registrazione' || statoScaduto(stato, oggi);
 }
 
 /** Vero se lo stato appartiene a un altro giorno del diario: si riparte dall'avvio (l'audio scaduto lo cancella la lettura della nota). */

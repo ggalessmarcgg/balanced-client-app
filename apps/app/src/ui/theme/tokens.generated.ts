@@ -1,5 +1,5 @@
 // GENERATO da scripts/tokens/genera-token.mjs a partire da src/ui/theme/figma-tokens.json
-// (file Figma gEx2IMz69sIuUnOYkLBjcf, modalità Chiaro, lettura del 2026-10-21).
+// (file Figma gEx2IMz69sIuUnOYkLBjcf, modalità Chiaro, lettura del 2026-10-23).
 // NON MODIFICARE A MANO: rileggere Figma e rigenerare con `npm run tokens` (vedi CLAUDE.md).
 /* eslint-disable */
 
@@ -1127,6 +1127,19 @@ export const icone = {
     colore: '#000000',
     ai: false,
   },
+  "24/Penna": {
+    nome: 'Penna',
+    misura: 24,
+    figma: '761:448',
+    resa: 'lucide',
+    lucide: 'pen-line',
+    lucideComponente: 'PenLine',
+    tratto: 2,
+    trattoFigma: 2,
+    coloreVariabile: 'icona/primaria',
+    colore: '#000000',
+    ai: false,
+  },
   "24/Piano": {
     nome: 'Piano',
     misura: 24,
@@ -1276,7 +1289,7 @@ export type ChiaveIcona = keyof typeof icone;
 export type IconaPerMisura = {
   16: 'Colazione' | 'Grafico' | 'Imparando la nutrizione' | 'Integrando nuove abitudini' | 'Scelte più consapevoli' | 'Tabella';
   20: 'Argomento · Acqua' | 'Argomento · Altro' | 'Argomento · Energia' | 'Argomento · Movimento' | 'Argomento · Pasti' | 'Argomento · Sazietà' | 'Calendario' | 'Campanella attiva' | 'Carta' | 'Certificazione' | 'Email' | 'Giù' | 'Info' | 'Link' | 'Matita' | 'Più' | 'Sostituisci' | 'Spunta' | 'Su' | 'Videochiamata' | 'WhatsApp';
-  24: 'Account' | 'Avanti' | 'Avviso' | 'Calendario' | 'Calendario semplice' | 'Campanella' | 'Chiudi' | 'Contenuti' | 'Copia' | 'Energia' | 'Goccia' | 'Grafico' | 'Indietro' | 'Info' | 'Invia' | 'Lucchetto' | 'Matita' | 'Meno' | 'Menu' | 'Microfono' | 'Nutrizionista' | 'Occhio' | 'Occhio barrato' | 'Offline' | 'Piano' | 'Più' | 'Profilo' | 'Revisioni' | 'Ricette' | 'Spunta' | 'Video';
+  24: 'Account' | 'Avanti' | 'Avviso' | 'Calendario' | 'Calendario semplice' | 'Campanella' | 'Chiudi' | 'Contenuti' | 'Copia' | 'Energia' | 'Goccia' | 'Grafico' | 'Indietro' | 'Info' | 'Invia' | 'Lucchetto' | 'Matita' | 'Meno' | 'Menu' | 'Microfono' | 'Nutrizionista' | 'Occhio' | 'Occhio barrato' | 'Offline' | 'Penna' | 'Piano' | 'Più' | 'Profilo' | 'Revisioni' | 'Ricette' | 'Spunta' | 'Video';
   32: 'Matita';
   36: 'Conferma' | 'Offline';
 };

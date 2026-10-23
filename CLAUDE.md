@@ -436,19 +436,22 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `attesa.ts` nota dell'audio in attesa, `nomi.ts` → `docs/diario-nomi.md`); servizio `src/servizi/racconta.ts` (stato
   condiviso, consenso nel portachiavi, audio in attesa nella cartella documenti, `trascriviAudio` con `expo/fetch` e
   rinnovo del token su 401), hook `src/servizi/useRacconta.ts` (possiede il registratore expo-audio e lo collega al
-  flusso, avviso di sistema all'uscita con `beforeRemove`); componenti `src/ui/racconta/` (PulsanteRegistrazione con
+  flusso, avviso di sistema all'uscita con `usePreventRemove`); componenti `src/ui/racconta/` (PulsanteRegistrazione con
   le varianti Pronto / In registrazione / Da inviare, LivelloVoce con Reanimated, Argomenti, CardRacconto,
   ComandiRegistrazione), tutorial `src/ui/Suggerimento.tsx` e `src/ui/Tutorial.tsx` (velo al 40 %, elemento misurato e
   rifatto sopra il velo, "Ho capito"); schermata `SchermataRacconta.tsx`; rotta `app/racconta.tsx`.
 - Registrazione: `expo-audio` 58.0.10 (approvato il 23/10/2026; plugin in `app.json` con il testo italiano del permesso,
   senza modalità in secondo piano), mono AAC-LC in m4a a 24 kHz / 48 kbit/s (`QUALITA_VOCE`; 3 minuti ≈ 1,1 MB, inviato come
   `audio/mp4`), file nella cartella documenti (`directory: 'document'`, nome `racconto-<data>`), limite di 3 minuti con
-  arresto automatico un passo di lettura (250 ms) prima e `forDuration` nativo come riserva; pausa quando l'app va in
+  arresto automatico un passo di lettura (100 ms, anche per il livello voce) prima e `forDuration` nativo come riserva; pausa quando l'app va in
   secondo piano e ripresa al rientro; le interruzioni di sistema (chiamata) mettono in pausa il registratore da sole e la
   lettura periodica le mostra come "In pausa". Lo stop porta alla 5.2 "Registrazione terminata" (`756:7628`): la
   trascrizione parte solo dal pulsante "Da inviare" (penna, decisione del 23/10/2026). Uscire con una registrazione in
   corso o terminata e non inviata chiede conferma con l'`Alert` di sistema ("Vuoi interrompere la registrazione?");
-  solo "Interrompi" scarta il file. Livello voce: il livello reale del microfono (metering) ammorbidito con Reanimated
+  solo "Interrompi" scarta il file. **expo-router 58 non emette più `beforeRemove`** (react-navigation incorporato):
+  per bloccare l'uscita si usa solo `usePreventRemove` di `expo-router`, che copre freccia (`router.back()`), gesto
+  di iOS e tasto indietro di Android (bug del 23/10/2026). Allo smontaggio il registratore si ferma sempre e l'evento
+  `uscita` riporta all'avvio una registrazione rimasta senza registratore (`ripartiDallAvvio` all'apertura). Livello voce: il livello reale del microfono (metering) ammorbidito con Reanimated
   e un'onda per barretta calcolata sul thread dell'interfaccia (`altezzaBarretta`, worklet); ferme con "Riduci movimento".
   I pallini dei caricamenti (`Pulsante` stato `caricamento`) saltellano come nel funnel (1,2 s, ritardi 0,15 s).
 - Trascrizione su richiesta (`POST /v1/diario-vocale/trascrivi`, byte del file, `X-Diary-Date`, `X-Audio-Duration-Ms`

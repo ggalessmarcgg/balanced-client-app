@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { SOGLIA_ARRESTO_MS } from './audio.ts';
-import { raccontoVuoto, riduci, STATO_INIZIALE, statoScaduto, uscitaDaConfermare, type EventoRacconta, type StatoRacconta } from './flusso.ts';
+import { raccontoVuoto, riduci, ripartiDallAvvio, STATO_INIZIALE, statoScaduto, uscitaDaConfermare, type EventoRacconta, type StatoRacconta } from './flusso.ts';
 import { erroreApp, type ErroreTrascrizione } from './server.ts';
 
 const AUDIO = { uri: 'file:///doc/ExpoAudio/racconto-2026-10-23.m4a', durataMs: 88_000, data: '2026-10-23' };
@@ -221,5 +221,53 @@ describe('flusso: cambio di giorno', () => {
     assert.equal(statoScaduto({ tipo: 'senzaConnessione', audio: AUDIO, inRiprova: false }, '2026-10-24'), true);
     assert.equal(statoScaduto({ tipo: 'errore', audio: null, errore: errore('sessione') }, '2026-10-24'), false);
     assert.equal(statoScaduto({ tipo: 'pronto', avviso: 'nessuno' }, '2026-10-24'), false);
+  });
+});
+
+describe('flusso: uscita dalla schermata (difetto del 23/10/2026)', () => {
+  const pronto: StatoRacconta = { tipo: 'pronto', avviso: 'nessuno' };
+  const avviato: EventoRacconta = { tipo: 'avviato', permesso: 'concesso', audioInAttesa: null, testoInAttesa: null };
+
+  it('prima della correzione: uscendo durante la registrazione il flusso restava in "registrazione" e al rientro "Ferma" non portava a nulla', () => {
+    // Sequenza del difetto: registrazione avviata, schermata smontata senza azzeramento, nuova schermata con un
+    // registratore nuovo che non registra. Con lo stato rimasto, "avviato" veniva ignorato e "Ferma" chiedeva di
+    // fermare un registratore mai avviato.
+    const { stato } = esegui(pronto, [{ tipo: 'avvia' }, { tipo: 'avviataRegistrazione' }, { tipo: 'avanzamento', durataMs: 4_000, registrando: true, livelloDb: -20 }]);
+    assert.equal(stato.tipo, 'registrazione');
+    assert.equal(riduci(stato, avviato).stato, stato);
+    // Ora all'apertura lo stato rimasto viene riconosciuto e si riparte dall'avvio.
+    assert.equal(ripartiDallAvvio(stato, '2026-10-23'), true);
+  });
+
+  it('"uscita" durante la registrazione (anche in pausa o in arresto) riporta all’avvio; al rientro si registra e si ferma di nuovo', () => {
+    for (const reg of [
+      { tipo: 'registrazione', durataMs: 4_000, inPausa: false, fermando: false, livello: 0.4 },
+      { tipo: 'registrazione', durataMs: 4_000, inPausa: true, fermando: false, livello: 0 },
+      { tipo: 'registrazione', durataMs: 4_000, inPausa: false, fermando: true, livello: 0 },
+    ] satisfies StatoRacconta[]) {
+      const t = riduci(reg, { tipo: 'uscita' });
+      assert.deepEqual(t.stato, STATO_INIZIALE);
+      assert.deepEqual(t.effetti, []);
+      const rientro = esegui(t.stato, [avviato, { tipo: 'avvia' }, { tipo: 'avviataRegistrazione' }, { tipo: 'ferma' }]);
+      assert.equal(rientro.stato.tipo, 'registrazione');
+      assert.deepEqual(rientro.effetti.at(-1), [{ tipo: 'fermaRegistrazione', motivo: 'tocco' }]);
+    }
+  });
+
+  it('"uscita" lascia com’erano gli stati che non dipendono dal registratore (audio terminato, trascrizione, racconto)', () => {
+    for (const s of [
+      { tipo: 'terminata', audio: AUDIO },
+      { tipo: 'trascrizione', audio: AUDIO },
+      { tipo: 'senzaConnessione', audio: AUDIO, inRiprova: false },
+      { tipo: 'racconto', ...TESTO },
+      pronto,
+    ] satisfies StatoRacconta[]) {
+      assert.equal(riduci(s, { tipo: 'uscita' }).stato, s);
+      assert.equal(ripartiDallAvvio(s, '2026-10-23'), false);
+    }
+  });
+
+  it('all’apertura si riparte dall’avvio anche con uno stato di un altro giorno', () => {
+    assert.equal(ripartiDallAvvio({ tipo: 'racconto', ...TESTO }, '2026-10-24'), true);
   });
 });

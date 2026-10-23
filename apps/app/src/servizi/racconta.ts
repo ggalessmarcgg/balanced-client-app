@@ -9,7 +9,7 @@ import { useSyncExternalStore } from 'react';
 import { dataOggiRoma } from '@/core/diario/data';
 import { fileDaCancellare, leggiNotaAttesa, leggiNotaTesto, notaAudioInAttesa, notaTestoInAttesa, type AudioRacconto, type TestoRacconto } from '@/core/racconta/attesa';
 import { durataDichiarata } from '@/core/racconta/audio';
-import { riduci, STATO_INIZIALE, statoScaduto, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
+import { riduci, ripartiDallAvvio, STATO_INIZIALE, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
 import { erroreApp, interpretaRispostaTrascrizione, intestazioniTrascrizione, nuovoIdRichiesta, PERCORSO_TRASCRIVI, TEMPO_MASSIMO_TRASCRIZIONE_MS, type EsitoTrascrizione } from '@/core/racconta/server';
 import { leggi, scrivi } from '@/servizi/archivio';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
@@ -146,8 +146,9 @@ async function esegui(effetto: EffettoRacconta): Promise<void> {
  */
 export async function avviaRacconta(clientId: string, permesso: () => Promise<PermessoMicrofono>): Promise<void> {
   const oggi = dataOggiRoma(new Date());
-  // Altro cliente o altro giorno del diario: si riparte dall'avvio (un racconto di ieri non vale più).
-  if (clienteCorrente !== clientId || statoScaduto(stato, oggi)) {
+  // Altro cliente, altro giorno del diario (un racconto di ieri non vale più) o registrazione rimasta senza
+  // registratore: si riparte dall'avvio.
+  if (clienteCorrente !== clientId || ripartiDallAvvio(stato, oggi)) {
     clienteCorrente = clientId;
     impostaStato(STATO_INIZIALE);
   }

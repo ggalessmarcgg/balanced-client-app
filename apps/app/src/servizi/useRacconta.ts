@@ -1,11 +1,13 @@
 // Schermata "Racconta": possiede il registratore (expo-audio) e lo collega al flusso condiviso (servizi/racconta.ts).
 // Registrazione mono AAC a 24 kHz / 48 kbit/s nella cartella documenti (mai in cache), limite di 3 minuti con arresto
-// automatico, lettura del tempo e del livello ogni 250 ms, pausa quando l'app va in secondo piano e ripresa al rientro
+// automatico, lettura del tempo e del livello ogni 100 ms (INTERVALLO_LETTURA_MS), pausa quando l'app va in secondo piano e ripresa al rientro
 // (le interruzioni di sistema, es. una chiamata, mettono in pausa il registratore da sole e la lettura le mostra).
 // La trascrizione parte solo dal pulsante "Da inviare" (decisione del 23/10/2026); uscire con una registrazione in
-// corso o terminata e non inviata chiede conferma con l'avviso di sistema.
+// corso o terminata e non inviata chiede conferma con l'avviso di sistema (usePreventRemove di expo-router: freccia,
+// gesto e tasto indietro di Android passano tutti da lì). All'uscita dalla schermata il registratore si ferma sempre
+// e il flusso non resta mai in una registrazione senza registratore.
 import { AudioModule, AudioQuality, IOSOutputFormat, setAudioModeAsync, useAudioRecorder, useAudioRecorderState, type RecordingOptions, type RecordingStatus } from 'expo-audio';
-import { useNavigation } from 'expo-router';
+import { usePreventRemove } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Linking, type AppStateStatus } from 'react-native';
 
@@ -51,12 +53,6 @@ async function permessoMicrofono(): Promise<PermessoMicrofono> {
   }
 }
 
-/** Il poco di react-navigation che serve qui (expo-router non tipizza l'evento `beforeRemove`). */
-type NavigazioneConUscita = {
-  addListener: (evento: 'beforeRemove', ascoltatore: (e: { preventDefault: () => void; data: { action: unknown } }) => void) => () => void;
-  dispatch: (azione: unknown) => void;
-};
-
 export type AzioniRacconta = {
   consenti: () => void;
   apriImpostazioni: () => void;
@@ -85,11 +81,12 @@ export function tutorialDaMostrare(stato: StatoRacconta, visti: Record<PuntoTuto
  */
 export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial: PuntoTutorial | null; azioni: AzioniRacconta } {
   const { stato, tutorialVisti } = useMemoriaRacconta();
-  const navigation = useNavigation() as unknown as NavigazioneConUscita;
   const [data] = useState(() => dataOggiRoma(new Date()));
   const ultimaDurata = useRef(0);
   const inRegistrazione = useRef(false);
   const inPausaPerSfondo = useRef(false);
+  /** Vero dopo lo smontaggio: un avvio ancora in preparazione non deve più partire. */
+  const smontata = useRef(false);
 
   const onStatus = useCallback(
     (s: RecordingStatus) => {
@@ -108,12 +105,22 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
   const recorder = useAudioRecorder(opzioniRegistrazione(data), onStatus);
   const lettura = useAudioRecorderState(recorder, INTERVALLO_LETTURA_MS);
 
-  /** Ferma e scarta una registrazione in corso (uscita confermata, smontaggio). */
+  /**
+   * Ferma e scarta una registrazione in corso (uscita confermata, smontaggio). Lo stop parte in modo sincrono, mentre
+   * il registratore è ancora vivo (expo-audio lo rilascia subito dopo le pulizie degli effetti).
+   */
   const scartaRegistrazione = useCallback(async () => {
     if (!inRegistrazione.current) return;
     inRegistrazione.current = false;
-    const uri = recorder.uri;
-    await recorder.stop().catch(() => {});
+    let uri: string | null = null;
+    let arresto: Promise<unknown> = Promise.resolve();
+    try {
+      uri = recorder.uri;
+      arresto = recorder.stop();
+    } catch {
+      // registratore già rilasciato
+    }
+    await arresto.catch(() => {});
     if (uri) await cancellaAudio(uri);
     await setAudioModeAsync({ allowsRecording: false }).catch(() => {});
   }, [recorder]);
@@ -130,6 +137,7 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
         avvia: async () => {
           await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true, interruptionMode: 'doNotMix' });
           await recorder.prepareToRecordAsync();
+          if (smontata.current) throw new Error('schermata chiusa');
           ultimaDurata.current = 0;
           inRegistrazione.current = true;
           inPausaPerSfondo.current = false;
@@ -157,35 +165,35 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
     invia({ tipo: 'avanzamento', durataMs: lettura.durationMillis, registrando: lettura.isRecording, livelloDb: lettura.metering });
   }, [lettura.durationMillis, lettura.isRecording, lettura.metering]);
 
-  // Avvio; allo smontaggio una registrazione ancora in corso (uscita già confermata) si ferma e si scarta.
+  // Avvio; allo smontaggio (per qualunque motivo) una registrazione ancora in corso si ferma, si scarta e il flusso
+  // riparte dall'avvio: al rientro non resta mai una registrazione "bloccata" senza registratore.
   useEffect(() => {
+    smontata.current = false;
     void avviaRacconta(clientId, permessoMicrofono);
     return () => {
+      smontata.current = true;
       void scartaRegistrazione();
+      invia({ tipo: 'uscita' });
     };
   }, [clientId, scartaRegistrazione]);
 
-  // Uscita (freccia indietro, gesto, tasto indietro di Android) con una registrazione da scartare: avviso di sistema;
-  // solo "Interrompi" scarta l'audio e lascia la schermata.
-  useEffect(
-    () =>
-      navigation.addListener('beforeRemove', (e) => {
-        if (!uscitaDaConfermare(statoRacconta())) return;
-        e.preventDefault();
-        Alert.alert(AVVISO_USCITA.titolo, AVVISO_USCITA.testo, [
-          { text: AVVISO_USCITA.annulla, style: 'cancel' },
-          {
-            text: AVVISO_USCITA.interrompi,
-            style: 'destructive',
-            onPress: () => {
-              void scartaRegistrazione().then(() => interrompiRacconta());
-              navigation.dispatch(e.data.action);
-            },
-          },
-        ]);
-      }),
-    [navigation, scartaRegistrazione],
-  );
+  // Uscita (freccia indietro, gesto, tasto indietro di Android) con una registrazione da scartare: expo-router blocca
+  // la rimozione della schermata e qui compare l'avviso di sistema; solo "Interrompi" scarta l'audio e lascia la
+  // schermata. (expo-router 58 non emette più `beforeRemove`: il blocco passa solo da usePreventRemove.)
+  usePreventRemove(uscitaDaConfermare(stato), ({ repeat }) => {
+    Alert.alert(AVVISO_USCITA.titolo, AVVISO_USCITA.testo, [
+      { text: AVVISO_USCITA.annulla, style: 'cancel' },
+      {
+        text: AVVISO_USCITA.interrompi,
+        style: 'destructive',
+        onPress: () => {
+          void scartaRegistrazione();
+          void interrompiRacconta();
+          repeat();
+        },
+      },
+    ]);
+  });
 
   // Secondo piano / schermo bloccato: pausa e ripresa al rientro. Al rientro si ricontrolla anche il permesso
   // (ritorno dalle impostazioni) e, senza rete, si riprova la trascrizione.

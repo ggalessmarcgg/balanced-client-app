@@ -1,6 +1,6 @@
 {
-  "_nota": "Fotografia in sola lettura del file Figma (design system dell'app). Generata con apps/app/scripts/figma/01-variabili-stili.js e 02-icone.js tramite il connettore Figma; da qui scripts/tokens/genera-token.mjs produce src/ui/theme/tokens.generated.ts. Non modificare a mano: rileggere da Figma. Icone rilette il 18/10/2026 sera dopo il ridisegno con Lucide 1.59 e il tratto 1,67 sulle 20.",
-  "letturaDel": "2026-10-21",
+  "_nota": "Fotografia in sola lettura del file Figma (design system dell'app). Generata con apps/app/scripts/figma/01-variabili-stili.js e 02-icone.js tramite il connettore Figma; da qui scripts/tokens/genera-token.mjs produce src/ui/theme/tokens.generated.ts. Non modificare a mano: rileggere da Figma. Icone rilette il 18/10/2026 sera dopo il ridisegno con Lucide 1.59 e il tratto 1,67 sulle 20. Icone rilette il 23/10/2026 (aggiunta Icona / 24 / Penna, 761:448).",
+  "letturaDel": "2026-10-23",
   "fileKey": "gEx2IMz69sIuUnOYkLBjcf",
   "fileName": "Clients App",
   "mode": "Chiaro",
@@ -1542,6 +1542,15 @@
       "description": "Lucide: wifi-off.",
       "strokeWeight": 2,
       "shapes": 7,
+      "stroke": "icona/primaria"
+    },
+    {
+      "id": "761:448",
+      "name": "Icona / 24 / Penna",
+      "size": 24,
+      "description": "Lucide: pen-line. Icona Lucide 24×24, tratto 2. Colore legato a icona/primaria. Usata nel Pulsante registrazione \"Da inviare\" (trascrivi).",
+      "strokeWeight": 2,
+      "shapes": 2,
       "stroke": "icona/primaria"
     },
     {

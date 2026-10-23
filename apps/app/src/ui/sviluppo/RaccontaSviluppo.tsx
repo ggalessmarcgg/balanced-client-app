@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { SOGLIA_ARRESTO_MS } from '@/core/racconta/audio';
+import { INTERVALLO_LETTURA_MS, SOGLIA_ARRESTO_MS } from '@/core/racconta/audio';
 import type { StatoRacconta } from '@/core/racconta/flusso';
 import type { ErroreTrascrizione } from '@/core/racconta/server';
 import type { PuntoTutorial } from '@/servizi/racconta';
@@ -89,7 +89,7 @@ function statoIniziale(scenario: ScenarioRacconta): StatoRacconta {
 }
 
 const nulla = () => {};
-const PASSO_MS = 250;
+const PASSO_MS = INTERVALLO_LETTURA_MS;
 
 const TUTORIAL_PER_SCENARIO: Partial<Record<ScenarioRacconta, PuntoTutorial>> = { tutorialPronto: 'pronto', tutorialTerminata: 'terminata', tutorialRacconto: 'racconto' };
 

@@ -6,8 +6,12 @@
 /** Durata massima di un racconto: 3 minuti (timer "m:ss / 3:00" in tutte le schermate di Figma). */
 export const LIMITE_REGISTRAZIONE_MS = 180_000;
 
-/** La registrazione si ferma da sola un passo di lettura prima del limite, così la durata dichiarata al server non lo supera mai. */
-export const INTERVALLO_LETTURA_MS = 250;
+/**
+ * Lettura periodica del registratore (tempo e livello della voce) ogni 100 ms, così il livello segue la voce senza
+ * scatti. La registrazione si ferma da sola un passo di lettura prima del limite, così la durata dichiarata al server
+ * non lo supera mai.
+ */
+export const INTERVALLO_LETTURA_MS = 100;
 export const SOGLIA_ARRESTO_MS = LIMITE_REGISTRAZIONE_MS - INTERVALLO_LETTURA_MS;
 
 export const QUALITA_VOCE = {
