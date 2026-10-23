@@ -179,9 +179,11 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
     };
   }, [clientId, scartaRegistrazione]);
 
-  // Uscita (freccia indietro, gesto, tasto indietro di Android) con una registrazione da scartare: expo-router blocca
-  // la rimozione della schermata e qui compare l'avviso di sistema; solo "Interrompi" scarta l'audio e lascia la
-  // schermata. (expo-router 58 non emette più `beforeRemove`: il blocco passa solo da usePreventRemove.)
+  // Uscita (freccia indietro, tasto indietro di Android) con una registrazione da scartare: expo-router blocca la
+  // rimozione della schermata e qui compare l'avviso di sistema; solo "Interrompi" scarta l'audio e lascia la
+  // schermata. (expo-router 58 non emette più `beforeRemove`: il blocco passa solo da usePreventRemove.) Il gesto di
+  // scorrimento indietro di iOS in questi stati è disattivato dalla rotta (gestoIndietroDisattivato): una volta partito
+  // non si può annullare e la schermata uscirebbe prima dell'avviso.
   // Durante "Preparando il tuo diario" (senza freccia indietro) l'uscita è bloccata in silenzio finché il server non
   // risponde (al più TEMPO_MASSIMO_COMPILAZIONE_MS): il diario compilato va nella bozza di oggi.
   usePreventRemove(uscitaDaConfermare(stato) || uscitaBloccata(stato), ({ repeat }) => {

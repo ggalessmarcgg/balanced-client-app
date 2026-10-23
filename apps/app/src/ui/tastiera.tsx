@@ -8,7 +8,7 @@
 import { createContext, useCallback, useContext, useMemo, useRef, type ComponentRef, type RefObject } from 'react';
 import { useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type TextInputProps, type View, type ViewStyle } from 'react-native';
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
-import Reanimated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type AnimatedRef } from 'react-native-reanimated';
+import Reanimated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
 
 import { colori, spazio } from '@/ui/theme';
 
@@ -42,6 +42,8 @@ const ATTESA_LAYOUT_MS = 50;
 export type ScorrimentoConTastiera = {
   /** Da passare come `ref` al Reanimated.ScrollView del contenitore. */
   riferimento: AnimatedRef<Reanimated.ScrollView>;
+  /** Posizione corrente dello scorrimento (contentOffset.y), aggiornata dagli eventi di scorrimento sul thread dell'interfaccia. */
+  posizione: SharedValue<number>;
   /** Da passare come `onScroll` (con scrollEventThrottle 16): tiene la posizione corrente sul thread dell'interfaccia. */
   onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
   /** Stile dello spazio in fondo al contenuto (un Reanimated.View vuoto dopo i figli). */
@@ -134,7 +136,7 @@ export function useScorrimentoConTastiera(spazioSotto: number): ScorrimentoConTa
     [riporta, fondoCampo],
   );
 
-  return { riferimento, onScroll, stileSpazio, contesto };
+  return { riferimento, posizione, onScroll, stileSpazio, contesto };
 }
 
 /**

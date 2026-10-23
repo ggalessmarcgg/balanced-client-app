@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { SOGLIA_ARRESTO_MS } from './audio.ts';
-import { raccontoVuoto, riduci, ripartiDallAvvio, STATO_INIZIALE, statoScaduto, uscitaBloccata, uscitaDaConfermare, type EventoRacconta, type StatoRacconta } from './flusso.ts';
+import { gestoIndietroDisattivato, raccontoVuoto, riduci, ripartiDallAvvio, STATO_INIZIALE, statoScaduto, uscitaBloccata, uscitaDaConfermare, type EventoRacconta, type StatoRacconta } from './flusso.ts';
 import { erroreApp, type ErroreTrascrizione } from './server.ts';
 
 const AUDIO = { uri: 'file:///doc/ExpoAudio/racconto-2026-10-23.m4a', durataMs: 88_000, data: '2026-10-23' };
@@ -62,6 +62,26 @@ describe('flusso: registrazione', () => {
     assert.deepEqual(avvio.effetti, [{ tipo: 'avviaRegistrazione' }]);
     const t = riduci(avvio.stato, { tipo: 'avanzamento', durataMs: 1_250, registrando: true, livelloDb: -25 });
     assert.deepEqual(t.stato, { tipo: 'registrazione', durataMs: 1_250, inPausa: false, fermando: false, livello: 0.5 });
+  });
+
+  it('la lettura arrivata prima che il registratore parta (non registra, durata 0) non è una pausa (difetto del 23/10/2026)', () => {
+    // Sequenza vera: "avvia", poi la lettura periodica con lo stato precedente a record() (isRecording false, 0 ms),
+    // poi le letture della registrazione. Prima della correzione il secondo passo mostrava "In pausa" per un istante.
+    const { stato, effetti } = esegui(pronto, [
+      { tipo: 'avvia' },
+      { tipo: 'avanzamento', durataMs: 0, registrando: false, livelloDb: null },
+      { tipo: 'avanzamento', durataMs: 65, registrando: true, livelloDb: -30 },
+    ]);
+    assert.deepEqual(effetti[1], []);
+    assert.equal(stato.tipo === 'registrazione' && stato.inPausa, false);
+    const dopoLetturaVecchia = esegui(pronto, [{ tipo: 'avvia' }, { tipo: 'avanzamento', durataMs: 0, registrando: false }]).stato;
+    assert.deepEqual(dopoLetturaVecchia, { tipo: 'registrazione', durataMs: 0, inPausa: false, fermando: false, livello: 0 });
+    // Una pausa vera (chiamata) con il tempo già avanzato si vede ancora.
+    const inPausa = esegui(pronto, [{ tipo: 'avvia' }, { tipo: 'avanzamento', durataMs: 65, registrando: true }, { tipo: 'avanzamento', durataMs: 65, registrando: false }]).stato;
+    assert.equal(inPausa.tipo === 'registrazione' && inPausa.inPausa, true);
+    // Messa in pausa dall'app (secondo piano) prima di qualunque avanzamento: la lettura a 0 ms non la annulla.
+    const pausaSubito = esegui(pronto, [{ tipo: 'avvia' }, { tipo: 'pausa' }, { tipo: 'avanzamento', durataMs: 0, registrando: false }]).stato;
+    assert.equal(pausaSubito.tipo === 'registrazione' && pausaSubito.inPausa, true);
   });
 
   it('se il registratore non parte si torna a Pronto con l’avviso', () => {
@@ -127,6 +147,16 @@ describe('flusso: registrazione', () => {
     assert.equal(uscitaDaConfermare({ tipo: 'trascrizione', audio: AUDIO }), false);
     assert.equal(uscitaDaConfermare({ tipo: 'racconto', ...TESTO }), false);
     assert.equal(uscitaDaConfermare(pronto), false);
+  });
+
+  it('il gesto indietro di iOS è disattivato solo mentre si registra, sulla 5.2 e durante la compilazione (difetto del 23/10/2026)', () => {
+    assert.equal(gestoIndietroDisattivato({ tipo: 'registrazione', durataMs: 1, inPausa: false, fermando: false, livello: 0 }), true);
+    assert.equal(gestoIndietroDisattivato({ tipo: 'registrazione', durataMs: 1, inPausa: true, fermando: false, livello: 0 }), true);
+    assert.equal(gestoIndietroDisattivato({ tipo: 'terminata', audio: AUDIO }), true);
+    assert.equal(gestoIndietroDisattivato({ tipo: 'compilazione', racconto: TESTO }), true);
+    for (const s of [pronto, { tipo: 'avvio' }, { tipo: 'permesso', inRichiesta: false }, { tipo: 'trascrizione', audio: AUDIO }, { tipo: 'racconto', ...TESTO }, { tipo: 'senzaConnessione', audio: AUDIO, inRiprova: false }, { tipo: 'errore', audio: null, errore: errore('definitivo') }] satisfies StatoRacconta[]) {
+      assert.equal(gestoIndietroDisattivato(s), false, s.tipo);
+    }
   });
 });
 

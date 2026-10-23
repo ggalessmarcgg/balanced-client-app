@@ -1,6 +1,7 @@
-import { Redirect, useRouter } from 'expo-router';
+import { Redirect, Stack, useRouter } from 'expo-router';
 import { useCallback, useEffect } from 'react';
 
+import { gestoIndietroDisattivato } from '@/core/racconta/flusso';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useRacconta } from '@/servizi/useRacconta';
 import { SchermataRacconta } from '@/ui/schermate/SchermataRacconta';
@@ -26,5 +27,12 @@ function Racconta({ clientId }: { clientId: string }) {
     if (compilato) router.replace('/racconta-riepilogo');
   }, [compilato, router]);
 
-  return <SchermataRacconta stato={stato} azioni={azioni} tutorial={tutorial} onIndietro={onIndietro} onScrivi={onIndietro} onCreaDiario={azioni.creaDiario} />;
+  return (
+    <>
+      {/* Il gesto di scorrimento indietro di iOS non si può annullare una volta partito: mentre si registra, sulla 5.2 e
+          durante la compilazione resta solo la freccia (che mostra l'avviso prima di uscire); negli altri stati il gesto è attivo. */}
+      <Stack.Screen options={{ gestureEnabled: !gestoIndietroDisattivato(stato) }} />
+      <SchermataRacconta stato={stato} azioni={azioni} tutorial={tutorial} onIndietro={onIndietro} onScrivi={onIndietro} onCreaDiario={azioni.creaDiario} />
+    </>
+  );
 }

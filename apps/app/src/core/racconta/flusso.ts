@@ -152,6 +152,10 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
 
     case 'avanzamento': {
       if (stato.tipo !== 'registrazione' || stato.fermando) return resta(stato);
+      // Il registratore sta ancora partendo (prepareToRecordAsync → record): una lettura "non sta registrando" prima che
+      // il tempo sia mai avanzato non è una pausa, è lo stato precedente all'avvio arrivato in ritardo (difetto del
+      // 23/10/2026: "In pausa" per un istante sopra il livello della voce). Lo stato resta com'è.
+      if (!evento.registrando && evento.durataMs === 0 && stato.durataMs === 0) return resta(stato);
       const durataMs = Math.max(stato.durataMs, evento.durataMs);
       const livello = evento.registrando ? livelloDaDecibel(evento.livelloDb) : 0;
       // Allo scadere dei 3 minuti si ferma da sola (contratto §1.2).
@@ -267,6 +271,16 @@ export function raccontoVuoto(testo: string): boolean {
 /** Vero se, uscendo dalla schermata, c'è una registrazione da scartare (in corso o terminata e non inviata): avviso di sistema prima di uscire. */
 export function uscitaDaConfermare(stato: StatoRacconta): boolean {
   return stato.tipo === 'registrazione' || stato.tipo === 'terminata';
+}
+
+/**
+ * Vero se il gesto di scorrimento indietro di iOS va disattivato: durante la registrazione e sulla 5.2 (uscita da
+ * confermare) e durante la compilazione (uscita bloccata). Su iOS il gesto interattivo non si può annullare dopo che è
+ * partito: la schermata uscirebbe e l'avviso comparirebbe solo dopo (difetto del 23/10/2026). Con la freccia l'avviso
+ * compare prima di uscire; il tasto indietro di Android resta com'è (avviso). Negli altri stati il gesto resta attivo.
+ */
+export function gestoIndietroDisattivato(stato: StatoRacconta): boolean {
+  return uscitaDaConfermare(stato) || uscitaBloccata(stato);
 }
 
 /** Giorno del diario a cui lo stato si riferisce (null per gli stati senza audio né racconto). */

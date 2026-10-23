@@ -449,11 +449,17 @@ npx expo install --fix                   # riallinea versioni alla SDK
   trascrizione parte solo dal pulsante "Da inviare" (penna, decisione del 23/10/2026). Uscire con una registrazione in
   corso o terminata e non inviata chiede conferma con l'`Alert` di sistema ("Vuoi interrompere la registrazione?");
   solo "Interrompi" scarta il file. **expo-router 58 non emette più `beforeRemove`** (react-navigation incorporato):
-  per bloccare l'uscita si usa solo `usePreventRemove` di `expo-router`, che copre freccia (`router.back()`), gesto
-  di iOS e tasto indietro di Android (bug del 23/10/2026). Allo smontaggio il registratore si ferma sempre e l'evento
+  per bloccare l'uscita si usa solo `usePreventRemove` di `expo-router`, che copre freccia (`router.back()`) e tasto
+  indietro di Android (bug del 23/10/2026). **Il gesto di scorrimento indietro di iOS** non si può annullare una volta
+  partito (la schermata usciva e l'avviso compariva dopo): la rotta lo disattiva con `Stack.Screen gestureEnabled`
+  mentre si registra, sulla 5.2 e durante la compilazione (`gestoIndietroDisattivato` in `flusso.ts`); negli altri
+  stati resta attivo. Una lettura del registratore "non sta registrando" a durata 0 è il registratore che sta ancora
+  partendo, non una pausa (prima mostrava "In pausa" per un istante). Allo smontaggio il registratore si ferma sempre e l'evento
   `uscita` riporta all'avvio una registrazione rimasta senza registratore (`ripartiDallAvvio` all'apertura). Livello voce: il livello reale del microfono (metering) ammorbidito con Reanimated
   e un'onda per barretta calcolata sul thread dell'interfaccia (`altezzaBarretta`, worklet); ferme con "Riduci movimento".
-  I pallini dei caricamenti (`Pulsante` stato `caricamento`) saltellano come nel funnel (1,2 s, ritardi 0,15 s).
+  I pallini dei caricamenti (`Pulsante` stato `caricamento`) saltellano come nel funnel (1,2 s, ritardi 0,15 s): un solo
+  ciclo nativo (una fase 0–1 e tre interpolazioni sfalsate), mai tre cicli separati con `Animated.delay`, perché lo
+  sfalsamento dipenderebbe dai timer del thread JS.
 - Trascrizione su richiesta (`POST /v1/diario-vocale/trascrivi`, byte del file, `X-Diary-Date`, `X-Audio-Duration-Ms`
   mai oltre 180 000, `X-Request-Id`), schermata 7.1 (`756:7718`); l'audio si cancella subito dopo un testo ricevuto e il
   testo va nella cartella documenti (`balanced.racconta.testo.<client_id>`) fino a fine giornata o alla creazione del
@@ -481,7 +487,12 @@ npx expo install --fix                   # riallinea versioni alla SDK
   bozza salvata all'uscita e in secondo piano), "Invia alla nutrizionista" = `condividiOggi` (`src/servizi/condivisione.ts`,
   la stessa di Oggi), conferma ed errori di salvataggio mostrati in Oggi (`mostraNotificaInOggi`). Tutorial · 6
   (`758:7773`) al primo arrivo sul riepilogo, scorso in fondo (`Pagina scorriInFondoAllAvvio` + `onScorsoInFondo`), punto
-  `riepilogo` della stessa chiave dei tutorial. Rotta `app/racconta-riepilogo.tsx`.
+  `riepilogo` della stessa chiave dei tutorial. Rotta `app/racconta-riepilogo.tsx`. **Tutorial** (`src/ui/Tutorial.tsx`):
+  compare solo se l'elemento è misurato e sta per intero nella finestra (`src/core/tutorial/riquadro.ts`), un tocco sul
+  velo lo chiude come "Ho capito". Un elemento dentro il contenuto scorrevole si misura tramite la `Pagina`
+  (`collegaMisura`: posizione nel contenuto + ScrollView nella finestra − scorrimento dagli eventi), perché dopo uno
+  `scrollToEnd` programmato `measureInWindow` resta alla posizione di prima: l'evento di scorrimento lo consuma il
+  worklet di Reanimated e l'albero di Fabric non riceve il nuovo spostamento (difetto del 23/10/2026, velo senza fumetto).
 - Pagina di sviluppo: `/sviluppo/stati?stato=racconta-2-permesso|racconta-3-microfono-disattivato|racconta-4-pronto|racconta-5-registrazione|racconta-5-registrazione-animata|racconta-5-pausa|racconta-5.2-terminata|racconta-tutorial-3-pronto|racconta-tutorial-4-trascrizione|racconta-tutorial-5-crea-diario|racconta-6-racconto|racconta-6-tastiera|racconta-7-trascrizione|racconta-10-senza-connessione|racconta-11-non-ho-capito|racconta-12-errore|racconta-7-preparando|racconta-12-elaborazione|racconta-8-riepilogo|racconta-8-riepilogo-compilato|racconta-8-riepilogo-riposo|racconta-8-riepilogo-vuoto|racconta-8-riepilogo-tastiera|racconta-tutorial-6-invio|…`
   (registrazione finta con timer e livello voce); esiti dei confronti in `~/Desktop/censimenti-app/step10-confronti/lotto1/` e `lotto2/`.
 

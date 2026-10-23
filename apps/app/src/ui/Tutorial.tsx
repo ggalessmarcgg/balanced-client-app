@@ -1,33 +1,60 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { StyleSheet, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { riquadroNellaFinestra, stessoRiquadro, type Riquadro } from '@/core/tutorial/riquadro';
 import { LARGHEZZA_SUGGERIMENTO, Suggerimento } from '@/ui/Suggerimento';
 import { colori, opacita, spazio } from '@/ui/theme';
 
 /** Posizione nella finestra dell'elemento da evidenziare. */
-export type RiquadroTutorial = { x: number; y: number; larghezza: number; altezza: number };
+export type RiquadroTutorial = Riquadro;
+
+type Vista = ComponentRef<typeof View>;
+
+/**
+ * Misura nella finestra di un elemento dentro il contenuto scorrevole di una Pagina, fornita dalla Pagina stessa
+ * (`null` se non si riesce). Serve perché dopo uno scorrimento programmato `measureInWindow` può restare alla posizione
+ * di prima dello scorrimento: l'evento di scorrimento lo consuma il worklet di Reanimated sul thread dell'interfaccia e
+ * l'albero di Fabric non riceve il nuovo spostamento (difetto del 23/10/2026, riepilogo di Racconta).
+ */
+export type MisuraNellaFinestra = (vista: Vista, esito: (riquadro: Riquadro | null) => void) => void;
+/** Collegamento tra l'hook (nella schermata) e la Pagina, che gli dà la sua misura finché è montata (poi null). */
+export type CollegaMisura = (misura: MisuraNellaFinestra | null) => void;
 
 /**
  * Misura l'elemento da evidenziare: `ref` e `onLayout` vanno sul contenitore dell'elemento nella pagina; `riquadro`
- * è la sua posizione nella finestra (null finché non è misurato o se il tutorial non è attivo).
+ * è la sua posizione nella finestra, null finché non è misurato, se non sta per intero nello schermo o se il tutorial
+ * non è attivo (in tutti questi casi il tutorial non compare). Se l'elemento sta nel contenuto scorrevole della Pagina,
+ * la schermata passa `collegaMisura` alla Pagina e la misura passa da lei (vedi `MisuraNellaFinestra`); altrimenti
+ * (elemento nel piede) si usa `measureInWindow`.
  */
-export function useRiquadroTutorial(attivo: boolean): { ref: (v: ComponentRef<typeof View> | null) => void; onLayout: () => void; riquadro: RiquadroTutorial | null } {
-  const vista = useRef<ComponentRef<typeof View> | null>(null);
+export function useRiquadroTutorial(attivo: boolean): { ref: (v: Vista | null) => void; onLayout: () => void; riquadro: RiquadroTutorial | null; collegaMisura: CollegaMisura } {
+  const { width: larghezzaFinestra, height: altezzaFinestra } = useWindowDimensions();
+  const misuratore = useRef<MisuraNellaFinestra | null>(null);
+  const vista = useRef<Vista | null>(null);
   const [riquadro, setRiquadro] = useState<RiquadroTutorial | null>(null);
   const misura = useCallback(() => {
     if (!attivo) return;
-    vista.current?.measureInWindow((x, y, larghezza, altezza) => {
-      if (larghezza > 0 && altezza > 0) setRiquadro((r) => (r && r.x === x && r.y === y && r.larghezza === larghezza && r.altezza === altezza ? r : { x, y, larghezza, altezza }));
-    });
-  }, [attivo]);
+    const v = vista.current;
+    if (!v) return;
+    const esito = (r: Riquadro | null) => {
+      const valido = r && riquadroNellaFinestra(r, { larghezza: larghezzaFinestra, altezza: altezzaFinestra }) ? r : null;
+      setRiquadro((prec) => (stessoRiquadro(prec, valido) ? prec : valido));
+    };
+    const dallaPagina = misuratore.current;
+    if (dallaPagina) dallaPagina(v, esito);
+    else v.measureInWindow((x, y, larghezza, altezza) => esito({ x, y, larghezza, altezza }));
+  }, [attivo, larghezzaFinestra, altezzaFinestra]);
   useEffect(() => {
     misura();
   }, [misura]);
-  const ref = useCallback((v: ComponentRef<typeof View> | null) => {
+  const ref = useCallback((v: Vista | null) => {
     vista.current = v;
   }, []);
+  const collegaMisura = useCallback<CollegaMisura>((m) => {
+    misuratore.current = m;
+  }, []);
   // Da inattivo la misura non vale (l'elemento può essere cambiato): si rifà alla prossima attivazione.
-  return { ref, onLayout: misura, riquadro: attivo ? riquadro : null };
+  return { ref, onLayout: misura, riquadro: attivo ? riquadro : null, collegaMisura };
 }
 
 export type TutorialProps = {
@@ -36,6 +63,7 @@ export type TutorialProps = {
   /** Copia dell'elemento evidenziato, resa sopra il velo nella stessa posizione (non toccabile). */
   elemento: ReactNode;
   testo: string;
+  /** "Ho capito", e anche un tocco sul velo: il tutorial si chiude e non ricompare. */
   onHoCapito: () => void;
 };
 
@@ -44,7 +72,8 @@ const DISTANZA = spazio[8];
 
 /**
  * Tutorial a schermo (sezione Figma 1.1, schema delle schermate Tutorial): velo testo/primario al 40 %, l'elemento
- * evidenziato sopra il velo nella sua posizione e il Suggerimento con la punta verso di lui; si chiude solo con "Ho capito".
+ * evidenziato sopra il velo nella sua posizione e il Suggerimento con la punta verso di lui; si chiude con "Ho capito"
+ * e, per sicurezza, con un tocco sul velo (così non può mai bloccare la schermata).
  */
 export function Tutorial({ riquadro, elemento, testo, onHoCapito }: TutorialProps) {
   const { width: larghezzaFinestra } = useWindowDimensions();
@@ -53,7 +82,7 @@ export function Tutorial({ riquadro, elemento, testo, onHoCapito }: TutorialProp
   const sinistra = Math.round((larghezzaFinestra - LARGHEZZA_SUGGERIMENTO) / 2);
   return (
     <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
-      <View style={[StyleSheet.absoluteFill, stili.velo]} accessible={false} />
+      <Pressable style={[StyleSheet.absoluteFill, stili.velo]} onPress={onHoCapito} accessible={false} />
       <View style={{ position: 'absolute', left: riquadro.x, top: riquadro.y, width: riquadro.larghezza, height: riquadro.altezza }} pointerEvents="none" accessible={false} importantForAccessibility="no-hide-descendants">
         {elemento}
       </View>

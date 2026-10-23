@@ -42,6 +42,7 @@ const nulla = () => {};
  * (padding verticale 32, nessun gap); contenuto 16 sopra, 32 sotto, margini 20.
  */
 export function SchermataRiepilogo({ diario, inviando, tutorial, onAggiorna, onCondividi, onChiudi, onHoCapito, notifica, commentoAFuoco = false, scorriInFondoAllAvvio = false, sovrapposti }: SchermataRiepilogoProps) {
+  // "Invia alla nutrizionista" sta nel contenuto scorrevole: la misura passa dalla Pagina (vedi MisuraNellaFinestra).
   const misura = useRiquadroTutorial(tutorial);
   const { chiave: chiaveNotifica, ...propsNotifica } = notifica ?? { chiave: undefined, testo: '', tipo: 'conferma' as const };
   return (
@@ -49,6 +50,7 @@ export function SchermataRiepilogo({ diario, inviando, tutorial, onAggiorna, onC
       // Con il tutorial la pagina parte in fondo, dove sta "Invia alla nutrizionista", e lo rimisura dopo lo scorrimento.
       scorriInFondoAllAvvio={tutorial || scorriInFondoAllAvvio}
       onScorsoInFondo={tutorial ? misura.onLayout : undefined}
+      collegaMisura={misura.collegaMisura}
       sovrapposti={
         <>
           {tutorial && <Tutorial riquadro={misura.riquadro} elemento={<Pulsante etichetta="Invia alla nutrizionista" />} testo={TESTI_TUTORIAL.riepilogo} onHoCapito={onHoCapito} />}

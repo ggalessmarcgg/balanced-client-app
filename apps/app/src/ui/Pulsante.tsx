@@ -77,44 +77,54 @@ export function Pulsante({ etichetta, livello = 'primario', stato = 'normale', o
 
 // Pallini del caricamento: a saltello sfalsato come nel funnel (onboarding-v2, loading.css: 1,2 s ease-in-out,
 // picco al 30 % del ciclo, ritardi di 0,15 s e 0,3 s; lì −8 px su pallini da 12, qui in proporzione −5 su 8).
-// Con "Riduci movimento" restano fermi.
+// Un solo motore: una fase 0–1 che gira in un ciclo nativo (Animated.loop di un solo timing, iterazioni native) e tre
+// interpolazioni sfalsate di 150 ms. Con tre cicli separati (delay + timing in sequenza, difetto del 23/10/2026) ogni
+// pallino ripartiva dal thread JS a ogni passo e i ritardi dipendevano dai timer: bastava un ritardo del JS all'avvio
+// perché il secondo e il terzo partissero insieme e restassero sincronizzati per sempre. Con "Riduci movimento" fermi.
 const SALTELLO = { durataMs: 1200, ritardoMs: 150, altezza: -5, picco: 0.3, fine: 0.6 };
+/** Punti campionati per ciascun tratto (salita e discesa) della curva ease-in-out. */
+const PASSI_CURVA = 6;
+
+/** Fotogrammi del pallino i-esimo sulla fase del ciclo (0–1): fermo, su con ease-in-out fino al picco, giù, fermo. */
+function fotogrammi(indice: number): { inputRange: number[]; outputRange: number[] } {
+  const inizio = (indice * SALTELLO.ritardoMs) / SALTELLO.durataMs;
+  const curva = Easing.inOut(Easing.ease);
+  const inputRange = [0];
+  const outputRange = [0];
+  if (inizio > 0) {
+    inputRange.push(inizio);
+    outputRange.push(0);
+  }
+  for (let k = 1; k <= PASSI_CURVA; k++) {
+    inputRange.push(inizio + SALTELLO.picco * (k / PASSI_CURVA));
+    outputRange.push(SALTELLO.altezza * curva(k / PASSI_CURVA));
+  }
+  for (let k = 1; k <= PASSI_CURVA; k++) {
+    inputRange.push(inizio + SALTELLO.picco + (SALTELLO.fine - SALTELLO.picco) * (k / PASSI_CURVA));
+    outputRange.push(SALTELLO.altezza * (1 - curva(k / PASSI_CURVA)));
+  }
+  inputRange.push(1);
+  outputRange.push(0);
+  return { inputRange, outputRange };
+}
+const CURVE_PALLINI = [0, 1, 2].map(fotogrammi);
 
 function PuntiniCaricamento({ colore }: { colore: string }) {
   const riduci = useRiduciMovimento();
-  const [salti] = useState(() => [new Animated.Value(0), new Animated.Value(0), new Animated.Value(0)]);
+  const [fase] = useState(() => new Animated.Value(0));
   useEffect(() => {
-    if (riduci) {
-      for (const s of salti) {
-        s.stopAnimation();
-        s.setValue(0);
-      }
-      return;
-    }
-    // Un ciclo: fermo → su (fino al 30 %) → giù (fino al 60 %) → fermo; ogni pallino parte 150 ms dopo il precedente.
-    const su = SALTELLO.durataMs * SALTELLO.picco;
-    const giu = SALTELLO.durataMs * (SALTELLO.fine - SALTELLO.picco);
-    const pausa = SALTELLO.durataMs * (1 - SALTELLO.fine);
-    const cicli = salti.map((s, i) =>
-      Animated.loop(
-        Animated.sequence([
-          Animated.delay(i * SALTELLO.ritardoMs),
-          Animated.timing(s, { toValue: 1, duration: su, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.timing(s, { toValue: 0, duration: giu, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-          Animated.delay(pausa - i * SALTELLO.ritardoMs),
-        ]),
-      ),
-    );
-    for (const c of cicli) c.start();
-    return () => {
-      for (const c of cicli) c.stop();
-    };
-  }, [riduci, salti]);
+    fase.stopAnimation();
+    fase.setValue(0);
+    if (riduci) return;
+    const ciclo = Animated.loop(Animated.timing(fase, { toValue: 1, duration: SALTELLO.durataMs, easing: Easing.linear, useNativeDriver: true }));
+    ciclo.start();
+    return () => ciclo.stop();
+  }, [riduci, fase]);
   const opacitaPuntini = [1, opacita.caricamentoPuntoMedio, opacita.caricamentoPuntoChiaro];
   return (
     <View style={stili.puntini} accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-      {salti.map((s, i) => (
-        <Animated.View key={i} style={[stili.puntino, { backgroundColor: colore, opacity: opacitaPuntini[i], transform: [{ translateY: s.interpolate({ inputRange: [0, 1], outputRange: [0, SALTELLO.altezza] }) }] }]} />
+      {CURVE_PALLINI.map((curva, i) => (
+        <Animated.View key={i} style={[stili.puntino, { backgroundColor: colore, opacity: opacitaPuntini[i], transform: [{ translateY: fase.interpolate(curva) }] }]} />
       ))}
     </View>
   );
