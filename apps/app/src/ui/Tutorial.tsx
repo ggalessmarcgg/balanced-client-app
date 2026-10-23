@@ -47,6 +47,18 @@ export function useRiquadroTutorial(attivo: boolean): { ref: (v: Vista | null) =
   useEffect(() => {
     misura();
   }, [misura]);
+  // Finché il tutorial è attivo e l'elemento non è ancora misurabile (scorrimento programmato non ancora applicato,
+  // transizione di navigazione in corso, layout in arrivo) si riprova a intervalli per qualche secondo: senza, un solo
+  // tentativo mancato lasciava il tutorial nascosto per sempre (difetto del 23/10/2026 al primo arrivo sul riepilogo).
+  useEffect(() => {
+    if (!attivo || riquadro) return;
+    const timer = setInterval(misura, INTERVALLO_RIMISURA_MS);
+    const fine = setTimeout(() => clearInterval(timer), DURATA_RIMISURA_MS);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(fine);
+    };
+  }, [attivo, riquadro, misura]);
   const ref = useCallback((v: Vista | null) => {
     vista.current = v;
   }, []);
@@ -66,6 +78,10 @@ export type TutorialProps = {
   /** "Ho capito", e anche un tocco sul velo: il tutorial si chiude e non ricompare. */
   onHoCapito: () => void;
 };
+
+/** Nuovi tentativi di misura dell'elemento da evidenziare: ogni 250 ms per 4 s. */
+const INTERVALLO_RIMISURA_MS = 250;
+const DURATA_RIMISURA_MS = 4000;
 
 /** Distanza tra la punta del suggerimento e l'elemento evidenziato (Figma Tutorial · 3: 7 → spazio 8). */
 const DISTANZA = spazio[8];

@@ -123,7 +123,16 @@ comuni dei campi in `src/ui/tastiera.ts`.
 
 - **Il campo a fuoco sta subito sopra la tastiera** con un piccolo margine
   (`MARGINE_SOPRA_TASTIERA`, 16): la pagina o il pannello scorrono da soli; mentre
-  si scrive e il campo si allunga, lo scorrimento segue il cursore.
+  si scrive e il campo si allunga, lo scorrimento segue il cursore. **Campi lunghi**
+  (decisione del 23/10/2026): se il campo è più alto dello spazio libero sopra la
+  tastiera, a stare sopra la tastiera è la **riga del cursore**, seguita mentre si scrive
+  o si tocca in un altro punto del testo (anche verso l'alto se la riga finisce sotto la
+  barra di stato); con i campi brevi resta la regola del campo intero. Posizione del
+  campo e del cursore dal thread dell'interfaccia (`useReanimatedFocusedInput`,
+  `useFocusedInputHandler` di keyboard-controller, regole pure in
+  `src/core/tastiera/cursore.ts`), limitate allo scorrimento che contiene il campo
+  (tag dello ScrollView genitore o campo registrato nel contesto); scorrimenti animati,
+  mai a scatti.
 - **Lo scorrimento non chiude la tastiera** (`keyboardDismissMode="none"`).
 - **La tastiera si chiude solo** toccando fuori dai campi
   (`keyboardShouldPersistTaps="handled"`) oppure con "Avanti", "Chiudi", "Invia" o il
@@ -498,7 +507,9 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (`758:7773`) al primo arrivo sul riepilogo, scorso in fondo (`Pagina scorriInFondoAllAvvio` + `onScorsoInFondo`), punto
   `riepilogo` della stessa chiave dei tutorial. Rotta `app/racconta-riepilogo.tsx`. **Tutorial** (`src/ui/Tutorial.tsx`):
   compare solo se l'elemento è misurato e sta per intero nella finestra (`src/core/tutorial/riquadro.ts`), un tocco sul
-  velo lo chiude come "Ho capito". Un elemento dentro il contenuto scorrevole si misura tramite la `Pagina`
+  velo lo chiude come "Ho capito"; finché l'elemento non è misurabile si riprova ogni 250 ms per 4 s e la `Pagina`
+  ripete lo scorrimento in fondo (subito, dopo 400 ms e comunque entro 500 ms anche senza misura del contenuto), perché
+  un solo tentativo mancato lasciava il tutorial nascosto (primo arrivo sul riepilogo, 23/10/2026). Un elemento dentro il contenuto scorrevole si misura tramite la `Pagina`
   (`collegaMisura`: posizione nel contenuto + ScrollView nella finestra − scorrimento dagli eventi), perché dopo uno
   `scrollToEnd` programmato `measureInWindow` resta alla posizione di prima: l'evento di scorrimento lo consuma il
   worklet di Reanimated e l'albero di Fabric non riceve il nuovo spostamento (difetto del 23/10/2026, velo senza fumetto).

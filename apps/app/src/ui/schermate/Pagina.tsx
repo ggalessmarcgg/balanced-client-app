@@ -40,6 +40,25 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
   const [altezzaPiede, setAltezzaPiede] = useState(0);
   const { riferimento: scorrimento, posizione, onScroll: segnaPosizione, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(altezzaPiede + insets.bottom);
   const nelPortale = useSovrappostiNelPortale(sovrapposti);
+  // Scorre in fondo (idempotente) e, poco dopo, fa rimisurare l'elemento da evidenziare. Si ripete una seconda volta
+  // perché il primo scorrimento può arrivare prima che il contenuto sia completo (difetto del 23/10/2026).
+  const scorriInFondo = useCallback(() => {
+    setScorsoInFondo(true);
+    for (const ritardo of RITARDI_SCORRIMENTO_MS) {
+      setTimeout(() => {
+        scorrimento.current?.scrollToEnd({ animated: false });
+        if (onScorsoInFondo) setTimeout(onScorsoInFondo, RITARDO_MISURA_MS);
+      }, ritardo);
+    }
+  }, [scorrimento, onScorsoInFondo]);
+  useEffect(() => {
+    if (!scorriInFondoAllAvvio || !scorrevole) return;
+    // Se la misura del contenuto non arriva (o arriva tardi), si scorre comunque dopo un breve ritardo.
+    const timer = setTimeout(() => {
+      if (!scorsoInFondo) scorriInFondo();
+    }, RITARDO_SCORRIMENTO_SENZA_MISURA_MS);
+    return () => clearTimeout(timer);
+  }, [scorriInFondoAllAvvio, scorrevole, scorsoInFondo, scorriInFondo]);
   // Misura nella finestra di un elemento del contenuto (tutorial) senza dipendere dallo stato dello scorrimento
   // nell'albero di Fabric, che dopo uno scorrimento programmato può restare indietro: posizione nel contenuto + posizione
   // dello ScrollView nella finestra − spostamento letto dagli eventi di scorrimento (src/core/tutorial/riquadro.ts).
@@ -77,17 +96,7 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
             contentContainerStyle={stili.contenuto}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="none"
-            onContentSizeChange={
-              scorriInFondoAllAvvio && !scorsoInFondo
-                ? () => {
-                    scorrimento.current?.scrollToEnd({ animated: false });
-                    setScorsoInFondo(true);
-                    // Lo scorrimento nativo si applica dopo qualche fotogramma: si misura dopo un breve ritardo (con
-                    // misuraNellaFinestra, che legge lo spostamento dagli eventi di scorrimento).
-                    if (onScorsoInFondo) setTimeout(onScorsoInFondo, RITARDO_MISURA_MS);
-                  }
-                : undefined
-            }
+            onContentSizeChange={scorriInFondoAllAvvio && !scorsoInFondo ? scorriInFondo : undefined}
           >
             <FornitoreCampi value={campi}>{children}</FornitoreCampi>
             <Reanimated.View style={spazioTastiera} />
@@ -102,7 +111,13 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
   );
 }
 
+// Lo scorrimento nativo si applica dopo qualche fotogramma: si misura dopo un breve ritardo (con misuraNellaFinestra,
+// che legge lo spostamento dagli eventi di scorrimento).
 const RITARDO_MISURA_MS = 150;
+/** Due scorrimenti in fondo: subito e dopo che il contenuto ha avuto il tempo di completarsi. */
+const RITARDI_SCORRIMENTO_MS = [0, 400];
+/** Senza una misura del contenuto entro questo tempo si scorre comunque. */
+const RITARDO_SCORRIMENTO_SENZA_MISURA_MS = 500;
 
 const stili = StyleSheet.create({
   pagina: { flex: 1 },
