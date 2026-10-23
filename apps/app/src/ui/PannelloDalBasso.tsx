@@ -1,10 +1,23 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Animated, BackHandler, PanResponder, Pressable, StyleSheet, View, useWindowDimensions, type PanResponderCallbacks } from 'react-native';
-import Reanimated from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Animated,
+  BackHandler,
+  PanResponder,
+  Pressable,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+  type PanResponderCallbacks,
+} from "react-native";
+import Reanimated from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { colori, margine, opacita, raggio, spazio } from '@/ui/theme';
-import { FornitoreCampi, useScorrimentoConTastiera } from '@/ui/tastiera';
+import { colori, margine, opacita, raggio, spazio } from "@/ui/theme";
+import {
+  ChiudiCampiAlTocco,
+  FornitoreCampi,
+  useScorrimentoConTastiera,
+} from "@/ui/tastiera";
 
 export type PannelloDalBassoProps = {
   aperto: boolean;
@@ -42,7 +55,16 @@ const SOGLIA_INIZIO = 6;
  * con un gesto veloce) la maniglia o, quando il contenuto non scorre, il foglio intero; se espandibile, trascinando
  * verso l'alto si porta a schermo pieno e verso il basso si riduce prima di chiudersi.
  */
-export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espandibile = false, pieno = false, piede, distanzaPiede = spazio[20] }: PannelloDalBassoProps) {
+export function PannelloDalBasso({
+  aperto,
+  onChiudi,
+  children,
+  etichetta,
+  espandibile = false,
+  pieno = false,
+  piede,
+  distanzaPiede = spazio[20],
+}: PannelloDalBassoProps) {
   const { height: altezzaSchermo } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const altezzaMax = altezzaSchermo - insets.top - DISTANZA_DALL_ALTO;
@@ -57,7 +79,12 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
   const [altezzaPiede, setAltezzaPiede] = useState(0);
   const contenutoScorre = altezzaContenuto > altezzaArea + 1;
   // Sotto lo scorrimento c'è solo il piede (che include la sua area sicura); senza piede lo scorrimento arriva al bordo.
-  const { riferimento: scorrimentoInterno, onScroll: segnaPosizione, stileSpazio: spazioTastiera, contesto: campi } = useScorrimentoConTastiera(piede ? altezzaPiede : 0);
+  const {
+    riferimento: scorrimentoInterno,
+    onScroll: segnaPosizione,
+    stileSpazio: spazioTastiera,
+    contesto: campi,
+  } = useScorrimentoConTastiera(piede ? altezzaPiede : 0);
   // Il pannello resta montato durante l'animazione di chiusura: stato derivato in render dal cambio di `aperto`.
   const [apertoPrecedente, setApertoPrecedente] = useState(aperto);
   const [inChiusura, setInChiusura] = useState(false);
@@ -70,9 +97,17 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
   useEffect(() => {
     if (aperto) {
       trascinamento.setValue(0);
-      Animated.timing(scorrimento, { toValue: 0, duration: DURATA_MS, useNativeDriver: true }).start();
+      Animated.timing(scorrimento, {
+        toValue: 0,
+        duration: DURATA_MS,
+        useNativeDriver: true,
+      }).start();
     } else {
-      Animated.timing(scorrimento, { toValue: altezzaSchermo, duration: DURATA_MS, useNativeDriver: true }).start(() => {
+      Animated.timing(scorrimento, {
+        toValue: altezzaSchermo,
+        duration: DURATA_MS,
+        useNativeDriver: true,
+      }).start(() => {
         setInChiusura(false);
         setEspanso(pieno);
         estensione.setValue(pieno ? 1 : 0);
@@ -83,7 +118,7 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
   // Tasto indietro di Android: chiude il pannello.
   useEffect(() => {
     if (!aperto) return;
-    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       onChiudi();
       return true;
     });
@@ -97,14 +132,22 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
     setEspanso(pieno);
   }
   useEffect(() => {
-    Animated.timing(estensione, { toValue: pieno ? 1 : 0, duration: DURATA_MS, useNativeDriver: false }).start();
+    Animated.timing(estensione, {
+      toValue: pieno ? 1 : 0,
+      duration: DURATA_MS,
+      useNativeDriver: false,
+    }).start();
   }, [pieno, estensione]);
 
   const paddingInferiore = Math.max(insets.bottom, spazio[20]);
   // Il foglio è alto quanto il contenuto (più maniglia e piede, che include la sua area sicura) e mai oltre il massimo.
-  const altezzaFoglio = Math.min(altezzaMax, altezzaContenuto + spazio[12] + (piede ? altezzaPiede : paddingInferiore));
+  const altezzaFoglio = Math.min(
+    altezzaMax,
+    altezzaContenuto + spazio[12] + (piede ? altezzaPiede : paddingInferiore),
+  );
   const gesti = useMemo(() => {
-    const verticale = (dy: number, dx: number) => Math.abs(dy) > SOGLIA_INIZIO && Math.abs(dy) > Math.abs(dx) * 1.5;
+    const verticale = (dy: number, dx: number) =>
+      Math.abs(dy) > SOGLIA_INIZIO && Math.abs(dy) > Math.abs(dx) * 1.5;
     const comuni: PanResponderCallbacks = {
       onPanResponderTerminationRequest: () => false,
       onPanResponderMove: (_, g) => {
@@ -122,7 +165,10 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
           if (!espandibile || pieno) return;
           const apri = -g.dy > SOGLIA || g.vy < -VELOCITA;
           setEspanso(apri);
-          Animated.spring(estensione, { toValue: apri ? 1 : 0, useNativeDriver: false }).start();
+          Animated.spring(estensione, {
+            toValue: apri ? 1 : 0,
+            useNativeDriver: false,
+          }).start();
           return;
         }
         const chiudi = g.dy > SOGLIA || g.vy > VELOCITA;
@@ -130,63 +176,142 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
           // Da schermo pieno: prima si torna all'altezza del contenuto.
           setEspanso(false);
           Animated.parallel([
-            Animated.spring(trascinamento, { toValue: 0, useNativeDriver: true }),
-            Animated.timing(estensione, { toValue: 0, duration: DURATA_MS, useNativeDriver: false }),
+            Animated.spring(trascinamento, {
+              toValue: 0,
+              useNativeDriver: true,
+            }),
+            Animated.timing(estensione, {
+              toValue: 0,
+              duration: DURATA_MS,
+              useNativeDriver: false,
+            }),
           ]).start();
         } else if (chiudi) {
-          Animated.timing(trascinamento, { toValue: altezzaSchermo, duration: DURATA_MS, useNativeDriver: true }).start(onChiudi);
+          Animated.timing(trascinamento, {
+            toValue: altezzaSchermo,
+            duration: DURATA_MS,
+            useNativeDriver: true,
+          }).start(onChiudi);
         } else {
-          Animated.spring(trascinamento, { toValue: 0, useNativeDriver: true }).start();
+          Animated.spring(trascinamento, {
+            toValue: 0,
+            useNativeDriver: true,
+          }).start();
         }
       },
     };
     return {
       // Maniglia: prende il tocco fin dall'inizio (non ha figli da toccare), come il cursore della sazietà.
-      maniglia: PanResponder.create({ ...comuni, onStartShouldSetPanResponder: () => true, onMoveShouldSetPanResponder: () => true }),
+      maniglia: PanResponder.create({
+        ...comuni,
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+      }),
       // Foglio intero: solo quando il contenuto non deve scorrere (altrimenti il gesto verticale è dello scorrimento).
-      foglio: PanResponder.create({ ...comuni, onMoveShouldSetPanResponderCapture: (_, g) => !contenutoScorre && verticale(g.dy, g.dx) }),
+      foglio: PanResponder.create({
+        ...comuni,
+        onMoveShouldSetPanResponderCapture: (_, g) =>
+          !contenutoScorre && verticale(g.dy, g.dx),
+      }),
     };
-  }, [trascinamento, estensione, espanso, altezzaFoglio, onChiudi, altezzaSchermo, altezzaMax, espandibile, pieno, contenutoScorre]);
+  }, [
+    trascinamento,
+    estensione,
+    espanso,
+    altezzaFoglio,
+    onChiudi,
+    altezzaSchermo,
+    altezzaMax,
+    espandibile,
+    pieno,
+    contenutoScorre,
+  ]);
 
   if (!montato) return null;
-  const opacitaVelo = scorrimento.interpolate({ inputRange: [0, altezzaSchermo], outputRange: [1, 0] });
-  const altezzaMinima = estensione.interpolate({ inputRange: [0, 1], outputRange: [0, altezzaMax] });
+  const opacitaVelo = scorrimento.interpolate({
+    inputRange: [0, altezzaSchermo],
+    outputRange: [1, 0],
+  });
+  const altezzaMinima = estensione.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, altezzaMax],
+  });
   const riempie = pieno || espanso;
   return (
     <View style={stili.schermo}>
-      <Animated.View style={[StyleSheet.absoluteFill, { opacity: opacitaVelo }]}>
-        <Pressable style={stili.velo} onPress={onChiudi} accessibilityRole="button" accessibilityLabel="Chiudi" />
+      <Animated.View
+        style={[StyleSheet.absoluteFill, { opacity: opacitaVelo }]}
+      >
+        <Pressable
+          style={stili.velo}
+          onPress={onChiudi}
+          accessibilityRole="button"
+          accessibilityLabel="Chiudi"
+        />
       </Animated.View>
-      <Animated.View style={{ transform: [{ translateY: Animated.add(scorrimento, trascinamento) }] }} accessibilityViewIsModal accessibilityLabel={etichetta}>
-        <Animated.View style={[stili.foglio, { maxHeight: altezzaMax, minHeight: altezzaMinima }]} {...gesti.foglio.panHandlers}>
-          <View style={stili.areaManiglia} {...gesti.maniglia.panHandlers} accessible={false}>
+      <Animated.View
+        style={{
+          transform: [{ translateY: Animated.add(scorrimento, trascinamento) }],
+        }}
+        accessibilityViewIsModal
+        accessibilityLabel={etichetta}
+      >
+        <Animated.View
+          style={[
+            stili.foglio,
+            { maxHeight: altezzaMax, minHeight: altezzaMinima },
+          ]}
+          {...gesti.foglio.panHandlers}
+        >
+          <View
+            style={stili.areaManiglia}
+            {...gesti.maniglia.panHandlers}
+            accessible={false}
+          >
             <View style={stili.maniglia} />
           </View>
-          <Reanimated.ScrollView
-            ref={scorrimentoInterno}
-            onScroll={segnaPosizione}
-            scrollEventThrottle={16}
+          {/* Un tocco fuori dai campi, ovunque nel foglio (anche nello spazio vuoto sotto il contenuto e nel piede), chiude il campo a fuoco e la tastiera. */}
+          <ChiudiCampiAlTocco
             style={riempie ? stili.scorrimentoPieno : stili.scorrimento}
-            contentContainerStyle={[stili.contenitore, { paddingBottom: piede ? spazio[20] : paddingInferiore }]}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="none"
-            showsVerticalScrollIndicator={false}
-            scrollEnabled={contenutoScorre}
-            bounces={false}
-            onContentSizeChange={(_, h) => setAltezzaContenuto(h)}
-            onLayout={(e) => setAltezzaArea(e.nativeEvent.layout.height)}
           >
-            {/* Il gap sta su un contenitore interno: lo spazio per la tastiera (alto 0 da chiusa) non deve aggiungere un gap in fondo. */}
-            <View style={stili.interno}>
-              <FornitoreCampi value={campi}>{children}</FornitoreCampi>
-            </View>
-            <Reanimated.View style={spazioTastiera} />
-          </Reanimated.ScrollView>
-          {piede && (
-            <View style={[stili.piede, { paddingTop: distanzaPiede, paddingBottom: paddingInferiore }]} onLayout={(e) => setAltezzaPiede(e.nativeEvent.layout.height)}>
-              {piede}
-            </View>
-          )}
+            <Reanimated.ScrollView
+              ref={scorrimentoInterno}
+              onScroll={segnaPosizione}
+              scrollEventThrottle={16}
+              style={riempie ? stili.scorrimentoPieno : stili.scorrimento}
+              contentContainerStyle={[
+                stili.contenitore,
+                { paddingBottom: piede ? spazio[20] : paddingInferiore },
+              ]}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode="none"
+              showsVerticalScrollIndicator={false}
+              scrollEnabled={contenutoScorre}
+              bounces={false}
+              onContentSizeChange={(_, h) => setAltezzaContenuto(h)}
+              onLayout={(e) => setAltezzaArea(e.nativeEvent.layout.height)}
+            >
+              {/* Il gap sta su un contenitore interno: lo spazio per la tastiera (alto 0 da chiusa) non deve aggiungere un gap in fondo. */}
+              <View style={stili.interno}>
+                <FornitoreCampi value={campi}>{children}</FornitoreCampi>
+              </View>
+              <Reanimated.View style={spazioTastiera} />
+            </Reanimated.ScrollView>
+            {piede && (
+              <View
+                style={[
+                  stili.piede,
+                  {
+                    paddingTop: distanzaPiede,
+                    paddingBottom: paddingInferiore,
+                  },
+                ]}
+                onLayout={(e) => setAltezzaPiede(e.nativeEvent.layout.height)}
+              >
+                {piede}
+              </View>
+            )}
+          </ChiudiCampiAlTocco>
         </Animated.View>
       </Animated.View>
     </View>
@@ -194,10 +319,21 @@ export function PannelloDalBasso({ aperto, onChiudi, children, etichetta, espand
 }
 
 /** Il foglio del pannello (maniglia + contenuto), riusato dalla pagina dei componenti per l'anteprima statica. */
-export function Foglio({ children, maniglia }: { children: ReactNode; maniglia?: object }) {
+export function Foglio({
+  children,
+  maniglia,
+}: {
+  children: ReactNode;
+  maniglia?: object;
+}) {
   const insets = useSafeAreaInsets();
   return (
-    <View style={[stili.foglio, { paddingBottom: Math.max(insets.bottom, spazio[20]) }]}>
+    <View
+      style={[
+        stili.foglio,
+        { paddingBottom: Math.max(insets.bottom, spazio[20]) },
+      ]}
+    >
       <View style={stili.areaManiglia} {...maniglia} accessible={false}>
         <View style={stili.maniglia} />
       </View>
@@ -207,24 +343,50 @@ export function Foglio({ children, maniglia }: { children: ReactNode; maniglia?:
 }
 
 const stili = StyleSheet.create({
-  schermo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end', zIndex: 10, elevation: 10 },
-  velo: { flex: 1, backgroundColor: colori.testo.primario, opacity: opacita.velo },
+  schermo: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "flex-end",
+    zIndex: 10,
+    elevation: 10,
+  },
+  velo: {
+    flex: 1,
+    backgroundColor: colori.testo.primario,
+    opacity: opacita.velo,
+  },
   foglio: {
     backgroundColor: colori.sfondo.pagina,
     borderTopLeftRadius: raggio.card,
     borderTopRightRadius: raggio.card,
     paddingTop: spazio[12],
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   // Area della maniglia: alta quanto basta per essere afferrata (12 + 5 + 12); il contenuto parte 20 sotto la maniglia (Figma: titolo a 37).
-  areaManiglia: { alignItems: 'center', marginTop: -spazio[12], paddingVertical: spazio[12] },
-  maniglia: { width: MANIGLIA.larghezza, height: MANIGLIA.altezza, borderRadius: raggio.pieno, backgroundColor: colori.maniglia },
+  areaManiglia: {
+    alignItems: "center",
+    marginTop: -spazio[12],
+    paddingVertical: spazio[12],
+  },
+  maniglia: {
+    width: MANIGLIA.larghezza,
+    height: MANIGLIA.altezza,
+    borderRadius: raggio.pieno,
+    backgroundColor: colori.maniglia,
+  },
   // Lo scorrimento è alto quanto il contenuto e si restringe (flexShrink) quando il foglio tocca il massimo: così il
   // piede resta sempre visibile e scorre solo il contenuto (in React Native flexShrink è 0 se non dichiarato).
   scorrimento: { flexGrow: 0, flexShrink: 1 },
   scorrimentoPieno: { flex: 1 },
   contenitore: { paddingTop: spazio[8], paddingHorizontal: margine.pagina },
   interno: { gap: spazio[20] },
-  contenuto: { paddingTop: spazio[8], paddingHorizontal: margine.pagina, gap: spazio[20] },
+  contenuto: {
+    paddingTop: spazio[8],
+    paddingHorizontal: margine.pagina,
+    gap: spazio[20],
+  },
   piede: { paddingHorizontal: margine.pagina },
 });

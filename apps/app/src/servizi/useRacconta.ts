@@ -28,6 +28,16 @@ export const AVVISO_USCITA = {
   interrompi: 'Interrompi',
 } as const;
 
+/**
+ * Due fotogrammi di attesa prima di avviare il registratore: lo stato "registrazione" disattiva il gesto indietro
+ * (Stack.Screen gestureEnabled) e la modifica deve arrivare al navigatore nativo prima che l'avvio della sessione audio
+ * occupi il thread principale; altrimenti un trascinamento dal bordo subito dopo il tocco faceva uscire la schermata e
+ * l'avviso compariva dopo (corsa osservata il 23/10/2026, una volta su sedici prove).
+ */
+function dueFotogrammi(): Promise<void> {
+  return new Promise((risolvi) => requestAnimationFrame(() => requestAnimationFrame(() => risolvi())));
+}
+
 function opzioniRegistrazione(data: string): RecordingOptions {
   return {
     directory: 'document',
@@ -137,6 +147,8 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
           return p.granted;
         },
         avvia: async () => {
+          await dueFotogrammi();
+          if (smontata.current) throw new Error('schermata chiusa');
           await setAudioModeAsync({ allowsRecording: true, playsInSilentMode: true, interruptionMode: 'doNotMix' });
           await recorder.prepareToRecordAsync();
           if (smontata.current) throw new Error('schermata chiusa');

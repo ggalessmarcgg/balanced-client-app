@@ -5,11 +5,12 @@
 // (useKeyboardHandler.onStart, altezza finale nota) si calcola di quanto scorrere e a ogni fotogramma (onMove) si
 // scorre in proporzione all'avanzamento, sul thread dell'interfaccia (Reanimated). In fondo al contenuto uno spazio
 // alto quanto la parte di tastiera che copre lo scorrimento, così c'è sempre dove scorrere.
-import { createContext, useCallback, useContext, useMemo, useRef, type ComponentRef, type RefObject } from 'react';
-import { useWindowDimensions, type NativeScrollEvent, type NativeSyntheticEvent, type TextInputProps, type View, type ViewStyle } from 'react-native';
+import { createContext, useCallback, useContext, useMemo, useRef, type ComponentRef, type ReactNode, type RefObject } from 'react';
+import { Keyboard, TextInput, useWindowDimensions, View, type GestureResponderEvent, type NativeScrollEvent, type NativeSyntheticEvent, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
 import { useKeyboardHandler } from 'react-native-keyboard-controller';
 import Reanimated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
 
+import { toccoChiudeCampo } from '@/core/tastiera/tocco';
 import { colori, spazio } from '@/ui/theme';
 
 /** Distanza tra il bordo inferiore del campo e la tastiera. */
@@ -25,6 +26,25 @@ export const PROPRIETA_CAMPO: Pick<TextInputProps, 'keyboardAppearance' | 'selec
 
 /** Elemento nativo di una View (ha measureInWindow). */
 type Vista = ComponentRef<typeof View>;
+
+/**
+ * Un tocco su un punto non interattivo toglie il fuoco al campo e chiude la tastiera (regola in CLAUDE.md). Lo
+ * ScrollView di React Native lo fa da sé solo se ha visto la tastiera software aprirsi: con una tastiera fisica (o nel
+ * simulatore con la tastiera software spenta) il cursore restava nel campo (difetto del 23/10/2026). Qui la regola non
+ * dipende dalla tastiera: la vista diventa responder di un tocco iniziato fuori dal campo a fuoco (gli elementi
+ * interattivi e gli altri campi lo prendono prima) e al rilascio chiude il campo; uno scorrimento la interrompe e
+ * non chiude nulla.
+ */
+export function ChiudiCampiAlTocco({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+  const deveChiudere = useCallback((e: GestureResponderEvent) => toccoChiudeCampo(TextInput.State.currentlyFocusedInput(), e.target), []);
+  const chiudi = useCallback(() => Keyboard.dismiss(), []);
+  return (
+    <View style={style} onStartShouldSetResponder={deveChiudere} onResponderRelease={chiudi} onResponderTerminationRequest={sempre}>
+      {children}
+    </View>
+  );
+}
+const sempre = () => true;
 
 type ContestoCampi = {
   /** Il campo (il suo contenitore) ha preso il fuoco: da ora in poi si tiene sopra la tastiera. */

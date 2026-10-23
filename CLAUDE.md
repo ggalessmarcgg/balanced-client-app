@@ -127,7 +127,12 @@ comuni dei campi in `src/ui/tastiera.ts`.
 - **Lo scorrimento non chiude la tastiera** (`keyboardDismissMode="none"`).
 - **La tastiera si chiude solo** toccando fuori dai campi
   (`keyboardShouldPersistTaps="handled"`) oppure con "Avanti", "Chiudi", "Invia" o il
-  tasto Invio dove previsto. Nei moduli Invio passa al campo successivo
+  tasto Invio dove previsto. Il tocco fuori dai campi lo gestisce `ChiudiCampiAlTocco`
+  (`src/ui/tastiera.tsx`, intorno a tutta la `Pagina` e al foglio del `PannelloDalBasso`,
+  regola pura in `src/core/tastiera/tocco.ts`): un tocco su qualunque punto non interattivo
+  toglie il fuoco al campo e chiude la tastiera anche senza tastiera software (tastiera
+  fisica, simulatore con la tastiera spenta), dove lo ScrollView di React Native da solo non
+  lo farebbe (difetto del 23/10/2026: il cursore restava nel campo). Nei moduli Invio passa al campo successivo
   (`returnKeyType="next"`, `submitBehavior="submit"`, `inputRef`) e dall'ultimo campo
   esegue l'azione (nel Login da email a password, dalla password "Accedi").
 - **I piedi fissi non salgono sopra la tastiera**: i pulsanti in fondo a una schermata
@@ -453,7 +458,11 @@ npx expo install --fix                   # riallinea versioni alla SDK
   indietro di Android (bug del 23/10/2026). **Il gesto di scorrimento indietro di iOS** non si può annullare una volta
   partito (la schermata usciva e l'avviso compariva dopo): la rotta lo disattiva con `Stack.Screen gestureEnabled`
   mentre si registra, sulla 5.2 e durante la compilazione (`gestoIndietroDisattivato` in `flusso.ts`); negli altri
-  stati resta attivo. Una lettura del registratore "non sta registrando" a durata 0 è il registratore che sta ancora
+  stati resta attivo. Il livello giusto è questo (stack radice, `gestureEnabled` dello screen di react-native-screens,
+  che blocca sia il gesto dal bordo sia quello dal contenuto di iOS 26); il registratore parte però solo dopo due
+  fotogrammi (`dueFotogrammi` in `useRacconta.ts`), così l'opzione arriva al navigatore nativo prima che la sessione
+  audio occupi il thread principale: altrimenti un trascinamento subito dopo il tocco poteva ancora far uscire la
+  schermata (corsa osservata una volta su sedici il 23/10/2026). Una lettura del registratore "non sta registrando" a durata 0 è il registratore che sta ancora
   partendo, non una pausa (prima mostrava "In pausa" per un istante). Allo smontaggio il registratore si ferma sempre e l'evento
   `uscita` riporta all'avvio una registrazione rimasta senza registratore (`ripartiDallAvvio` all'apertura). Livello voce: il livello reale del microfono (metering) ammorbidito con Reanimated
   e un'onda per barretta calcolata sul thread dell'interfaccia (`altezzaBarretta`, worklet); ferme con "Riduci movimento".

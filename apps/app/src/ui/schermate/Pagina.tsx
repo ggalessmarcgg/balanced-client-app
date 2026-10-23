@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { riquadroDalContenuto } from '@/core/tutorial/riquadro';
 import { useSovrappostiNelPortale } from '@/ui/schermate/Sovrapposti';
 import { colori } from '@/ui/theme';
-import { FornitoreCampi, useScorrimentoConTastiera } from '@/ui/tastiera';
+import { ChiudiCampiAlTocco, FornitoreCampi, useScorrimentoConTastiera } from '@/ui/tastiera';
 import type { CollegaMisura, MisuraNellaFinestra } from '@/ui/Tutorial';
 
 export type PaginaProps = {
@@ -65,7 +65,8 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
     return () => collegaMisura(null);
   }, [collegaMisura, misuraNellaFinestra, scorrevole]);
   return (
-    <View style={[stili.pagina, { backgroundColor: sfondo }]}>
+    // Un tocco fuori dai campi, ovunque nella pagina (contenuto o piede), chiude il campo a fuoco e la tastiera.
+    <ChiudiCampiAlTocco style={[stili.pagina, { backgroundColor: sfondo }]}>
       <View style={[stili.pagina, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         {scorrevole ? (
           <Reanimated.ScrollView
@@ -97,7 +98,7 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
         {piede && <View onLayout={(e) => setAltezzaPiede(e.nativeEvent.layout.height)}>{piede}</View>}
       </View>
       {nelPortale ? null : sovrapposti}
-    </View>
+    </ChiudiCampiAlTocco>
   );
 }
 
