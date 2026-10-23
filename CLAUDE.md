@@ -132,7 +132,12 @@ comuni dei campi in `src/ui/tastiera.ts`.
   `useFocusedInputHandler` di keyboard-controller, regole pure in
   `src/core/tastiera/cursore.ts`), limitate allo scorrimento che contiene il campo
   (tag dello ScrollView genitore o campo registrato nel contesto); scorrimenti animati,
-  mai a scatti.
+  mai a scatti. **Cambio di campo con la tastiera aperta**: un solo punto scorre
+  (`portaInVista`, sul thread dell'interfaccia), sempre della sola differenza calcolata
+  dalle posizioni correnti (`spostamentoPerCampo`, idempotente); il gestore della tastiera
+  non applica lo scorrimento proporzionale quando riceve un nuovo "mostra" alla stessa
+  altezza (difetto del 23/10/2026: doppia spinta al cambio di campo). Il JS misura solo il
+  contenitore del campo (campo più ciò che deve restare visibile, es. "Invia"), mai scorre.
 - **Lo scorrimento non chiude la tastiera** (`keyboardDismissMode="none"`).
 - **La tastiera si chiude solo** toccando fuori dai campi
   (`keyboardShouldPersistTaps="handled"`) oppure con "Avanti", "Chiudi", "Invia" o il
