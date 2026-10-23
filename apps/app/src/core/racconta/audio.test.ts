@@ -32,7 +32,7 @@ describe('audio: durate e limite', () => {
   it('un racconto di 3 minuti a 48 kbit/s mono pesa poco più di 1 MB', () => {
     const byte = dimensioneMassimaByte();
     assert.equal(byte, 1_080_000 + 64 * 1024);
-    assert.ok(byte < 6 * 1024 * 1024, 'sotto il limite di 6 MB del server');
+    assert.ok(byte < 2 * 1024 * 1024, 'sotto il limite di 2 MB del server');
   });
 });
 

@@ -1,7 +1,7 @@
 // Qualità della registrazione, limite di durata e misure derivate (decisioni dello step 10, lotto 1).
 // Voce in mono AAC-LC dentro un contenitore m4a: è il formato che il server accetta come `audio/mp4`
 // (docs/server-diario-vocale.md §3). Frequenza di campionamento 24 kHz e 48 kbit/s: il parlato resta nitido
-// (nomi di alimenti, quantità) e un racconto di 3 minuti pesa poco più di 1 MB, molto sotto i 6 MB del server.
+// (nomi di alimenti, quantità) e un racconto di 3 minuti pesa circa 1,15 MB, sotto i 2 MB del server.
 
 /** Durata massima di un racconto: 3 minuti (timer "m:ss / 3:00" in tutte le schermate di Figma). */
 export const LIMITE_REGISTRAZIONE_MS = 180_000;
