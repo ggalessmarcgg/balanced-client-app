@@ -10,10 +10,10 @@ import { applicaLettureInAttesa } from '@/core/diario/commento';
 import { dataOggiRoma } from '@/core/diario/data';
 import type { RigaSettimana } from '@/core/diario/letture';
 import { BLOCCHI, bloccoSuccessivo, type Blocco, type Diario } from '@/core/diario/modello';
-import { bozzePrecedentiInAttesa, condividiDiario, leggiDiarioOggi, precaricaAutori, type EsitoScrittura } from '@/servizi/diario';
+import { condividiOggi } from '@/servizi/condivisione';
+import { bozzePrecedentiInAttesa, leggiDiarioOggi, precaricaAutori, type EsitoScrittura } from '@/servizi/diario';
 import { giornateInAttesa, riprovaLetture, salvaBozzaInAttesa, salvaGiornateInAttesa } from '@/servizi/giornate';
-import { accodaScrittura, aggiornaMemoria, memoriaDiario, persistiMemoria, useMemoriaDiario } from '@/servizi/memoriaDiario';
-import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
+import { aggiornaMemoria, memoriaDiario, persistiMemoria, useMemoriaDiario } from '@/servizi/memoriaDiario';
 import { notificaModifica, type NotificaDiario, type NutrizionistaCliente } from '@/servizi/usePannelloGiornata';
 
 export type { NotificaDiario, NutrizionistaCliente } from '@/servizi/usePannelloGiornata';
@@ -59,6 +59,30 @@ function notificaDi(esito: EsitoScrittura, condivisione: boolean): NotificaDiari
   return { tipo: 'errore', testo: esito.errore === 'rete' ? TESTI.erroreRete : TESTI.erroreAltro, riprova: true };
 }
 
+// Notifica breve da mostrare in Oggi arrivando da un'altra schermata (riepilogo di Racconta: condivisione o errore di
+// salvataggio). Oggi resta montata sotto: se c'è, la riceve subito; altrimenti la trova alla prossima apertura.
+let notificaInSospeso: NotificaDiario | null = null;
+const ascoltatoriNotifica = new Set<(n: NotificaDiario) => void>();
+
+export function mostraNotificaInOggi(n: NotificaDiario): void {
+  if (ascoltatoriNotifica.size === 0) {
+    notificaInSospeso = n;
+    return;
+  }
+  for (const a of ascoltatoriNotifica) a(n);
+}
+
+function prendiNotificaInSospeso(): NotificaDiario | null {
+  const n = notificaInSospeso;
+  notificaInSospeso = null;
+  return n;
+}
+
+/** Notifica breve dopo un salvataggio o una condivisione (null se non serve: salvataggio riuscito). */
+export function notificaScrittura(esito: EsitoScrittura, condivisione: boolean): NotificaDiario | null {
+  return notificaDi(esito, condivisione);
+}
+
 function impostaLocale(nuovo: DiarioLocale): void {
   aggiornaMemoria({ locale: nuovo });
   persistiMemoria();
@@ -69,7 +93,7 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
   const [fase, setFase] = useState<FaseDiario>(memoria.locale ? { tipo: 'pronto' } : { tipo: 'caricamento' });
   const [blocco, setBlocco] = useState<Blocco | null>(null);
   const [inviando, setInviando] = useState(false);
-  const [notifica, setNotifica] = useState<NotificaDiario | null>(null);
+  const [notifica, setNotifica] = useState<NotificaDiario | null>(prendiNotificaInSospeso);
   const nutrizionistaRef = useRef(nutrizionista);
   useEffect(() => {
     nutrizionistaRef.current = nutrizionista;
@@ -78,6 +102,13 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
 
   const mostraNotifica = useCallback((n: NotificaDiario) => {
     if (montato.current) setNotifica(n);
+  }, []);
+
+  useEffect(() => {
+    ascoltatoriNotifica.add(setNotifica);
+    return () => {
+      ascoltatoriNotifica.delete(setNotifica);
+    };
   }, []);
 
   /** Salvataggio della bozza di oggi (serializzato: una scrittura alla volta, servizi/giornate). */
@@ -219,49 +250,19 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
   }, []);
 
   const condividi = useCallback(() => {
-    const attuale = memoriaDiario().locale;
-    if (!attuale || inviando) return;
+    if (!memoriaDiario().locale || inviando) return;
     setInviando(true);
-    accodaScrittura(async () => {
-      const { locale: dopo, esito } = await condividiDiario(memoriaDiario().locale ?? attuale);
-      impostaLocale(dopo);
-      if (dopo.riga.tipo === 'condiviso') {
-        // Oggi diventa un giorno condiviso della settimana (apribile nel pannello); la giornata completa si rilegge al tocco.
-        const m = memoriaDiario();
-        const precedente = m.settimana.find((r) => r.submission_date === dopo.data);
-        const rigaOggi: RigaSettimana = {
-          id: dopo.riga.id,
-          submission_date: dopo.data,
-          status: 'submitted',
-          updated_at: null,
-          energy_level: dopo.diario.energy_level,
-          satiety_level: dopo.diario.satiety_level,
-          hydration_level: dopo.diario.hydration_level,
-          sport_type: dopo.diario.sport_type,
-          sport_duration: dopo.diario.sport_duration,
-          nutritionist_comment: precedente?.nutritionist_comment ?? null,
-          comment_author_id: precedente?.comment_author_id ?? null,
-          comment_acknowledged: precedente?.comment_acknowledged ?? null,
-          review_status: precedente?.review_status ?? null,
-        };
-        const { [dopo.data]: _vecchia, ...giornate } = m.giornate;
-        aggiornaMemoria({
-          settimana: [...m.settimana.filter((r) => r.submission_date !== dopo.data), rigaOggi].sort((a, b) => (a.submission_date < b.submission_date ? -1 : 1)),
-          giornate,
-          primoDiario: m.primoDiario ?? dopo.data,
-        });
-        persistiMemoria();
-        // Il trigger del diario ha fatto avanzare (o sbloccato) la revisione: si rilegge solo lo stato leggero.
-        aggiornaStatoRevisioni(dopo.clientId);
-      }
-      if (!montato.current) return;
-      setInviando(false);
-      const n = notificaDi(esito, true);
-      if (n) setNotifica(n);
-      if (esito.tipo !== 'errore') setBlocco(null);
-    }).catch(() => {
-      if (montato.current) setInviando(false);
-    });
+    condividiOggi()
+      .then((esito) => {
+        if (!montato.current) return;
+        setInviando(false);
+        const n = esito ? notificaDi(esito, true) : null;
+        if (n) setNotifica(n);
+        if (esito && esito.tipo !== 'errore') setBlocco(null);
+      })
+      .catch(() => {
+        if (montato.current) setInviando(false);
+      });
   }, [inviando]);
 
   const riprova = useCallback(() => {

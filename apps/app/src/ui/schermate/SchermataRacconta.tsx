@@ -6,6 +6,7 @@ import { PulsanteRegistrazione } from '@/ui/racconta/PulsanteRegistrazione';
 import { Tutorial, useRiquadroTutorial } from '@/ui/Tutorial';
 
 import type { StatoRacconta } from '@/core/racconta/flusso';
+import { testiErroreCompilazione } from '@/core/racconta/compila';
 import { testiErrore } from '@/core/racconta/server';
 import type { AzioniRacconta } from '@/servizi/useRacconta';
 import { Icona } from '@/ui/icone';
@@ -27,7 +28,7 @@ export type SchermataRaccontaProps = {
   onIndietro: () => void;
   /** "Preferisco scrivere" / "Scrivi il diario": torna a Oggi per compilare a mano. */
   onScrivi: () => void;
-  /** "Crea il mio diario" (dal lotto 2 la compilazione; oggi una Notifica breve). */
+  /** "Crea il mio diario": compilazione del diario dal racconto (lotto 2). */
   onCreaDiario: () => void;
   /** Campo del racconto a fuoco all'avvio (pagina di sviluppo: verifica della tastiera). */
   raccontoAFuoco?: boolean;
@@ -57,20 +58,24 @@ const TESTI = {
     corpo: 'Controlla che nessun’altra app stia usando il microfono e riprova. Puoi sempre scrivere il diario.',
   },
   trascrizione: { attesa: 'Ci vorrà qualche secondo...', titolo: 'Trascrivendo il tuo racconto' },
+  compilazione: { attesa: 'Ci vorrà qualche secondo...', titolo: 'Preparando il tuo diario' },
   attesaRete: 'La registrazione è al sicuro sul telefono. Il testo comparirà appena torni online.',
 } as const;
 
-/** Testi dei suggerimenti del tutorial (Figma Tutorial · 3 `586:5739`, · 4 `758:7670`, · 5 `758:7728`). */
+/** Testi dei suggerimenti del tutorial (Figma Tutorial · 3 `586:5739`, · 4 `758:7670`, · 5 `758:7728`, · 6 `758:7773`). */
 export const TESTI_TUTORIAL: Record<PuntoTutorial, string> = {
   pronto: 'Racconta liberamente la tua giornata: compileremo il diario per te e potrai controllarlo prima di inviarlo.',
   terminata: 'Tocca qui per trasformare il tuo racconto in testo: potrai rileggerlo e correggerlo prima di creare il diario.',
   racconto: 'Con un tocco compiliamo il tuo diario partendo da quello che hai raccontato.',
+  riepilogo:
+    'Qui trovi il diario compilato dal tuo racconto: controllalo e correggi quello che serve. Tocca «Invia alla nutrizionista» per condividerlo, oppure «Chiudi» per tenerlo come bozza. Se non lo invii, lo condividiamo noi alle 23:50.',
 };
 
 /**
- * "Racconta la tua giornata" (sezione Figma 3.1 · Diario vocale, lotto 1): le schermate 2 (permesso), 3 (microfono
+ * "Racconta la tua giornata" (sezione Figma 3.1 · Diario vocale): le schermate 2 (permesso), 3 (microfono
  * disattivato), 4 (pronto, anche con l'avviso della 11), 5 (in registrazione), 5.2 (registrazione terminata), 7.1
- * (trascrizione in corso), 6 (il tuo racconto), 10 (senza connessione) e 12 (errore) dallo stesso stato del flusso.
+ * (trascrizione in corso), 6 (il tuo racconto), 7 (preparando il diario, lotto 2), 10 (senza connessione) e 12 (errore
+ * della trascrizione o della compilazione) dallo stesso stato del flusso.
  * Intestazione con la freccia indietro e il titolo; i comandi stanno nel piede fisso della pagina. I tre suggerimenti
  * del tutorial (sezione 1.1) evidenziano il pulsante di registrazione, quello "Da inviare" e "Crea il mio diario".
  */
@@ -90,7 +95,8 @@ export function SchermataRacconta({ stato, azioni, tutorial = null, onIndietro, 
       }
     >
       <View style={stili.intestazione}>
-        <Intestazione titolo={TITOLO} onIndietro={onIndietro} />
+        {/* Racconta · 7 "Preparando il tuo diario": senza freccia indietro (contratto §1.4), si attende il server. */}
+        <Intestazione titolo={TITOLO} onIndietro={onIndietro} mostraIndietro={stato.tipo !== 'compilazione' && stato.tipo !== 'compilato'} />
       </View>
       {corpo}
     </Pagina>
@@ -162,21 +168,43 @@ function contenuto(stato: StatoRacconta, azioni: AzioniRacconta, onScrivi: () =>
       };
 
     case 'trascrizione':
+      return { corpo: <CorpoAttesa testi={TESTI.trascrizione} /> };
+
+    case 'compilazione':
+    case 'compilato':
+      // "compilato" dura il tempo di passare al riepilogo: resta la stessa attesa, senza lampi.
+      return { corpo: <CorpoAttesa testi={TESTI.compilazione} /> };
+
+    case 'erroreCompilazione': {
+      const testi = testiErroreCompilazione(stato.errore);
       return {
         corpo: (
-          <View style={stili.corpoCaricamento} accessibilityLiveRegion="polite">
-            <Testo stile="bodyDetails" colore={colori.testo.secondario} style={stili.testoCentrato}>
-              {TESTI.trascrizione.attesa}
-            </Testo>
-            <View style={stili.caricamento}>
-              <Testo stile="etichetta" style={stili.testoCentrato} accessibilityRole="header">
-                {TESTI.trascrizione.titolo}
+          <View style={stili.corpoRacconto}>
+            <Messaggio tipo="errore" testo={testi.messaggio} />
+            <CardRacconto durataMs={stato.racconto.durataMs} testo={stato.racconto.testo} soloLettura />
+            {testi.corpo && (
+              <Testo stile="body" colore={colori.testo.corpoAttenuato} style={stili.testoLargo}>
+                {testi.corpo}
               </Testo>
-              <Pulsante etichetta={TESTI.trascrizione.titolo} livello="terziario" stato="caricamento" style={stili.centrato} />
-            </View>
+            )}
+            {testi.riferimento && (
+              <Testo stile="caption" colore={colori.testo.secondario} style={stili.riferimento} selectable>
+                {testi.riferimento}
+              </Testo>
+            )}
+          </View>
+        ),
+        piede: (
+          <View style={stili.comandi}>
+            {testi.riprova ? (
+              <Pulsante etichetta="Riprova" onPress={azioni.riprova} accessibilityHint="Prepara di nuovo il diario dal racconto" />
+            ) : (
+              <Pulsante etichetta="Scrivi il diario" onPress={onScrivi} />
+            )}
           </View>
         ),
       };
+    }
 
     case 'racconto':
       return {
@@ -263,6 +291,23 @@ function CorpoMicrofono({ titolo, testo, attenuato = false }: { titolo: string; 
         <Testo stile="bodyDetails" style={stili.testoCentrato}>
           {testo}
         </Testo>
+      </View>
+    </View>
+  );
+}
+
+/** Corpo delle attese 7.1 (trascrizione) e 7 (compilazione): testo di attesa, titolo e pallini a saltello, centrati. */
+function CorpoAttesa({ testi }: { testi: { attesa: string; titolo: string } }) {
+  return (
+    <View style={stili.corpoCaricamento} accessibilityLiveRegion="polite">
+      <Testo stile="bodyDetails" colore={colori.testo.secondario} style={stili.testoCentrato}>
+        {testi.attesa}
+      </Testo>
+      <View style={stili.caricamento}>
+        <Testo stile="etichetta" style={stili.testoCentrato} accessibilityRole="header">
+          {testi.titolo}
+        </Testo>
+        <Pulsante etichetta={testi.titolo} livello="terziario" stato="caricamento" style={stili.centrato} />
       </View>
     </View>
   );

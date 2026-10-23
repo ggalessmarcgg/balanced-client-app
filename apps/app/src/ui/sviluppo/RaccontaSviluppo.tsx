@@ -5,7 +5,6 @@ import type { StatoRacconta } from '@/core/racconta/flusso';
 import type { ErroreTrascrizione } from '@/core/racconta/server';
 import type { PuntoTutorial } from '@/servizi/racconta';
 import type { AzioniRacconta } from '@/servizi/useRacconta';
-import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataRacconta } from '@/ui/schermate/SchermataRacconta';
 
 // "Racconta" con dati finti per i confronti con Figma (sezione 3.1 · Diario vocale: 459:643, 459:681, 459:719, 459:779,
@@ -35,11 +34,16 @@ export type ScenarioRacconta =
   | 'erroreNonDisponibile'
   | 'erroreSessione'
   | 'erroreTroppoLungo'
-  | 'creaDiarioNotifica';
+  | 'compilazione'
+  | 'erroreCompilazione'
+  | 'erroreCompilazioneRete'
+  | 'erroreCompilazioneSessione'
+  | 'erroreCompilazioneCondiviso';
 
 const AUDIO = { uri: 'file:///finto/racconto-2026-10-09.m4a', durataMs: 88_000, data: '2026-10-09' };
 const RACCONTO =
   'A colazione ho preso uno yogurt greco con i frutti di bosco e un caffè, a pranzo pasta al pomodoro con un’insalata. L’energia oggi è stata buona, soprattutto la mattina. Ho bevuto circa due litri d’acqua e la sera ho fatto mezz’ora di camminata. A cena pollo e verdure. Volevo dire a Margherita che nel weekend sono fuori a cena.';
+const TESTO = { testo: RACCONTO, durataMs: AUDIO.durataMs, data: AUDIO.data };
 const errore = (esito: ErroreTrascrizione['esito'], codice: string, httpStatus: number): ErroreTrascrizione => ({ esito, codice, messaggio: 'm', richiestaId: 'app-mh1x2y-0a1b2c3d', httpStatus });
 
 function statoIniziale(scenario: ScenarioRacconta): StatoRacconta {
@@ -73,7 +77,6 @@ function statoIniziale(scenario: ScenarioRacconta): StatoRacconta {
     case 'racconto':
     case 'raccontoTastiera':
     case 'tutorialRacconto':
-    case 'creaDiarioNotifica':
       return { tipo: 'racconto', testo: RACCONTO, durataMs: AUDIO.durataMs, data: AUDIO.data };
     case 'senzaConnessione':
       return { tipo: 'senzaConnessione', audio: AUDIO, inRiprova: false };
@@ -85,6 +88,16 @@ function statoIniziale(scenario: ScenarioRacconta): StatoRacconta {
       return { tipo: 'errore', audio: null, errore: errore('sessione', 'token_non_valido', 401) };
     case 'erroreTroppoLungo':
       return { tipo: 'errore', audio: null, errore: errore('definitivo', 'audio_troppo_lungo', 400) };
+    case 'compilazione':
+      return { tipo: 'compilazione', racconto: TESTO };
+    case 'erroreCompilazione':
+      return { tipo: 'erroreCompilazione', racconto: TESTO, errore: errore('riprovabile', 'compilazione_timeout', 504) };
+    case 'erroreCompilazioneRete':
+      return { tipo: 'erroreCompilazione', racconto: TESTO, errore: { ...errore('rete', 'rete', 0), httpStatus: null, richiestaId: null } };
+    case 'erroreCompilazioneSessione':
+      return { tipo: 'erroreCompilazione', racconto: TESTO, errore: errore('sessione', 'token_non_valido', 401) };
+    case 'erroreCompilazioneCondiviso':
+      return { tipo: 'erroreCompilazione', racconto: TESTO, errore: { ...errore('definitivo', 'gia_condiviso', 0), httpStatus: null, richiestaId: null } };
   }
 }
 
@@ -95,7 +108,6 @@ const TUTORIAL_PER_SCENARIO: Partial<Record<ScenarioRacconta, PuntoTutorial>> = 
 
 export function RaccontaSviluppo({ scenario }: { scenario: ScenarioRacconta }) {
   const [stato, setStato] = useState<StatoRacconta>(() => statoIniziale(scenario));
-  const [notifica, setNotifica] = useState(scenario === 'creaDiarioNotifica' ? 1 : 0);
   const [tutorial, setTutorial] = useState<PuntoTutorial | null>(TUTORIAL_PER_SCENARIO[scenario] ?? null);
 
   // Registrazione finta: il timer avanza e il livello voce finge il parlato; a 3 minuti si ferma e passa a "terminata".
@@ -122,9 +134,12 @@ export function RaccontaSviluppo({ scenario }: { scenario: ScenarioRacconta }) {
     avvia: () => setStato({ tipo: 'registrazione', durataMs: 0, inPausa: false, fermando: false, livello: 0 }),
     ferma: () => setStato((s) => (s.tipo === 'registrazione' ? { tipo: 'terminata', audio: { ...AUDIO, durataMs: s.durataMs } } : s)),
     invia: () => setStato((s) => (s.tipo === 'terminata' ? { tipo: 'racconto', testo: RACCONTO, durataMs: s.audio.durataMs, data: AUDIO.data } : s)),
-    riprova: () => setStato((s) => (s.tipo === 'errore' && s.audio ? { tipo: 'trascrizione', audio: s.audio } : s)),
+    riprova: () =>
+      setStato((s) => (s.tipo === 'errore' && s.audio ? { tipo: 'trascrizione', audio: s.audio } : s.tipo === 'erroreCompilazione' ? { tipo: 'compilazione', racconto: s.racconto } : s)),
     ricomincia: () => setStato({ tipo: 'pronto', avviso: 'nessuno' }),
     modificaTesto: (testo) => setStato((s) => (s.tipo === 'racconto' ? { ...s, testo } : s)),
+    // Compilazione finta: "Preparando il tuo diario" resta a schermo (il riepilogo ha i suoi stati).
+    creaDiario: () => setStato((s) => (s.tipo === 'racconto' ? { tipo: 'compilazione', racconto: { testo: s.testo, durataMs: s.durataMs, data: s.data } } : s)),
     hoCapito: () => setTutorial(null),
   };
 
@@ -135,10 +150,9 @@ export function RaccontaSviluppo({ scenario }: { scenario: ScenarioRacconta }) {
       tutorial={tutorial}
       onIndietro={nulla}
       onScrivi={nulla}
-      onCreaDiario={() => setNotifica((n) => n + 1)}
+      onCreaDiario={azioni.creaDiario}
       raccontoAFuoco={scenario === 'raccontoTastiera'}
       livelloVoceFermo={scenario === 'registrazione' || scenario === 'registrazionePausa'}
-      sovrapposti={notifica > 0 ? <NotificaInBasso key={notifica} tipo="conferma" testo="La creazione del diario dal racconto arriva a breve." onScomparsa={() => setNotifica(0)} /> : undefined}
     />
   );
 }

@@ -15,6 +15,10 @@ export const SCHERMATE_RACCONTA = {
   tutorialPronto: 'racconta · tutorial · racconta',
   tutorialTerminata: 'racconta · tutorial · trascrizione',
   tutorialRacconto: 'racconta · tutorial · crea il diario',
+  creaDiario: 'racconta · crea diario',
+  riepilogo: 'racconta · riepilogo',
+  erroreCompilazione: 'racconta · elaborazione non riuscita',
+  tutorialRiepilogo: 'racconta · tutorial · invio del diario',
 } as const;
 
 export const AZIONI_RACCONTA = {
@@ -34,6 +38,10 @@ export const AZIONI_RACCONTA = {
   ricomincia: 'racconta · ricomincia',
   riprova: 'racconta · riprova trascrizione',
   creaDiario: 'racconta · crea il mio diario',
+  riprovaCompilazione: 'racconta · riprova compilazione',
+  modificaRiepilogo: 'racconta · modifica riepilogo',
+  inviaDiario: 'racconta · invia',
+  chiudiRiepilogo: 'racconta · chiudi riepilogo',
 } as const;
 
 export type SchermataRacconta = (typeof SCHERMATE_RACCONTA)[keyof typeof SCHERMATE_RACCONTA];

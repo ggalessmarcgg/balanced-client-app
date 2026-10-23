@@ -17,6 +17,7 @@ import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
 import { RaccontaSviluppo } from '@/ui/sviluppo/RaccontaSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
+import { RiepilogoSviluppo } from '@/ui/sviluppo/RiepilogoSviluppo';
 import { StatiSviluppo } from '@/ui/sviluppo/StatiSviluppo';
 import { StoricoSviluppo } from '@/ui/sviluppo/StoricoSviluppo';
 import { colori, margine, spazio, testi, tocco } from '@/ui/theme';
@@ -104,7 +105,18 @@ export const STATI_SVILUPPO = [
   ['racconta-errore-sessione', 'Racconta · sessione scaduta (token_non_valido; senza disegno)'],
   ['racconta-errore-troppo-lungo', 'Racconta · audio troppo lungo, "Ricomincia" (senza disegno)'],
   ['racconta-registrazione-non-riuscita', 'Racconta · 4 con l\'avviso "La registrazione non è partita" (senza disegno)'],
-  ['racconta-crea-diario', 'Racconta · 6 con la Notifica breve di "Crea il mio diario" (lotto 2)'],
+  ['racconta-7-preparando', 'Racconta · 7 · Preparando il tuo diario (459:922), senza freccia indietro (lotto 2)'],
+  ['racconta-12-elaborazione', 'Racconta · 12 · Elaborazione non riuscita (459:1712): il racconto salvato e "Riprova"'],
+  ['racconta-12-elaborazione-offline', 'Racconta · 12 · compilazione senza rete: il racconto salvato e "Riprova" (senza disegno)'],
+  ['racconta-12-elaborazione-sessione', 'Racconta · 12 · compilazione con la sessione scaduta: "Scrivi il diario" (senza disegno)'],
+  ['racconta-12-elaborazione-condiviso', 'Racconta · 12 · giornata già condivisa nel frattempo (senza disegno)'],
+  ['racconta-8-riepilogo', 'Racconta · 8 · Il tuo diario, riepilogo modificabile (747:7517), dati del disegno'],
+  ['racconta-8-riepilogo-compilato', 'Racconta · 8 · riepilogo con un diario compilato da un racconto (pasti scritti)'],
+  ['racconta-8-riepilogo-riposo', 'Racconta · 8 · riepilogo con "Oggi riposo" (durate al 50 %)'],
+  ['racconta-8-riepilogo-vuoto', 'Racconta · 8 · riepilogo vuoto: "Invia" disattivato'],
+  ['racconta-8-riepilogo-tastiera', 'Racconta · 8 · riepilogo con il commento a fuoco (verifica della tastiera)'],
+  ['racconta-8-riepilogo-errore-invio', 'Racconta · 8 · riepilogo con la Notifica breve d\'errore di "Invia" (senza disegno)'],
+  ['racconta-tutorial-6-invio', 'Tutorial · 6 · Racconta · invio del diario (758:7773) sul riepilogo, scorso in fondo'],
   ['revisioni-1-in-corso', 'Revisioni · 1 · Revisione in corso (494:1944)'],
   ['revisioni-2-nuova', 'Revisioni · 2 · Nuova revisione arrivata (494:2060)'],
   ['revisioni-3-in-preparazione', 'Revisioni · 3 · Revisione in preparazione (494:2165)'],
@@ -376,8 +388,30 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <RaccontaSviluppo scenario="erroreTroppoLungo" />;
     case 'racconta-registrazione-non-riuscita':
       return <RaccontaSviluppo scenario="registrazioneNonRiuscita" />;
-    case 'racconta-crea-diario':
-      return <RaccontaSviluppo scenario="creaDiarioNotifica" />;
+    case 'racconta-7-preparando':
+      return <RaccontaSviluppo scenario="compilazione" />;
+    case 'racconta-12-elaborazione':
+      return <RaccontaSviluppo scenario="erroreCompilazione" />;
+    case 'racconta-12-elaborazione-offline':
+      return <RaccontaSviluppo scenario="erroreCompilazioneRete" />;
+    case 'racconta-12-elaborazione-sessione':
+      return <RaccontaSviluppo scenario="erroreCompilazioneSessione" />;
+    case 'racconta-12-elaborazione-condiviso':
+      return <RaccontaSviluppo scenario="erroreCompilazioneCondiviso" />;
+    case 'racconta-8-riepilogo':
+      return <RiepilogoSviluppo scenario="figma" />;
+    case 'racconta-8-riepilogo-compilato':
+      return <RiepilogoSviluppo scenario="compilato" />;
+    case 'racconta-8-riepilogo-riposo':
+      return <RiepilogoSviluppo scenario="riposo" />;
+    case 'racconta-8-riepilogo-vuoto':
+      return <RiepilogoSviluppo scenario="vuoto" />;
+    case 'racconta-8-riepilogo-tastiera':
+      return <RiepilogoSviluppo scenario="tastiera" />;
+    case 'racconta-8-riepilogo-errore-invio':
+      return <RiepilogoSviluppo scenario="erroreInvio" />;
+    case 'racconta-tutorial-6-invio':
+      return <RiepilogoSviluppo scenario="tutorial" />;
     case 'revisioni-1-in-corso':
       return <RevisioniSviluppo scenario="inCorso" />;
     case 'revisioni-2-nuova':

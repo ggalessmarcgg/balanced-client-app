@@ -14,7 +14,7 @@ import { Alert, AppState, Linking, type AppStateStatus } from 'react-native';
 import { dataOggiRoma } from '@/core/diario/data';
 import { nomeFileRegistrazione } from '@/core/racconta/attesa';
 import { INTERVALLO_LETTURA_MS, LIMITE_REGISTRAZIONE_MS, QUALITA_VOCE } from '@/core/racconta/audio';
-import { uscitaDaConfermare, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
+import { uscitaBloccata, uscitaDaConfermare, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
 import { avviaRacconta, cancellaAudio, collegaRegistratore, interrompiRacconta, invia, registraConsenso, segnaTutorialVisto, statoRacconta, useMemoriaRacconta, type PuntoTutorial } from '@/servizi/racconta';
 
 /** Ogni quanto si riprova la trascrizione mentre si è senza rete (oltre che al ritorno in primo piano). */
@@ -63,6 +63,8 @@ export type AzioniRacconta = {
   riprova: () => void;
   ricomincia: () => void;
   modificaTesto: (testo: string) => void;
+  /** "Crea il mio diario": il racconto va al server con la bozza di oggi (lotto 2). */
+  creaDiario: () => void;
   /** "Ho capito" del suggerimento del tutorial. */
   hoCapito: () => void;
 };
@@ -180,7 +182,10 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
   // Uscita (freccia indietro, gesto, tasto indietro di Android) con una registrazione da scartare: expo-router blocca
   // la rimozione della schermata e qui compare l'avviso di sistema; solo "Interrompi" scarta l'audio e lascia la
   // schermata. (expo-router 58 non emette più `beforeRemove`: il blocco passa solo da usePreventRemove.)
-  usePreventRemove(uscitaDaConfermare(stato), ({ repeat }) => {
+  // Durante "Preparando il tuo diario" (senza freccia indietro) l'uscita è bloccata in silenzio finché il server non
+  // risponde (al più TEMPO_MASSIMO_COMPILAZIONE_MS): il diario compilato va nella bozza di oggi.
+  usePreventRemove(uscitaDaConfermare(stato) || uscitaBloccata(stato), ({ repeat }) => {
+    if (uscitaBloccata(statoRacconta())) return;
     Alert.alert(AVVISO_USCITA.titolo, AVVISO_USCITA.testo, [
       { text: AVVISO_USCITA.annulla, style: 'cancel' },
       {
@@ -241,6 +246,7 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
     riprova: useCallback(() => invia({ tipo: 'riprova' }), []),
     ricomincia: useCallback(() => invia({ tipo: 'ricomincia' }), []),
     modificaTesto: useCallback((testo: string) => invia({ tipo: 'modificaTesto', testo }), []),
+    creaDiario: useCallback(() => invia({ tipo: 'creaDiario' }), []),
     hoCapito: useCallback(() => {
       const punto = tutorialDaMostrare(statoRacconta(), tutorialVisti);
       if (punto) segnaTutorialVisto(punto);

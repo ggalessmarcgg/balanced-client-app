@@ -19,6 +19,8 @@ export type RigaPastoProps = {
   onToggle: () => void;
   onChangeText: (testo: string) => void;
   segnaposto?: string;
+  /** Sempre aperta (riepilogo di Racconta, Figma 747:7517): l'intestazione non chiude il campo e il campo non prende il fuoco da solo. */
+  fissa?: boolean;
 };
 
 // Riga pasto diario (Figma 449:83). Aperta: spunta al 50 % (dalla descrizione del componente), campo alto 64 su sfondo/card con raggio piccolo.
@@ -29,25 +31,26 @@ const ALTEZZA_CAMPO = 64;
  * Riga di un pasto nella card del diario: etichetta piccola e icona 20 a destra ("+" nero da compilare, spunta verde
  * compilata, spunta al 50 % quando è aperta); aperta mostra sotto il campo di testo su più righe.
  */
-export function RigaPasto({ etichetta, valore, stato, onToggle, onChangeText, segnaposto = 'Cosa hai mangiato?' }: RigaPastoProps) {
-  const aperta = stato === 'aperta';
+export function RigaPasto({ etichetta, valore, stato, onToggle, onChangeText, segnaposto = 'Cosa hai mangiato?', fissa = false }: RigaPastoProps) {
+  const aperta = fissa || stato === 'aperta';
   const { ref: contenitore, onFocus: fuocoTastiera, onBlur: sfuocoTastiera, onContentSizeChange: crescitaTastiera } = useCampoSopraTastiera();
   return (
     <View ref={contenitore} style={[stili.riga, aperta && stili.rigaAperta]}>
       <Pressable
         onPress={onToggle}
+        disabled={fissa}
         hitSlop={HIT_SLOP}
         style={stili.intestazione}
         accessibilityRole="button"
         accessibilityLabel={etichetta}
         accessibilityState={{ expanded: aperta }}
-        accessibilityHint={aperta ? 'Chiude il campo' : stato === 'compilata' ? 'Compilato, tocca per modificare' : 'Da compilare, tocca per scrivere'}
+        accessibilityHint={fissa ? undefined : aperta ? 'Chiude il campo' : stato === 'compilata' ? 'Compilato, tocca per modificare' : 'Da compilare, tocca per scrivere'}
       >
         <Testo stile="etichettaPiccola" style={stili.etichetta}>
           {etichetta}
         </Testo>
-        {stato === 'daCompilare' && <Icona misura={20} nome="Più" />}
-        {stato === 'compilata' && <Icona misura={20} nome="Spunta" colore={colori.azione.primaria} />}
+        {!aperta && stato === 'daCompilare' && <Icona misura={20} nome="Più" />}
+        {!aperta && stato === 'compilata' && <Icona misura={20} nome="Spunta" colore={colori.azione.primaria} />}
         {aperta && (
           <View style={stili.spuntaAperta}>
             <Icona misura={20} nome="Spunta" />
@@ -61,7 +64,7 @@ export function RigaPasto({ etichetta, valore, stato, onToggle, onChangeText, se
           onChangeText={onChangeText}
           placeholder={segnaposto}
           multiline
-          autoFocus
+          autoFocus={!fissa}
           textAlignVertical="top"
           onFocus={fuocoTastiera}
           onBlur={sfuocoTastiera}

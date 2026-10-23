@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ComponentRef, ReactNode } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import {
@@ -54,10 +54,10 @@ function Domanda({ etichetta, children }: { etichetta: string; children: ReactNo
 
 type PropsBlocco = { diario: Diario; onChange: (diario: Diario) => void; /** Dentro il pannello della giornata (spaziature compatte). */ nelPannello?: boolean };
 
-export type BloccoPastiProps = PropsBlocco & { pastoAperto: Pasto | null; onApri: (pasto: Pasto | null) => void };
+export type BloccoPastiProps = PropsBlocco & { pastoAperto: Pasto | null; onApri: (pasto: Pasto | null) => void; /** Tutte e quattro sempre aperte (riepilogo di Racconta, Figma 747:7517). */ tuttiAperti?: boolean };
 
-/** Passaggio 1 · Pasti (Figma 449:696): le quattro righe pasto con gap 16, una sola aperta per volta. */
-export function BloccoPasti({ diario, onChange, pastoAperto, onApri, nelPannello }: BloccoPastiProps) {
+/** Passaggio 1 · Pasti (Figma 449:696): le quattro righe pasto con gap 16, una sola aperta per volta (tutte nel riepilogo di Racconta). */
+export function BloccoPasti({ diario, onChange, pastoAperto, onApri, nelPannello, tuttiAperti = false }: BloccoPastiProps) {
   return (
     <BloccoDiario blocco="pasti" nelPannello={nelPannello}>
       <View style={stili.righe}>
@@ -69,6 +69,7 @@ export function BloccoPasti({ diario, onChange, pastoAperto, onApri, nelPannello
             stato={pastoAperto === pasto ? 'aperta' : diario[pasto].trim() ? 'compilata' : 'daCompilare'}
             onToggle={() => onApri(pastoAperto === pasto ? null : pasto)}
             onChangeText={(testo) => onChange({ ...diario, [pasto]: testo })}
+            fissa={tuttiAperti}
           />
         ))}
       </View>
@@ -185,7 +186,14 @@ export function BloccoSport({ diario, onChange, nelPannello }: PropsBlocco) {
 }
 
 /** Senza onCondividi (modifica di una giornata già condivisa) il blocco ha la sola nota. */
-export type BloccoCommentoProps = PropsBlocco & { onCondividi?: () => void; inviando?: boolean; /** Nota a fuoco all'avvio (pagina di sviluppo). */ aFuoco?: boolean };
+export type BloccoCommentoProps = PropsBlocco & {
+  onCondividi?: () => void;
+  inviando?: boolean;
+  /** Nota a fuoco all'avvio (pagina di sviluppo). */
+  aFuoco?: boolean;
+  /** Misura di "Invia alla nutrizionista" per il tutorial che lo evidenzia (riepilogo di Racconta, Tutorial · 6). */
+  misuraInvio?: { ref: (v: ComponentRef<typeof View> | null) => void; onLayout: () => void };
+};
 
 // Campo nota (Figma 449:961): alto 96 su sfondo/card, raggio foto, padding 16, segnaposto in Caption.
 const ALTEZZA_NOTA = 96;
@@ -195,7 +203,7 @@ const ALTEZZA_NOTA = 96;
  * "Invia" è disattivato finché il diario non ha almeno un contenuto (un pasto, un valore, lo sport o il commento):
  * nessuna condivisione di diari vuoti.
  */
-export function BloccoCommento({ diario, onChange, onCondividi, inviando = false, nelPannello, aFuoco = false }: BloccoCommentoProps) {
+export function BloccoCommento({ diario, onChange, onCondividi, inviando = false, nelPannello, aFuoco = false, misuraInvio }: BloccoCommentoProps) {
   const statoInvio = inviando ? 'caricamento' : haContenuto(diario) ? 'normale' : 'disabilitato';
   const { ref: contenitore, onFocus: fuocoTastiera, onBlur: sfuocoTastiera, onContentSizeChange: crescitaTastiera } = useCampoSopraTastiera();
   return (
@@ -216,12 +224,14 @@ export function BloccoCommento({ diario, onChange, onCondividi, inviando = false
           style={stili.nota}
         />
         {onCondividi && (
-          <Pulsante
-            etichetta="Invia alla nutrizionista"
-            onPress={onCondividi}
-            stato={statoInvio}
-            accessibilityHint={statoInvio === 'disabilitato' ? 'Compila almeno un pasto, un valore, lo sport o il commento' : 'Condivide la giornata: non si può annullare'}
-          />
+          <View ref={misuraInvio?.ref} onLayout={misuraInvio?.onLayout} collapsable={false} style={stili.invio}>
+            <Pulsante
+              etichetta="Invia alla nutrizionista"
+              onPress={onCondividi}
+              stato={statoInvio}
+              accessibilityHint={statoInvio === 'disabilitato' ? 'Compila almeno un pasto, un valore, lo sport o il commento' : 'Condivide la giornata: non si può annullare'}
+            />
+          </View>
         )}
       </View>
     </BloccoDiario>
@@ -238,6 +248,7 @@ const stili = StyleSheet.create({
   cresce: { flex: 1, alignSelf: 'stretch' },
   attenuato: { opacity: opacita.campoDisabilitato },
   commento: { alignSelf: 'stretch', gap: spazio[8] },
+  invio: { alignSelf: 'stretch' },
   nota: {
     ...testi.bodyDetails,
     color: colori.testo.primario,

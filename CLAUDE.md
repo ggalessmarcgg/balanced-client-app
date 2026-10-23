@@ -424,7 +424,7 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Pagina di sviluppo: `/sviluppo/stati?stato=stati-1-da-confermare|stati-2-prima|stati-3-orario-passato|stati-4-scegli|stati-4.1-non-disponibile|stati-4.2-cambia|stati-4.3-nessun-orario|stati-4-molti-orari|stati-5-confermata|…`;
   esiti dei confronti in `~/Desktop/censimenti-app/step12-confronti/`.
 
-## Diario vocale "Racconta" (step 10, lotto 1)
+## Diario vocale "Racconta" (step 10, lotti 1 e 2)
 
 - Riferimenti: `~/Desktop/censimenti-app/step10-censimento-voce.md`, contratto di prodotto
   `~/Desktop/balanced-client-agents/docs/contratti/contratto-diario-vocale-v0_4.md`, contratto delle funzioni del server
@@ -467,9 +467,23 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `balanced.racconta.consenso.<client_id>` (la schermata 2 compare finché il permesso non è concesso e il consenso non è
   registrato; "Consenti" registra il consenso e apre la richiesta di sistema) e `balanced.racconta.tutorial.<client_id>`
   (Tutorial · 3 su Pronto, · 4 sulla 5.2, · 5 su "Il tuo racconto", una volta ciascuno, chiusi solo da "Ho capito").
-- "Crea il mio diario" (compilazione con `/compila`, riepilogo `747:7517`) è il lotto 2: oggi mostra una Notifica breve.
-- Pagina di sviluppo: `/sviluppo/stati?stato=racconta-2-permesso|racconta-3-microfono-disattivato|racconta-4-pronto|racconta-5-registrazione|racconta-5-registrazione-animata|racconta-5-pausa|racconta-5.2-terminata|racconta-tutorial-3-pronto|racconta-tutorial-4-trascrizione|racconta-tutorial-5-crea-diario|racconta-6-racconto|racconta-6-tastiera|racconta-7-trascrizione|racconta-10-senza-connessione|racconta-11-non-ho-capito|racconta-12-errore|…`
-  (registrazione finta con timer e livello voce); esiti dei confronti in `~/Desktop/censimenti-app/step10-confronti/lotto1/`.
+- **Lotto 2 (compilazione, riepilogo, invio)**: logica pura in `src/core/racconta/compila.ts` (corpo `{ data, racconto,
+  bozza }` con la bozza di oggi nel formato del server e "oggi riposo", `corpo-libero` del database ↔ `corpo_libero` del
+  server in entrambi i versi, risposta tradotta nel modello dell'app con i valori fuori formato a vuoto, codici d'errore,
+  testi della 12) e stati `compilazione` / `compilato` / `erroreCompilazione` in `flusso.ts`. "Crea il mio diario" →
+  Racconta · 7 "Preparando il tuo diario" (`459:922`, senza freccia, uscita bloccata con `usePreventRemove`, tempo massimo
+  75 s) → `POST /v1/diario-vocale/compila`; il diario restituito, già fuso, **sostituisce** il diario di oggi in memoria
+  (`aggiornaDiario`) e si salva subito con `salvaBozzaInAttesa` (mai status, mai bozze vuote), poi il racconto salvato si
+  cancella e `router.replace('/racconta-riepilogo')`. `non_ho_capito` → 11 (il racconto si cancella); errori → 12 con il
+  racconto e "Riprova" (riprovabili e senza rete) o "Scrivi il diario". Giornata già condivisa o diario di oggi non in
+  memoria → nessuna chiamata. Riepilogo "Modifica e invia" (`747:7517`): `SchermataRiepilogo` con i componenti della
+  Card diario (pasti tutti aperti, `RigaPasto fissa`), hook `src/servizi/useRiepilogo.ts` (copia locale a ogni modifica,
+  bozza salvata all'uscita e in secondo piano), "Invia alla nutrizionista" = `condividiOggi` (`src/servizi/condivisione.ts`,
+  la stessa di Oggi), conferma ed errori di salvataggio mostrati in Oggi (`mostraNotificaInOggi`). Tutorial · 6
+  (`758:7773`) al primo arrivo sul riepilogo, scorso in fondo (`Pagina scorriInFondoAllAvvio` + `onScorsoInFondo`), punto
+  `riepilogo` della stessa chiave dei tutorial. Rotta `app/racconta-riepilogo.tsx`.
+- Pagina di sviluppo: `/sviluppo/stati?stato=racconta-2-permesso|racconta-3-microfono-disattivato|racconta-4-pronto|racconta-5-registrazione|racconta-5-registrazione-animata|racconta-5-pausa|racconta-5.2-terminata|racconta-tutorial-3-pronto|racconta-tutorial-4-trascrizione|racconta-tutorial-5-crea-diario|racconta-6-racconto|racconta-6-tastiera|racconta-7-trascrizione|racconta-10-senza-connessione|racconta-11-non-ho-capito|racconta-12-errore|racconta-7-preparando|racconta-12-elaborazione|racconta-8-riepilogo|racconta-8-riepilogo-compilato|racconta-8-riepilogo-riposo|racconta-8-riepilogo-vuoto|racconta-8-riepilogo-tastiera|racconta-tutorial-6-invio|…`
+  (registrazione finta con timer e livello voce); esiti dei confronti in `~/Desktop/censimenti-app/step10-confronti/lotto1/` e `lotto2/`.
 
 ## Note su Xcode 27 / Device Hub
 

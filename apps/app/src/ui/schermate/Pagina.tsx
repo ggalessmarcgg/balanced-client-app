@@ -17,8 +17,10 @@ export type PaginaProps = {
   scorrevole?: boolean;
   /** Elementi sopra tutto (pannello dal basso, notifica breve): posizionati da chi li passa. Nel gruppo dell'abbonato vanno al portale del layout, sopra la barra persistente. */
   sovrapposti?: ReactNode;
-  /** Solo per le pagine di sviluppo: all'avvio scorre fino in fondo (screenshot del contenuto sotto la piega). */
+  /** All'avvio scorre fino in fondo: tutorial su un elemento in fondo (riepilogo di Racconta) e screenshot del contenuto sotto la piega nelle pagine di sviluppo. */
   scorriInFondoAllAvvio?: boolean;
+  /** Chiamata poco dopo lo scorrimento in fondo all'avvio (per rimisurare un elemento da evidenziare). */
+  onScorsoInFondo?: () => void;
 };
 
 /**
@@ -27,7 +29,7 @@ export type PaginaProps = {
  * comparsa della tastiera perché il campo a fuoco stia per intero subito sopra (src/ui/tastiera.tsx); lo scorrimento
  * non chiude la tastiera; un tocco fuori dai campi la chiude; il piede non sale sopra la tastiera.
  */
-export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrevole = true, sovrapposti, scorriInFondoAllAvvio = false }: PaginaProps) {
+export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrevole = true, sovrapposti, scorriInFondoAllAvvio = false, onScorsoInFondo }: PaginaProps) {
   const insets = useSafeAreaInsets();
   const [scorsoInFondo, setScorsoInFondo] = useState(false);
   // Il piede sta sotto lo scorrimento: la tastiera copre lo scorrimento solo per la parte che supera piede e area sicura.
@@ -51,6 +53,8 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
                 ? () => {
                     scorrimento.current?.scrollToEnd({ animated: false });
                     setScorsoInFondo(true);
+                    // Lo scorrimento nativo si applica dopo qualche fotogramma: si misura dopo un breve ritardo.
+                    if (onScorsoInFondo) setTimeout(onScorsoInFondo, RITARDO_MISURA_MS);
                   }
                 : undefined
             }
@@ -67,6 +71,8 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
     </View>
   );
 }
+
+const RITARDO_MISURA_MS = 150;
 
 const stili = StyleSheet.create({
   pagina: { flex: 1 },

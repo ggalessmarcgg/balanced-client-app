@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { SOGLIA_ARRESTO_MS } from './audio.ts';
-import { raccontoVuoto, riduci, ripartiDallAvvio, STATO_INIZIALE, statoScaduto, uscitaDaConfermare, type EventoRacconta, type StatoRacconta } from './flusso.ts';
+import { raccontoVuoto, riduci, ripartiDallAvvio, STATO_INIZIALE, statoScaduto, uscitaBloccata, uscitaDaConfermare, type EventoRacconta, type StatoRacconta } from './flusso.ts';
 import { erroreApp, type ErroreTrascrizione } from './server.ts';
 
 const AUDIO = { uri: 'file:///doc/ExpoAudio/racconto-2026-10-23.m4a', durataMs: 88_000, data: '2026-10-23' };
@@ -269,5 +269,66 @@ describe('flusso: uscita dalla schermata (difetto del 23/10/2026)', () => {
 
   it('all’apertura si riparte dall’avvio anche con uno stato di un altro giorno', () => {
     assert.equal(ripartiDallAvvio({ tipo: 'racconto', ...TESTO }, '2026-10-24'), true);
+  });
+});
+
+describe('flusso: compilazione del diario (lotto 2)', () => {
+  const racconto: StatoRacconta = { tipo: 'racconto', ...TESTO };
+  const compilazione: StatoRacconta = { tipo: 'compilazione', racconto: TESTO };
+
+  it('"Crea il mio diario" manda al server il testo così com\'è (anche corretto a mano)', () => {
+    const corretto = riduci(racconto, { tipo: 'modificaTesto', testo: 'A colazione yogurt greco' }).stato;
+    const t = riduci(corretto, { tipo: 'creaDiario' });
+    assert.deepEqual(t.stato, { tipo: 'compilazione', racconto: { ...TESTO, testo: 'A colazione yogurt greco' } });
+    assert.deepEqual(t.effetti, [{ tipo: 'compila', racconto: { ...TESTO, testo: 'A colazione yogurt greco' } }]);
+    assert.deepEqual(riduci(compilazione, { tipo: 'creaDiario' }).effetti, []);
+  });
+
+  it('diario compilato → riepilogo; il racconto salvato si cancella', () => {
+    const t = riduci(compilazione, { tipo: 'compilato' });
+    assert.deepEqual(t.stato, { tipo: 'compilato', data: TESTO.data });
+    assert.deepEqual(t.effetti, [{ tipo: 'cancellaTesto' }]);
+  });
+
+  it('"non ho capito" → Racconta · 11 (Pronto con l\'avviso); il racconto si cancella', () => {
+    const t = riduci(compilazione, { tipo: 'nonCapito' });
+    assert.deepEqual(t.stato, { tipo: 'pronto', avviso: 'nonHoCapito' });
+    assert.deepEqual(t.effetti, [{ tipo: 'cancellaTesto' }]);
+  });
+
+  it('errore o tempo scaduto → Racconta · 12 con il racconto salvato; "Riprova" ricompila', () => {
+    const e = errore('riprovabile', 'compilazione_timeout');
+    const t = riduci(compilazione, { tipo: 'compilazioneFallita', errore: e });
+    assert.deepEqual(t.stato, { tipo: 'erroreCompilazione', racconto: TESTO, errore: e });
+    assert.deepEqual(t.effetti, []);
+    const r = riduci(t.stato, { tipo: 'riprova' });
+    assert.deepEqual(r.effetti, [{ tipo: 'compila', racconto: TESTO }]);
+    assert.deepEqual(riduci({ tipo: 'erroreCompilazione', racconto: TESTO, errore: errore('rete', 'rete') }, { tipo: 'riprova' }).effetti, [{ tipo: 'compila', racconto: TESTO }]);
+  });
+
+  it('errori definitivi senza "Riprova"; "Ricomincia" torna a Pronto e cancella il racconto', () => {
+    const definitivo: StatoRacconta = { tipo: 'erroreCompilazione', racconto: TESTO, errore: errore('sessione', 'token_non_valido') };
+    assert.deepEqual(riduci(definitivo, { tipo: 'riprova' }).effetti, []);
+    assert.deepEqual(riduci(definitivo, { tipo: 'ricomincia' }), { stato: { tipo: 'pronto', avviso: 'nessuno' }, effetti: [{ tipo: 'cancellaTesto' }] });
+  });
+
+  it('durante la compilazione non si esce; dopo, uscendo o riaprendo si riparte dall\'avvio', () => {
+    assert.equal(uscitaBloccata(compilazione), true);
+    assert.equal(uscitaBloccata(racconto), false);
+    assert.equal(uscitaDaConfermare(compilazione), false);
+    const compilato: StatoRacconta = { tipo: 'compilato', data: TESTO.data };
+    assert.deepEqual(riduci(compilato, { tipo: 'uscita' }).stato, STATO_INIZIALE);
+    assert.equal(ripartiDallAvvio(compilato, TESTO.data), true);
+    assert.equal(riduci(compilazione, { tipo: 'uscita' }).stato, compilazione);
+  });
+
+  it('esiti che arrivano fuori posto non cambiano nulla', () => {
+    assert.equal(riduci(racconto, { tipo: 'compilato' }).stato, racconto);
+    assert.equal(riduci(racconto, { tipo: 'nonCapito' }).stato, racconto);
+    assert.equal(riduci(racconto, { tipo: 'compilazioneFallita', errore: errore('riprovabile') }).stato, racconto);
+  });
+
+  it('una compilazione di un altro giorno è scaduta', () => {
+    assert.equal(statoScaduto(compilazione, '2026-10-24'), true);
   });
 });

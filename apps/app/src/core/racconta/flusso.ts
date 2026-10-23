@@ -1,6 +1,7 @@
-// Macchina a stati di "Racconta" (sezione Figma 3.1, lotto 1: da "Racconta" a "Il tuo racconto"). Funzione pura:
-// riceve lo stato e un evento, restituisce il nuovo stato e gli effetti da eseguire (chiedere il permesso, avviare
-// o fermare il registratore, trascrivere, salvare o cancellare l'audio). Chi la usa (src/servizi/racconta.ts) esegue
+// Macchina a stati di "Racconta" (sezione Figma 3.1: lotto 1 da "Racconta" a "Il tuo racconto", lotto 2 la
+// compilazione del diario). Funzione pura: riceve lo stato e un evento, restituisce il nuovo stato e gli effetti da
+// eseguire (chiedere il permesso, avviare o fermare il registratore, trascrivere, compilare, salvare o cancellare
+// l'audio e il racconto). Chi la usa (src/servizi/racconta.ts) esegue
 // gli effetti e rimanda qui gli esiti come eventi.
 import { limiteRaggiunto, livelloDaDecibel } from './audio.ts';
 import type { AudioRacconto, TestoRacconto } from './attesa.ts';
@@ -31,7 +32,13 @@ export type StatoRacconta =
   /** Racconta · 12 e varianti: errore del server; con `audio` c'è "Riprova", senza si ricomincia. */
   | { tipo: 'errore'; audio: AudioRacconto | null; errore: ErroreTrascrizione }
   /** Racconta · 6: il racconto trascritto, modificabile a mano. */
-  | { tipo: 'racconto'; testo: string; durataMs: number; data: string };
+  | { tipo: 'racconto'; testo: string; durataMs: number; data: string }
+  /** Racconta · 7: "Preparando il tuo diario" (compilazione in corso, senza freccia indietro). */
+  | { tipo: 'compilazione'; racconto: TestoRacconto }
+  /** Diario compilato e già messo nella bozza di oggi: la schermata passa al riepilogo (Racconta · 8). */
+  | { tipo: 'compilato'; data: string }
+  /** Racconta · 12 "Elaborazione non riuscita": il racconto resta salvato; con un errore riprovabile c'è "Riprova". */
+  | { tipo: 'erroreCompilazione'; racconto: TestoRacconto; errore: ErroreTrascrizione };
 
 export type EventoRacconta =
   | { tipo: 'avviato'; permesso: PermessoMicrofono; audioInAttesa: AudioRacconto | null; testoInAttesa: TestoRacconto | null }
@@ -54,6 +61,13 @@ export type EventoRacconta =
   | { tipo: 'riprova'; silenzioso?: boolean }
   | { tipo: 'modificaTesto'; testo: string }
   | { tipo: 'ricomincia' }
+  /** "Crea il mio diario" da "Il tuo racconto". */
+  | { tipo: 'creaDiario' }
+  /** Il server ha compilato il diario e la bozza di oggi è già aggiornata. */
+  | { tipo: 'compilato' }
+  /** Il server non ha capito il racconto (vuoto, incomprensibile o fuori tema). */
+  | { tipo: 'nonCapito' }
+  | { tipo: 'compilazioneFallita'; errore: ErroreTrascrizione }
   /** La schermata si smonta (qualunque sia il motivo): il registratore che possedeva non esiste più. */
   | { tipo: 'uscita' }
   | { tipo: 'azzera' };
@@ -69,7 +83,9 @@ export type EffettoRacconta =
   | { tipo: 'cancellaAudio'; uri: string }
   /** Il testo trascritto (o corretto) va nella cartella documenti fino a fine giornata o alla creazione del diario. */
   | { tipo: 'salvaTesto'; racconto: TestoRacconto }
-  | { tipo: 'cancellaTesto' };
+  | { tipo: 'cancellaTesto' }
+  /** Il racconto va al server con la bozza di oggi; il diario restituito diventa la bozza (servizi/racconta.ts). */
+  | { tipo: 'compila'; racconto: TestoRacconto };
 
 export type Transizione = { stato: StatoRacconta; effetti: EffettoRacconta[] };
 
@@ -87,6 +103,10 @@ function trascrivi(audio: AudioRacconto): Transizione {
   return { stato: { tipo: 'trascrizione', audio }, effetti: [{ tipo: 'trascrivi', audio }] };
 }
 
+function compila(racconto: TestoRacconto): Transizione {
+  return { stato: { tipo: 'compilazione', racconto }, effetti: [{ tipo: 'compila', racconto }] };
+}
+
 /** Lo stato dopo un evento, con gli effetti da eseguire. Gli eventi fuori posto non cambiano nulla. */
 export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizione {
   switch (evento.tipo) {
@@ -97,7 +117,8 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
       // Una registrazione in corso (o in pausa, o in arresto) vive solo con la schermata che possiede il registratore:
       // uscendo si riparte dall'avvio, mai da una registrazione "bloccata" senza registratore. Gli altri stati restano
       // (l'audio terminato e il racconto sono sul telefono, una trascrizione in corso arriva comunque).
-      return resta(stato.tipo === 'registrazione' ? STATO_INIZIALE : stato);
+      // Il diario compilato è già nella bozza: si riparte dall'avvio (la prossima apertura registra un racconto nuovo).
+      return resta(stato.tipo === 'registrazione' || stato.tipo === 'compilato' ? STATO_INIZIALE : stato);
 
     case 'avviato': {
       if (stato.tipo !== 'avvio') return resta(stato);
@@ -190,6 +211,7 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
         return trascrivi(stato.audio);
       }
       if (stato.tipo === 'errore' && stato.audio) return trascrivi(stato.audio);
+      if (stato.tipo === 'erroreCompilazione' && (stato.errore.esito === 'riprovabile' || stato.errore.esito === 'rete')) return compila(stato.racconto);
       return resta(stato);
     }
 
@@ -207,9 +229,29 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
       if (stato.tipo === 'terminata') return { stato: pronto(), effetti: [{ tipo: 'cancellaAudio', uri: stato.audio.uri }] };
       if (stato.tipo === 'errore' && stato.audio) return { stato: pronto(), effetti: [{ tipo: 'cancellaAudio', uri: stato.audio.uri }] };
       if (stato.tipo === 'senzaConnessione') return { stato: pronto(), effetti: [{ tipo: 'cancellaAudio', uri: stato.audio.uri }] };
+      if (stato.tipo === 'erroreCompilazione') return { stato: pronto(), effetti: [{ tipo: 'cancellaTesto' }] };
       if (stato.tipo === 'pronto') return resta(pronto());
       return resta(stato);
     }
+
+    case 'creaDiario':
+      // Il testo così com'è (eventualmente corretto a mano) va al server; resta salvato finché il diario non è creato.
+      if (stato.tipo !== 'racconto') return resta(stato);
+      return compila({ testo: stato.testo, durataMs: stato.durataMs, data: stato.data });
+
+    case 'compilato':
+      // La bozza di oggi è già aggiornata: il racconto salvato sul telefono non serve più.
+      if (stato.tipo !== 'compilazione') return resta(stato);
+      return { stato: { tipo: 'compilato', data: stato.racconto.data }, effetti: [{ tipo: 'cancellaTesto' }] };
+
+    case 'nonCapito':
+      // "Non ho capito" (Figma 11): si torna a Pronto per raccontare di nuovo; il racconto non serve più.
+      if (stato.tipo !== 'compilazione') return resta(stato);
+      return { stato: pronto('nonHoCapito'), effetti: [{ tipo: 'cancellaTesto' }] };
+
+    case 'compilazioneFallita':
+      if (stato.tipo !== 'compilazione') return resta(stato);
+      return resta({ tipo: 'erroreCompilazione', racconto: stato.racconto, errore: evento.errore });
   }
 }
 
@@ -238,17 +280,27 @@ export function dataDelloStato(stato: StatoRacconta): string | null {
       return stato.audio?.data ?? null;
     case 'racconto':
       return stato.data;
+    case 'compilazione':
+    case 'erroreCompilazione':
+      return stato.racconto.data;
+    case 'compilato':
+      return stato.data;
     default:
       return null;
   }
 }
 
+/** Vero durante la compilazione (Racconta · 7, senza freccia indietro): l'uscita non è possibile finché il server non risponde. */
+export function uscitaBloccata(stato: StatoRacconta): boolean {
+  return stato.tipo === 'compilazione';
+}
+
 /**
- * Vero se all'apertura della schermata il flusso deve ripartire dall'avvio: altro giorno del diario, oppure una
- * registrazione rimasta senza registratore (la schermata precedente si è smontata senza azzerare).
+ * Vero se all'apertura della schermata il flusso deve ripartire dall'avvio: altro giorno del diario, una registrazione
+ * rimasta senza registratore (la schermata precedente si è smontata senza azzerare) o un diario già compilato.
  */
 export function ripartiDallAvvio(stato: StatoRacconta, oggi: string): boolean {
-  return stato.tipo === 'registrazione' || statoScaduto(stato, oggi);
+  return stato.tipo === 'registrazione' || stato.tipo === 'compilato' || statoScaduto(stato, oggi);
 }
 
 /** Vero se lo stato appartiene a un altro giorno del diario: si riparte dall'avvio (l'audio scaduto lo cancella la lettura della nota). */

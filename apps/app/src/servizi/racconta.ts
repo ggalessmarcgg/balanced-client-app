@@ -1,18 +1,24 @@
-// "Racconta" (step 10, lotto 1): stato del flusso condiviso tra schermata e servizi (la macchina a stati pura è in
+// "Racconta" (step 10): stato del flusso condiviso tra schermata e servizi (la macchina a stati pura è in
 // src/core/racconta/flusso.ts), consenso al microfono ricordato sul telefono, audio in attesa nella cartella documenti
-// (mai in cache: src/core/racconta/attesa.ts) e chiamata "trascrivi" del server degli agenti con l'accesso Supabase
-// del cliente (docs/server-diario-vocale.md). Le azioni sul registratore le esegue la schermata, che si collega qui.
+// (mai in cache: src/core/racconta/attesa.ts) e chiamate "trascrivi" e "compila" del server degli agenti con l'accesso
+// Supabase del cliente (docs/server-diario-vocale.md). Lotto 2: il diario compilato diventa la bozza di oggi con la
+// logica esistente del diario (servizi/giornate.ts). Le azioni sul registratore le esegue la schermata, che si collega qui.
 import { fetch as fetchExpo } from 'expo/fetch';
 import { Directory, File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
 
+import { aggiornaDiario } from '@/core/diario/bozza';
 import { dataOggiRoma } from '@/core/diario/data';
+import type { Diario } from '@/core/diario/modello';
 import { fileDaCancellare, leggiNotaAttesa, leggiNotaTesto, notaAudioInAttesa, notaTestoInAttesa, type AudioRacconto, type TestoRacconto } from '@/core/racconta/attesa';
 import { durataDichiarata } from '@/core/racconta/audio';
+import { corpoCompilazione, erroreCompilazioneApp, interpretaRispostaCompilazione, PERCORSO_COMPILA, TEMPO_MASSIMO_COMPILAZIONE_MS, type EsitoCompilazione } from '@/core/racconta/compila';
 import { riduci, ripartiDallAvvio, STATO_INIZIALE, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
 import { erroreApp, interpretaRispostaTrascrizione, intestazioniTrascrizione, nuovoIdRichiesta, PERCORSO_TRASCRIVI, TEMPO_MASSIMO_TRASCRIZIONE_MS, type EsitoTrascrizione } from '@/core/racconta/server';
 import { leggi, scrivi } from '@/servizi/archivio';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
+import { salvaBozzaInAttesa } from '@/servizi/giornate';
+import { aggiornaMemoria, memoriaDiario, persistiMemoria } from '@/servizi/memoriaDiario';
 import { supabase } from '@/servizi/supabase';
 
 const URL_AGENTI = process.env.EXPO_PUBLIC_AGENTI_URL;
@@ -22,10 +28,10 @@ if (!URL_AGENTI) {
 
 // ---- Stato del flusso ---------------------------------------------------------------------------------------------
 
-/** I tre suggerimenti del tutorial di Racconta (Figma 586:5739, 758:7670, 758:7728), una volta per account. */
-export type PuntoTutorial = 'pronto' | 'terminata' | 'racconto';
+/** I suggerimenti del tutorial di Racconta (Figma 586:5739, 758:7670, 758:7728 e, sul riepilogo, 758:7773), una volta per account. */
+export type PuntoTutorial = 'pronto' | 'terminata' | 'racconto' | 'riepilogo';
 export type TutorialVisti = Record<PuntoTutorial, boolean>;
-const TUTORIAL_NESSUNO: TutorialVisti = { pronto: false, terminata: false, racconto: false };
+const TUTORIAL_NESSUNO: TutorialVisti = { pronto: false, terminata: false, racconto: false, riepilogo: false };
 
 export type MemoriaRacconta = { stato: StatoRacconta; tutorialVisti: TutorialVisti };
 
@@ -137,7 +143,43 @@ async function esegui(effetto: EffettoRacconta): Promise<void> {
     case 'cancellaTesto':
       if (clienteCorrente) await rimuoviFile(chiaveTesto(clienteCorrente), DOCUMENTI);
       return;
+    case 'compila': {
+      const esito = await compilaRacconto(effetto.racconto.testo, effetto.racconto.data);
+      if (esito.tipo === 'nonHoCapito') invia({ tipo: 'nonCapito' });
+      else if (esito.tipo === 'errore') invia({ tipo: 'compilazioneFallita', errore: esito.errore });
+      else {
+        const problema = applicaDiarioCompilato(effetto.racconto.data, esito.diario);
+        invia(problema ? { tipo: 'compilazioneFallita', errore: erroreCompilazioneApp(problema, null) } : { tipo: 'compilato' });
+      }
+      return;
+    }
   }
+}
+
+// ---- Lotto 2: il diario compilato diventa la bozza di oggi --------------------------------------------------------
+
+/** Il diario di oggi in memoria (letto da Oggi), se è del giorno del racconto e non ancora condiviso. */
+function diarioDiOggi(data: string): { tipo: 'ok'; diario: Diario } | { tipo: 'problema'; codice: 'diario_non_disponibile' | 'gia_condiviso' } {
+  const locale = memoriaDiario().locale;
+  if (!locale || locale.data !== data || (clienteCorrente && locale.clientId !== clienteCorrente)) return { tipo: 'problema', codice: 'diario_non_disponibile' };
+  if (locale.riga.tipo === 'condiviso') return { tipo: 'problema', codice: 'gia_condiviso' };
+  return { tipo: 'ok', diario: locale.diario };
+}
+
+/**
+ * Il diario restituito dal server (già fuso con la bozza) prende il posto del diario di oggi e si salva subito con la
+ * logica del diario: copia locale, poi la bozza sul server senza status (mai una bozza vuota, pianificaSalvataggio).
+ * Restituisce il problema se la giornata non si può più cambiare (condivisa nel frattempo, giorno cambiato).
+ */
+function applicaDiarioCompilato(data: string, diario: Diario): 'diario_non_disponibile' | 'gia_condiviso' | null {
+  const oggi = diarioDiOggi(data);
+  if (oggi.tipo === 'problema') return oggi.codice;
+  const locale = memoriaDiario().locale;
+  if (!locale) return 'diario_non_disponibile';
+  aggiornaMemoria({ locale: aggiornaDiario(locale, diario) });
+  persistiMemoria();
+  void salvaBozzaInAttesa();
+  return null;
 }
 
 /**
@@ -209,7 +251,7 @@ async function leggiTutorialVisti(clientId: string): Promise<TutorialVisti> {
   try {
     const testo = await leggi(`${PREFISSO_TUTORIAL}.${clientId}`);
     const grezzo = testo ? (JSON.parse(testo) as Partial<TutorialVisti>) : {};
-    return { pronto: grezzo.pronto === true, terminata: grezzo.terminata === true, racconto: grezzo.racconto === true };
+    return { pronto: grezzo.pronto === true, terminata: grezzo.terminata === true, racconto: grezzo.racconto === true, riepilogo: grezzo.riepilogo === true };
   } catch {
     return TUTORIAL_NESSUNO;
   }
@@ -321,7 +363,7 @@ export async function leggiAudioInAttesa(clientId: string, oggi: string): Promis
   return audio;
 }
 
-// ---- Chiamata al server -----------------------------------------------------------------------------------------------
+// ---- Chiamate al server -----------------------------------------------------------------------------------------------
 
 const MARGINE_SCADENZA_TOKEN_S = 60;
 
@@ -383,6 +425,52 @@ export async function trascriviAudio(audio: AudioRacconto): Promise<EsitoTrascri
   if (esito.tipo === 'errore' && esito.errore.esito === 'sessione' && esito.errore.httpStatus === 401) {
     const nuovoToken = await tokenAccesso(true);
     if (nuovoToken) return inviaAudio(nuovoToken, audio, byte, richiestaId);
+  }
+  return esito;
+}
+
+async function inviaCompilazione(token: string, corpo: string, richiestaId: string): Promise<EsitoCompilazione> {
+  const controllo = new AbortController();
+  const timer = setTimeout(() => controllo.abort(), TEMPO_MASSIMO_COMPILAZIONE_MS);
+  try {
+    const risposta = await fetchExpo(`${URL_AGENTI}${PERCORSO_COMPILA}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', 'X-Request-Id': richiestaId },
+      body: corpo,
+      signal: controllo.signal,
+    });
+    const idRisposta = risposta.headers.get('x-request-id') ?? richiestaId;
+    let json: unknown = null;
+    try {
+      json = await risposta.json();
+    } catch {
+      json = null;
+    }
+    return interpretaRispostaCompilazione(risposta.status, json, idRisposta);
+  } catch (e) {
+    const nome = (e as { name?: string })?.name;
+    return { tipo: 'errore', errore: erroreCompilazioneApp(nome === 'AbortError' ? 'tempo_scaduto' : 'rete', richiestaId) };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * POST /v1/diario-vocale/compila: il racconto (così come trascritto ed eventualmente corretto), la bozza di oggi dalla
+ * memoria dell'app (con "oggi riposo") e il giorno del diario. Con un token rifiutato si rinnova la sessione e si
+ * ripete una volta. Il server non scrive sul diario: restituisce i campi, già fusi con la bozza.
+ */
+export async function compilaRacconto(racconto: string, data: string): Promise<EsitoCompilazione> {
+  const richiestaId = nuovoIdRichiesta();
+  const oggi = diarioDiOggi(data);
+  if (oggi.tipo === 'problema') return { tipo: 'errore', errore: erroreCompilazioneApp(oggi.codice, null) };
+  const corpo = JSON.stringify(corpoCompilazione(data, racconto, oggi.diario));
+  const token = await tokenAccesso();
+  if (!token) return { tipo: 'errore', errore: erroreCompilazioneApp('sessione_assente', richiestaId) };
+  const esito = await inviaCompilazione(token, corpo, richiestaId);
+  if (esito.tipo === 'errore' && esito.errore.esito === 'sessione' && esito.errore.httpStatus === 401) {
+    const nuovoToken = await tokenAccesso(true);
+    if (nuovoToken) return inviaCompilazione(nuovoToken, corpo, richiestaId);
   }
   return esito;
 }

@@ -49,6 +49,7 @@ export default function RootLayout() {
         <Stack.Screen name="contenuti/index" options={{ animation: 'default' }} />
         <Stack.Screen name="contenuti/[id]" options={{ animation: 'default' }} />
         <Stack.Screen name="racconta" options={{ animation: 'default' }} />
+        <Stack.Screen name="racconta-riepilogo" options={{ animation: 'default' }} />
         <Stack.Screen name="storico" options={{ animation: 'default' }} />
         {/* Rotte di sviluppo: escluse dalle versioni per i clienti. */}
         <Stack.Protected guard={__DEV__}>
