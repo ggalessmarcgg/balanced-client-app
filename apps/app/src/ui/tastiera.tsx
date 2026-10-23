@@ -5,15 +5,21 @@
 // (useKeyboardHandler.onStart, altezza finale nota) si calcola di quanto scorrere e a ogni fotogramma (onMove) si
 // scorre in proporzione all'avanzamento, sul thread dell'interfaccia (Reanimated). In fondo al contenuto uno spazio
 // alto quanto la parte di tastiera che copre lo scorrimento, così c'è sempre dove scorrere.
-import { createContext, useCallback, useContext, useMemo, useRef, type ComponentRef, type ReactNode, type RefObject } from 'react';
-import { Keyboard, TextInput, useWindowDimensions, View, type GestureResponderEvent, type NativeScrollEvent, type NativeSyntheticEvent, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
-import { useKeyboardHandler } from 'react-native-keyboard-controller';
-import Reanimated, { scrollTo, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
+// Campi lunghi (decisione del 23/10/2026): quando il campo è più alto dello spazio libero sopra la tastiera non si
+// porta sopra la tastiera il bordo inferiore del campo intero ma la riga del cursore, che si segue mentre si scrive
+// o si tocca in un altro punto del testo. La posizione del cursore e del campo arrivano da react-native-keyboard-
+// controller sul thread dell'interfaccia (useReanimatedFocusedInput, useFocusedInputHandler), senza misure dal JS.
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, type ComponentRef, type ReactNode, type RefObject } from 'react';
+import { findNodeHandle, Keyboard, TextInput, useWindowDimensions, View, type GestureResponderEvent, type NativeScrollEvent, type NativeSyntheticEvent, type StyleProp, type TextInputProps, type ViewStyle } from 'react-native';
+import { useFocusedInputHandler, useKeyboardHandler, useReanimatedFocusedInput } from 'react-native-keyboard-controller';
+import Reanimated, { runOnUI, scrollTo, useAnimatedReaction, useAnimatedRef, useAnimatedScrollHandler, useAnimatedStyle, useSharedValue, type AnimatedRef, type SharedValue } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { toccoChiudeCampo } from '@/core/tastiera/tocco';
+import { campoLungo, spostamentoPerCursore } from '@/core/tastiera/cursore';
 import { colori, spazio } from '@/ui/theme';
 
-/** Distanza tra il bordo inferiore del campo e la tastiera. */
+/** Distanza tra il bordo inferiore del campo (o della riga del cursore) e la tastiera. */
 export const MARGINE_SOPRA_TASTIERA = spazio[16];
 
 /** Proprietà comuni a tutti i campi di testo dell'app: tastiera chiara, cursore e selezione nel colore dell'azione. */
@@ -78,14 +84,17 @@ export type ScorrimentoConTastiera = {
  */
 export function useScorrimentoConTastiera(spazioSotto: number): ScorrimentoConTastiera {
   const { height: altezzaFinestra } = useWindowDimensions();
+  const { top: cimaSicura } = useSafeAreaInsets();
   const riferimento = useAnimatedRef<Reanimated.ScrollView>();
   const posizione = useSharedValue(0);
   const onScroll = useAnimatedScrollHandler((e) => {
     'worklet';
     posizione.value = e.contentOffset.y;
   });
-  /** Bordo inferiore del campo a fuoco nella finestra (−1 = nessun campo). */
+  /** Bordo inferiore del contenitore del campo a fuoco nella finestra (−1 = nessun campo), misurato dal JS al fuoco. */
   const fondoCampo = useSharedValue(-1);
+  /** Altezza del contenitore del campo a fuoco (0 = non misurata): decide se il campo è lungo. */
+  const altezzaCampo = useSharedValue(0);
   const inizio = useSharedValue(0);
   const spostamento = useSharedValue(0);
   /** Altezza della tastiera: quella corrente durante l'animazione e quella finale della comparsa in corso o conclusa. */
@@ -93,29 +102,108 @@ export function useScorrimentoConTastiera(spazioSotto: number): ScorrimentoConTa
   const tastieraFinale = useSharedValue(0);
   const campoAFuoco = useRef<RefObject<Vista | null> | null>(null);
 
+  // Campo di testo a fuoco e cursore, dal thread dell'interfaccia (react-native-keyboard-controller): la cima del
+  // TextInput nelle coordinate del contenuto (posizione nella finestra + scorrimento al momento della misura, così
+  // resta valida mentre la pagina scorre) e la riga del cursore rispetto alla cima del TextInput. Gli eventi sono
+  // globali: contano solo se il campo sta dentro QUESTO scorrimento (tag dello ScrollView genitore riportato
+  // dall'evento, oppure campo registrato dal contesto), altrimenti ogni pagina montata scorrerebbe per conto suo.
+  const { input } = useReanimatedFocusedInput();
+  const tagScorrimento = useSharedValue(-1);
+  const haCampoRegistrato = useSharedValue(false);
+  useEffect(() => {
+    const vista = riferimento.current;
+    tagScorrimento.value = vista ? (findNodeHandle(vista) ?? -1) : -1;
+  }, [riferimento, tagScorrimento]);
+  const cimaCampoNelContenuto = useSharedValue(-1);
+  const altezzaTextInput = useSharedValue(0);
+  const cursoreCima = useSharedValue(0);
+  const cursoreFondo = useSharedValue(0);
+  useAnimatedReaction(
+    () => input.value,
+    (v) => {
+      'worklet';
+      const mio = v && v.layout && (v.parentScrollViewTarget === tagScorrimento.value || haCampoRegistrato.value);
+      if (mio) {
+        cimaCampoNelContenuto.value = v.layout.absoluteY + posizione.value;
+        altezzaTextInput.value = v.layout.height;
+      } else {
+        cimaCampoNelContenuto.value = -1;
+        altezzaTextInput.value = 0;
+      }
+    },
+  );
+  /** Vero se il campo a fuoco appartiene a questo scorrimento. */
+  const campoMio = (): boolean => {
+    'worklet';
+    return cimaCampoNelContenuto.value >= 0 || haCampoRegistrato.value;
+  };
+
+  // Di quanto scorrere perché il campo (breve: il bordo inferiore del contenitore; lungo: la riga del cursore, che
+  // deve stare anche sotto la cima visibile) stia sopra la tastiera alta `altezzaTastiera`. 0 se è già a posto.
+  const spostamentoNecessario = (altezzaTastiera: number): number => {
+    'worklet';
+    if (!campoMio()) return 0;
+    const cimaCampo = cimaCampoNelContenuto.value < 0 ? -1 : cimaCampoNelContenuto.value - posizione.value;
+    const altezza = altezzaCampo.value > 0 ? altezzaCampo.value : altezzaTextInput.value;
+    const lungo = campoLungo(altezza, { altezzaFinestra, altezzaTastiera, cimaSicura, margine: MARGINE_SOPRA_TASTIERA });
+    if (lungo && cimaCampo >= 0) {
+      return spostamentoPerCursore(
+        { cima: cimaCampo + cursoreCima.value, fondo: cimaCampo + cursoreFondo.value },
+        { altezzaFinestra, altezzaTastiera, cimaSicura, margine: MARGINE_SOPRA_TASTIERA },
+      );
+    }
+    // Campo breve: il contenitore misurato dal JS; se non ancora misurato, il TextInput stesso.
+    const fondo = fondoCampo.value >= 0 ? fondoCampo.value : cimaCampo >= 0 ? cimaCampo + altezzaTextInput.value : -1;
+    if (fondo < 0) return 0;
+    return Math.max(0, fondo - (altezzaFinestra - altezzaTastiera - MARGINE_SOPRA_TASTIERA));
+  };
+
+  // Cursore spostato (tocco in un altro punto, nuova riga mentre si scrive) con la tastiera già aperta: la riga del
+  // cursore si riporta in vista con uno scorrimento animato (fluido, mai a scatti).
+  useFocusedInputHandler(
+    {
+      onSelectionChange: (e) => {
+        'worklet';
+        if (!campoMio()) return;
+        cursoreCima.value = e.selection.start.y;
+        cursoreFondo.value = e.selection.end.y;
+        if (tastieraFinale.value <= 0 || spostamento.value !== 0) return;
+        const delta = spostamentoNecessario(tastieraFinale.value);
+        if (Math.abs(delta) >= 1) scrollTo(riferimento, 0, Math.max(0, posizione.value + delta), true);
+      },
+    },
+    [altezzaFinestra, cimaSicura],
+  );
+
   // Tastiera già aperta (fuoco passato da un altro campo, campo cresciuto): misura e scorrimento animato dal JS.
   const riporta = useCallback(() => {
     const campo = campoAFuoco.current?.current;
     if (!campo) return;
     campo.measureInWindow((_x, y, _w, h) => {
       fondoCampo.value = y + h;
+      altezzaCampo.value = h;
       if (tastieraFinale.value <= 0) return;
+      // Campo lungo: lo scorrimento lo decide il cursore (useFocusedInputHandler), non il bordo del contenitore.
+      if (campoLungo(h, { altezzaFinestra, altezzaTastiera: tastieraFinale.value, cimaSicura, margine: MARGINE_SOPRA_TASTIERA })) return;
       const eccesso = y + h - (altezzaFinestra - tastieraFinale.value - MARGINE_SOPRA_TASTIERA);
-      if (eccesso > 0) riferimento.current?.scrollTo({ y: posizione.value + eccesso, animated: true });
+      if (eccesso <= 0) return;
+      const destinazione = posizione.value + eccesso;
+      runOnUI(() => {
+        'worklet';
+        scrollTo(riferimento, 0, destinazione, true);
+      })();
     });
-  }, [riferimento, posizione, fondoCampo, tastieraFinale, altezzaFinestra]);
+  }, [riferimento, posizione, fondoCampo, altezzaCampo, tastieraFinale, altezzaFinestra, cimaSicura]);
 
   useKeyboardHandler(
     {
       onStart: (e) => {
         'worklet';
-        // I valori condivisi di Reanimated si aggiornano per `.value` anche dentro i worklet: la regola del React
-        // Compiler non li riconosce.
         // eslint-disable-next-line react-hooks/immutability
         tastieraFinale.value = e.height;
-        if (e.height > 0 && fondoCampo.value >= 0) {
+        if (e.height > 0) {
           inizio.value = posizione.value;
-          spostamento.value = Math.max(0, fondoCampo.value - (altezzaFinestra - e.height - MARGINE_SOPRA_TASTIERA));
+          spostamento.value = spostamentoNecessario(e.height);
         } else {
           spostamento.value = 0;
         }
@@ -123,18 +211,18 @@ export function useScorrimentoConTastiera(spazioSotto: number): ScorrimentoConTa
       onMove: (e) => {
         'worklet';
         tastiera.value = e.height;
-        if (spostamento.value > 0) scrollTo(riferimento, 0, inizio.value + spostamento.value * e.progress, false);
+        if (spostamento.value !== 0) scrollTo(riferimento, 0, Math.max(0, inizio.value + spostamento.value * e.progress), false);
       },
       onEnd: (e) => {
         'worklet';
         tastiera.value = e.height;
-        if (spostamento.value > 0) {
-          scrollTo(riferimento, 0, inizio.value + spostamento.value, false);
+        if (spostamento.value !== 0) {
+          scrollTo(riferimento, 0, Math.max(0, inizio.value + spostamento.value), false);
           spostamento.value = 0;
         }
       },
     },
-    [altezzaFinestra],
+    [altezzaFinestra, cimaSicura],
   );
 
   const stileSpazio = useAnimatedStyle<ViewStyle>(() => ({ height: Math.max(0, tastiera.value - spazioSotto) }));
@@ -143,17 +231,23 @@ export function useScorrimentoConTastiera(spazioSotto: number): ScorrimentoConTa
     () => ({
       registra: (campo) => {
         campoAFuoco.current = campo;
+        // eslint-disable-next-line react-hooks/immutability
+        haCampoRegistrato.value = true;
         riporta();
       },
       rimuovi: (campo) => {
         if (campoAFuoco.current !== campo) return;
         campoAFuoco.current = null;
         // eslint-disable-next-line react-hooks/immutability
+        haCampoRegistrato.value = false;
+        // eslint-disable-next-line react-hooks/immutability
         fondoCampo.value = -1;
+        // eslint-disable-next-line react-hooks/immutability
+        altezzaCampo.value = 0;
       },
       aggiorna: () => setTimeout(riporta, ATTESA_LAYOUT_MS),
     }),
-    [riporta, fondoCampo],
+    [riporta, fondoCampo, altezzaCampo, haCampoRegistrato],
   );
 
   return { riferimento, posizione, onScroll, stileSpazio, contesto };
