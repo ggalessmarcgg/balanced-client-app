@@ -16,6 +16,21 @@ import { colori, margine, spazio } from '@/ui/theme';
  * sessione salvata nel portachiavi. Solo nelle versioni di sviluppo.
  */
 export function PianoSviluppo() {
+  const clientId = useClientIdSviluppo();
+  return (
+    <SafeAreaView style={stili.pagina} edges={['top', 'bottom']}>
+      <ScrollView contentContainerStyle={stili.contenuto}>
+        <Testo stile="h2">Piano · lettura</Testo>
+        {clientId === undefined && <Testo stile="bodyDetails">Leggo lo stato…</Testo>}
+        {clientId === null && <Testo stile="bodyDetails">Nessun abbonato in sessione: accedi con un account abbonato (es. +test4, alessandro@test16.com) e riapri questa rotta.</Testo>}
+        {clientId && <Lettura clientId={clientId} />}
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+/** clientId dell'account in sessione: dallo stato in memoria o, se la rotta è stata aperta direttamente, dal portachiavi (undefined mentre legge, null senza abbonato). */
+export function useClientIdSviluppo(): string | null | undefined {
   const [clientId, setClientId] = useState<string | null | undefined>(() => clientIdDa());
   useEffect(() => {
     if (clientId !== undefined) return;
@@ -27,16 +42,7 @@ export function PianoSviluppo() {
       attivo = false;
     };
   }, [clientId]);
-  return (
-    <SafeAreaView style={stili.pagina} edges={['top', 'bottom']}>
-      <ScrollView contentContainerStyle={stili.contenuto}>
-        <Testo stile="h2">Piano · lettura</Testo>
-        {clientId === undefined && <Testo stile="bodyDetails">Leggo lo stato…</Testo>}
-        {clientId === null && <Testo stile="bodyDetails">Nessun abbonato in sessione: accedi con un account abbonato (es. +test4, alessandro@test16.com) e riapri questa rotta.</Testo>}
-        {clientId && <Lettura clientId={clientId} />}
-      </ScrollView>
-    </SafeAreaView>
-  );
+  return clientId;
 }
 
 function clientIdDa(): string | undefined {

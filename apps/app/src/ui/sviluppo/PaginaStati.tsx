@@ -15,6 +15,7 @@ import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConness
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
+import { PianoRealeSviluppo, PianoSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
 import { PianoSviluppo } from '@/ui/sviluppo/PianoSviluppo';
 import { RaccontaSviluppo } from '@/ui/sviluppo/RaccontaSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
@@ -182,6 +183,20 @@ export const STATI_SVILUPPO = [
   ['notifiche-errore', 'Notifiche senza connessione (Riprova)'],
   ['uscita-avviso', 'Esci con modifiche non inviate: Dialogo "Hai modifiche non ancora salvate" (Pannello dal basso di 499:2568)'],
   ['barra-animata', 'Barra di navigazione: la voce attiva cambia da sola ogni 2 s (sfondo che scorre, colori in dissolvenza)'],
+  ['piano-1-fisso', 'Piano · 1 · Piano fisso (527:2947), "G" selezionato'],
+  ['piano-1-fisso-nomi-lunghi', 'Piano fisso con nomi di pasto lunghi (intestazioni a capo), giorno di oggi'],
+  ['piano-1-fisso-giorno-vuoto', 'Piano fisso con il mercoledì senza righe: il giorno non compare nel selettore'],
+  ['piano-1-senza-indicazioni', 'Piano fisso senza indicazioni: nessun "Indicazioni" sulla riga del titolo'],
+  ['piano-2-variabile', 'Piano · 2 · Piano variabile (527:3070), "Pranzo" selezionato'],
+  ['piano-2-variabile-nomi-lunghi', 'Piano variabile con 4 pasti dai nomi lunghi e minuscoli, pasto per fascia oraria'],
+  ['piano-3-in-elaborazione', 'Piano · 3 · Piano in elaborazione (527:3174)'],
+  ['piano-caricamento', 'Piano in caricamento (segnaposti sulla forma della pagina)'],
+  ['piano-errore', 'Piano · Errore di caricamento con "Riprova" (563:4978)'],
+  ['piano-senza-rete', 'Piano senza connessione e senza copia (563:4517)'],
+  ['piano-senza-rete-copia', 'Piano senza connessione con la copia: Avviso connessione sopra il titolo'],
+  ['piano-1.1-indicazioni', 'Piano · 1.1 · Indicazioni (775:7878)'],
+  ['piano-reale', 'Scheda Piano vera per l\'account in sessione (serve un abbonato, es. +test4)'],
+  ['piano-reale-indicazioni', 'Indicazioni vere per l\'account in sessione'],
   ['piano-lettura', 'Piano · lettura (step 8, lotto 1): il piano composto per l\'account in sessione, in forma testuale (serve un abbonato, es. +test4)'],
 ] as const;
 export type ChiaveStatoSviluppo = (typeof STATI_SVILUPPO)[number][0];
@@ -545,6 +560,34 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
           sovrapposti={<Dialogo aperto titolo="Hai modifiche non ancora salvate" testo="Se esci ora andranno perse." annulla={{ etichetta: 'Annulla', onPress: nulla }} conferma={{ etichetta: 'Esci comunque', onPress: nulla }} />}
         />
       );
+    case 'piano-1-fisso':
+      return <PianoSchermataSviluppo variante="fisso" />;
+    case 'piano-1-fisso-nomi-lunghi':
+      return <PianoSchermataSviluppo variante="fisso-nomi-lunghi" />;
+    case 'piano-1-fisso-giorno-vuoto':
+      return <PianoSchermataSviluppo variante="fisso-giorno-vuoto" />;
+    case 'piano-1-senza-indicazioni':
+      return <PianoSchermataSviluppo variante="senza-indicazioni" />;
+    case 'piano-2-variabile':
+      return <PianoSchermataSviluppo variante="variabile" />;
+    case 'piano-2-variabile-nomi-lunghi':
+      return <PianoSchermataSviluppo variante="variabile-nomi-lunghi" />;
+    case 'piano-3-in-elaborazione':
+      return <PianoSchermataSviluppo variante="in-elaborazione" />;
+    case 'piano-caricamento':
+      return <PianoSchermataSviluppo variante="caricamento" />;
+    case 'piano-errore':
+      return <PianoSchermataSviluppo variante="errore" />;
+    case 'piano-senza-rete':
+      return <PianoSchermataSviluppo variante="senza-rete" />;
+    case 'piano-senza-rete-copia':
+      return <PianoSchermataSviluppo variante="senza-rete-copia" />;
+    case 'piano-1.1-indicazioni':
+      return <PianoSchermataSviluppo variante="indicazioni" />;
+    case 'piano-reale':
+      return <PianoRealeSviluppo cosa="piano" />;
+    case 'piano-reale-indicazioni':
+      return <PianoRealeSviluppo cosa="indicazioni" />;
     case 'piano-lettura':
       return <PianoSviluppo />;
     case 'barra-animata':
