@@ -1,0 +1,17 @@
+// Hook della scheda Piano (step 8): lettura all'apertura e al ritorno in primo piano, sullo stampo di useLetturaMenu.
+// `piano` null con fase pronta = nessun piano corrente ("Piano in elaborazione").
+import { useCallback } from 'react';
+
+import { componiPiano, type PianoComposto } from '@/core/piano/composizione';
+import { leggiPiano } from '@/servizi/piano';
+import { useLetturaMenu, type Lettura } from '@/servizi/useMenu';
+
+export type DatiPiano = { piano: PianoComposto | null; daCache: boolean };
+
+export function usePiano(clientId: string) {
+  const leggi = useCallback<Lettura<DatiPiano>>(async () => {
+    const esito = await leggiPiano(clientId);
+    return esito.tipo === 'ok' ? { tipo: 'ok', dati: { piano: esito.piano ? componiPiano(esito.piano) : null, daCache: esito.daCache } } : esito;
+  }, [clientId]);
+  return useLetturaMenu(leggi);
+}

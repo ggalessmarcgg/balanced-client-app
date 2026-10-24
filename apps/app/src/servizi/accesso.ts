@@ -11,6 +11,7 @@ import { svuotaArchivioFile } from '@/servizi/archivioFile';
 import { svuotaContenutiInMemoria } from '@/servizi/contenuti';
 import { svuotaRevisioni } from '@/servizi/memoriaRevisioni';
 import { svuotaNotifiche } from '@/servizi/notifiche';
+import { svuotaPiano } from '@/servizi/piano';
 import { svuotaCacheStato, svuotaStatoInMemoria } from '@/servizi/statoCliente';
 import { supabase } from '@/servizi/supabase';
 
@@ -73,6 +74,7 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   svuotaPrenotazioneInMemoria();
   svuotaRacconta();
   await svuotaNotifiche();
+  await svuotaPiano();
   await svuotaArchivioFile();
   return { revocaGlobale };
 }

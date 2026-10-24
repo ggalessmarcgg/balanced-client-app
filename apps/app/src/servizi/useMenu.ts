@@ -12,10 +12,10 @@ import { leggiNutrizionista, type DatiNutrizionista } from '@/servizi/nutrizioni
 
 export type FaseMenu = { tipo: 'caricamento' } | { tipo: 'rete' } | { tipo: 'errore' } | { tipo: 'pronto' };
 
-type Lettura<T> = () => Promise<{ tipo: 'ok'; dati: T } | { tipo: 'nonAutenticato' } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string }>;
+export type Lettura<T> = () => Promise<{ tipo: 'ok'; dati: T } | { tipo: 'nonAutenticato' } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string }>;
 
 /** Lettura comune: prima volta e a ogni ritorno in primo piano; i dati già mostrati non si sostituiscono con un errore. */
-function useLetturaMenu<T>(leggi: Lettura<T>): { fase: FaseMenu; dati: T | null; ricarica: () => void } {
+export function useLetturaMenu<T>(leggi: Lettura<T>): { fase: FaseMenu; dati: T | null; ricarica: () => void } {
   const [fase, setFase] = useState<FaseMenu>({ tipo: 'caricamento' });
   const [dati, setDati] = useState<T | null>(null);
   const montato = useRef(true);

@@ -8,6 +8,7 @@ import { giorniSettimana } from '@/core/diario/settimana';
 import type { Profilo } from '@/core/stato/stato';
 import { useNuovaRevisione } from '@/servizi/memoriaRevisioni';
 import { aggiornaNotifiche, useNotificheNuove } from '@/servizi/notifiche';
+import { aggiornaPiano } from '@/servizi/piano';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useDiario } from '@/servizi/useDiario';
@@ -35,16 +36,19 @@ function Oggi({ profilo }: { profilo: Profilo }) {
   const pannello = usePannelloGiornata(profilo.clientId, profilo.nutrizionista, diario.mostraNotifica);
   // Pallino "Nuova revisione" sulla barra: una lettura leggera dello stato delle revisioni all'avvio dell'app
   // dell'abbonato, a ogni ritorno in primo piano (e dopo la condivisione di un diario, in useDiario); nessun testo.
-  // Lo stesso per il pallino sulla campanella (notifiche degli ultimi 7 giorni, filtrate per utente).
+  // Lo stesso per il pallino sulla campanella (notifiche degli ultimi 7 giorni, filtrate per utente) e per la copia
+  // del piano alimentare (una chiamata con la versione nota: "invariato" non scarica nulla).
   const revisioneNuova = useNuovaRevisione();
   const notificheNuove = useNotificheNuove();
   useEffect(() => {
     aggiornaStatoRevisioni(profilo.clientId);
     aggiornaNotifiche();
+    aggiornaPiano(profilo.clientId);
     const sub = AppState.addEventListener('change', (stato: AppStateStatus) => {
       if (stato === 'active') {
         aggiornaStatoRevisioni(profilo.clientId);
         aggiornaNotifiche();
+        aggiornaPiano(profilo.clientId);
       }
     });
     return () => sub.remove();
