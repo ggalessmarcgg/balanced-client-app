@@ -12,6 +12,13 @@ SplashScreen.preventAutoHideAsync();
 // Tema chiaro forzato (anche con il telefono in modalità scura); in app.json userInterfaceStyle = "light".
 Appearance.setColorScheme('light');
 
+/**
+ * Pagine interne aperte sopra le schede (menu e sue pagine, notifiche, revisione, Racconta, storico, Indicazioni):
+ * entrano da destra e si chiudono verso destra con la freccia o con il gesto dal bordo che segue il dito. Un solo
+ * punto per tutte: nessuna variante per pagina.
+ */
+const OPZIONI_PAGINA_INTERNA = { animation: 'default' } as const;
+
 export default function RootLayout() {
   const [fontPronti, erroreFont] = useFontTema();
 
@@ -39,19 +46,20 @@ export default function RootLayout() {
         <Stack.Screen name="stato/account-non-collegato" />
         {/* Schede dell'abbonato (Oggi, Piano, Revisioni, Account): una sola barra di navigazione persistente nel layout del gruppo. */}
         <Stack.Screen name="(abbonato)" />
-        <Stack.Screen name="revisione/[id]" options={{ animation: 'default' }} />
-        <Stack.Screen name="indicazioni" options={{ animation: 'default' }} />
+        <Stack.Screen name="revisione/[id]" options={OPZIONI_PAGINA_INTERNA} />
+        {/* Indicazioni del piano: stesse opzioni delle pagine del menu. */}
+        <Stack.Screen name="indicazioni" options={OPZIONI_PAGINA_INTERNA} />
         {/* Menu a tutta pagina (dall'icona Menu della barra superiore) e le sue schermate. */}
-        <Stack.Screen name="menu" options={{ animation: 'default' }} />
-        <Stack.Screen name="notifiche" options={{ animation: 'default' }} />
-        <Stack.Screen name="nutrizionista" options={{ animation: 'default' }} />
-        <Stack.Screen name="appuntamenti" options={{ animation: 'default' }} />
-        <Stack.Screen name="peso-misure" options={{ animation: 'default' }} />
-        <Stack.Screen name="contenuti/index" options={{ animation: 'default' }} />
-        <Stack.Screen name="contenuti/[id]" options={{ animation: 'default' }} />
-        <Stack.Screen name="racconta" options={{ animation: 'default' }} />
-        <Stack.Screen name="racconta-riepilogo" options={{ animation: 'default' }} />
-        <Stack.Screen name="storico" options={{ animation: 'default' }} />
+        <Stack.Screen name="menu" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="notifiche" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="nutrizionista" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="appuntamenti" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="peso-misure" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="contenuti/index" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="contenuti/[id]" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="racconta" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="racconta-riepilogo" options={OPZIONI_PAGINA_INTERNA} />
+        <Stack.Screen name="storico" options={OPZIONI_PAGINA_INTERNA} />
         {/* Rotte di sviluppo: escluse dalle versioni per i clienti. */}
         <Stack.Protected guard={__DEV__}>
           <Stack.Screen name="sviluppo/componenti" />
