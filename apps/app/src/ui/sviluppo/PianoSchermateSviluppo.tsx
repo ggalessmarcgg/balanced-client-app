@@ -1,0 +1,103 @@
+import { useRouter } from 'expo-router';
+import { useCallback, useMemo } from 'react';
+
+import { componiPiano } from '@/core/piano/composizione';
+import type { GiornoServer, IndicazioneServer, PastoServer, PianoServer, RigaServer, SezioneServer } from '@/core/piano/tipi';
+import { usePiano } from '@/servizi/usePiano';
+import { SchermataIndicazioni } from '@/ui/schermate/SchermataIndicazioni';
+import { SchermataPiano, type FasePiano } from '@/ui/schermate/SchermataPiano';
+import { useClientIdSviluppo } from '@/ui/sviluppo/PianoSviluppo';
+
+// Piani sintetici per la pagina degli stati (step 8, lotto 2): i testi del fisso e del variabile sono quelli dei
+// disegni Figma 527:2947 e 527:3070, le indicazioni quelle di 775:7878.
+const nulla = () => {};
+const riga = (position: number, name: string, practical_quantity: string | null = null, parte: Partial<RigaServer> = {}): RigaServer => ({ position, name, quantity_type: 'libero', quantity: null, measure_type: null, practical_quantity, ...parte });
+const aPiacere = (position: number, name: string): RigaServer => riga(position, name, null, { quantity_type: 'a_piacere' });
+const sezione = (position: number, category: SezioneServer['category'], rows: RigaServer[]): SezioneServer => ({ position, category, rows });
+const pasto = (position: number, name: string, sections: SezioneServer[]): PastoServer => ({ id: `${position}-${name}`, position, name, sections });
+const GIORNI = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+const AGGIORNATO = '2026-10-12T10:00:00+00:00';
+
+const INDICAZIONI: IndicazioneServer[] = [
+  { position: 1, title: 'Acqua e caffè', body: 'Bevi almeno un litro e mezzo d’acqua al giorno, distribuendola tra i pasti: tieni una bottiglia sulla scrivania e riempila due volte. Il caffè va bene fino a tre al giorno, senza zucchero o con poco; l’ultimo entro metà pomeriggio, per non disturbare il sonno.' },
+  { position: 2, title: 'Il pasto libero', body: 'Una volta a settimana puoi concederti un pasto libero, senza pesare nulla. Goditelo con calma, seduta a tavola, e riprendi il piano dal pasto successivo, senza compensare saltando il pasto dopo.' },
+  { position: 3, title: 'Il pasto da portare via', body: 'Nei giorni in ufficio prepara il pranzo la sera prima: una porzione di cereali, una di proteine e verdure abbondanti in un unico contenitore. Condisci con l’olio al momento di mangiare, così le verdure restano croccanti.' },
+];
+
+function pastiFigma(nomi: [string, string, string, string, string] = ['Colazione', 'Spuntino', 'Pranzo', 'Spuntino', 'Cena']): PastoServer[] {
+  return [
+    pasto(1, nomi[0], [sezione(1, 'proteine', [riga(1, 'Yogurt greco bianco', '150 g')]), sezione(2, 'carboidrati', [riga(1, "Fiocchi d'avena", '3 cucchiai')]), sezione(3, 'fibre', [aPiacere(1, 'Frutti di bosco')])]),
+    pasto(2, nomi[1], [sezione(1, 'zuccheri', [riga(1, 'Mela', '1 frutto')])]),
+    pasto(3, nomi[2], [sezione(1, 'carboidrati', [riga(1, 'Riso basmati', '70 g')]), sezione(2, 'proteine', [riga(1, 'Petto di pollo', '120 g')]), sezione(3, 'fibre', [aPiacere(1, 'Zucchine')]), sezione(4, 'grassi', [riga(1, 'Olio EVO', '1 cucchiaio')])]),
+    pasto(4, nomi[3], [sezione(1, 'zuccheri', [riga(1, 'Mela', '1 frutto')])]),
+    pasto(5, nomi[4], [sezione(1, 'proteine', [riga(1, 'Salmone', '150 g')]), sezione(2, 'carboidrati', [riga(1, 'Patate', '200 g')]), sezione(3, 'fibre', [aPiacere(1, 'Insalata mista')]), sezione(4, 'grassi', [riga(1, 'Olio EVO', '1 cucchiaio')])]),
+  ];
+}
+
+function fisso(pasti: () => PastoServer[], opzioni: { giornoVuoto?: number; indicazioni?: IndicazioneServer[] } = {}): PianoServer {
+  const days: GiornoServer[] = GIORNI.map((name, i) => ({ day_index: i + 1, name, meals: opzioni.giornoVuoto === i + 1 ? [pasto(1, 'Colazione', [sezione(1, 'carboidrati', [])])] : pasti() }));
+  return { id: 'fisso-sviluppo', plan_type: 'fisso', sent_at: AGGIORNATO, updated_at: AGGIORNATO, days, indications: opzioni.indicazioni ?? INDICAZIONI };
+}
+
+function variabile(nomi: [string, string, string, string] = ['Colazione', 'Pranzo', 'Cena', 'Spuntini']): PianoServer {
+  const meals = [
+    pasto(1, nomi[0], [sezione(1, 'carboidrati', [riga(1, 'Pane integrale', '2 fette'), riga(2, "Fiocchi d'avena", '40 g')]), sezione(2, 'proteine', [riga(1, 'Yogurt greco', '150 g')]), sezione(3, 'zuccheri', [riga(1, 'Miele', '1 cucchiaino')])]),
+    pasto(2, nomi[1], [
+      sezione(1, 'carboidrati', [riga(1, 'Pasta o riso integrale', '70 g'), riga(2, 'Pane integrale', '2 fette'), riga(3, 'Gnocchi di patate', '150 g')]),
+      sezione(2, 'proteine', [riga(1, 'Legumi', '120 g'), riga(2, 'Carne bianca', '120 g'), riga(3, 'Pesce', '150 g'), riga(4, 'Uova', null, { quantity_type: 'precisa', quantity: 2 })]),
+      sezione(3, 'grassi', [riga(1, "Olio extravergine d'oliva", '1 cucchiaio')]),
+      sezione(4, 'fibre', [aPiacere(1, 'Verdure di stagione')]),
+      sezione(5, 'zuccheri', [riga(1, 'Frutta fresca', '1 frutto')]),
+    ]),
+    pasto(3, nomi[2], [sezione(1, 'proteine', [riga(1, 'Pesce', '150 g'), riga(2, 'Uova', null, { quantity_type: 'precisa', quantity: 2 })]), sezione(2, 'carboidrati', [riga(1, 'Pane integrale', '50 g')]), sezione(3, 'grassi', [riga(1, "Olio extravergine d'oliva", '1 cucchiaio')]), sezione(4, 'fibre', [aPiacere(1, 'Verdure di stagione')])]),
+    pasto(4, nomi[3], [sezione(1, 'zuccheri', [riga(1, 'Frutta fresca', '1 frutto')]), sezione(2, 'proteine', [riga(1, 'Yogurt bianco', '125 g')])]),
+  ];
+  return { id: 'variabile-sviluppo', plan_type: 'variabile', sent_at: AGGIORNATO, updated_at: AGGIORNATO, days: [{ day_index: 1, name: 'Giornata tipo', meals }], indications: INDICAZIONI };
+}
+
+const NOMI_LUNGHI_FISSO: [string, string, string, string, string] = ['Colazione (salata o dolce semplice, più sostanziosa nei giorni di allenamento)', 'Spuntino di metà mattina', 'Pranzo (mensa nei giorni in ufficio)', 'Spuntino delle 17 (pre-allenamento nei giorni di palestra)', 'Cena'];
+const NOMI_LUNGHI_VARIABILE: [string, string, string, string] = ['colazione (salata o dolce, a scelta)', 'Pranzo (mensa nei giorni in ufficio)', "Cena (leggera nei giorni di riposo)", "Spuntino pomeridiano prima dell'allenamento"];
+
+export type VariantePianoSviluppo = 'fisso' | 'fisso-nomi-lunghi' | 'fisso-giorno-vuoto' | 'senza-indicazioni' | 'variabile' | 'variabile-nomi-lunghi' | 'in-elaborazione' | 'caricamento' | 'errore' | 'senza-rete' | 'senza-rete-copia' | 'indicazioni';
+
+const PIANI: Record<string, () => PianoServer> = {
+  fisso: () => fisso(() => pastiFigma()),
+  'fisso-nomi-lunghi': () => fisso(() => pastiFigma(NOMI_LUNGHI_FISSO)),
+  'fisso-giorno-vuoto': () => fisso(() => pastiFigma(), { giornoVuoto: 3 }),
+  'senza-indicazioni': () => fisso(() => pastiFigma(), { indicazioni: [] }),
+  variabile: () => variabile(),
+  'variabile-nomi-lunghi': () => variabile(NOMI_LUNGHI_VARIABILE),
+  'senza-rete-copia': () => fisso(() => pastiFigma()),
+};
+/** Pagina iniziale come nei disegni: "G" nel fisso, "Pranzo" nel variabile. */
+const INDICE_FIGMA: Partial<Record<VariantePianoSviluppo, number>> = { fisso: 3, 'senza-indicazioni': 3, 'senza-rete-copia': 3, variabile: 1 };
+
+export function PianoSchermataSviluppo({ variante }: { variante: VariantePianoSviluppo }) {
+  const router = useRouter();
+  const onIndicazioni = useCallback(() => router.push({ pathname: '/sviluppo/stati', params: { stato: 'piano-1.1-indicazioni' } }), [router]);
+  const piano = useMemo(() => {
+    const costruisci = PIANI[variante];
+    return costruisci ? componiPiano(costruisci()) : null;
+  }, [variante]);
+  if (variante === 'indicazioni') return <SchermataIndicazioni indicazioni={componiPiano(fisso(() => pastiFigma()))?.indicazioni ?? []} onIndietro={() => router.back()} />;
+  const fase: FasePiano =
+    variante === 'caricamento' ? { tipo: 'caricamento' } : variante === 'errore' ? { tipo: 'errore', onRiprova: nulla } : variante === 'senza-rete' ? { tipo: 'rete', onRiprova: nulla } : variante === 'in-elaborazione' ? { tipo: 'pronto', piano: null, daCache: false } : { tipo: 'pronto', piano, daCache: variante === 'senza-rete-copia' };
+  return <SchermataPiano fase={fase} indiceIniziale={INDICE_FIGMA[variante]} onIndicazioni={onIndicazioni} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
+}
+
+/** La scheda Piano vera (o le sue Indicazioni) per l'account in sessione: stesso hook della rotta, senza il gruppo dell'abbonato. */
+export function PianoRealeSviluppo({ cosa }: { cosa: 'piano' | 'indicazioni' }) {
+  const clientId = useClientIdSviluppo();
+  const router = useRouter();
+  const onIndicazioni = useCallback(() => router.push({ pathname: '/sviluppo/stati', params: { stato: 'piano-reale-indicazioni' } }), [router]);
+  if (!clientId) return <SchermataPiano fase={{ tipo: 'caricamento' }} />;
+  return <PianoReale clientId={clientId} cosa={cosa} onIndicazioni={onIndicazioni} onIndietro={() => router.back()} />;
+}
+
+function PianoReale({ clientId, cosa, onIndicazioni, onIndietro }: { clientId: string; cosa: 'piano' | 'indicazioni'; onIndicazioni: () => void; onIndietro: () => void }) {
+  const { fase, dati, ricarica } = usePiano(clientId);
+  if (cosa === 'indicazioni') return <SchermataIndicazioni indicazioni={dati?.piano?.indicazioni ?? []} onIndietro={onIndietro} />;
+  const faseSchermata: FasePiano =
+    fase.tipo === 'pronto' && dati ? { tipo: 'pronto', piano: dati.piano, daCache: dati.daCache } : fase.tipo === 'caricamento' || fase.tipo === 'pronto' ? { tipo: 'caricamento' } : { tipo: fase.tipo, onRiprova: ricarica };
+  return <SchermataPiano fase={faseSchermata} onIndicazioni={onIndicazioni} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
+}

@@ -14,10 +14,13 @@ export type FaseMenu = { tipo: 'caricamento' } | { tipo: 'rete' } | { tipo: 'err
 
 export type Lettura<T> = () => Promise<{ tipo: 'ok'; dati: T } | { tipo: 'nonAutenticato' } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string }>;
 
-/** Lettura comune: prima volta e a ogni ritorno in primo piano; i dati già mostrati non si sostituiscono con un errore. */
-export function useLetturaMenu<T>(leggi: Lettura<T>): { fase: FaseMenu; dati: T | null; ricarica: () => void } {
-  const [fase, setFase] = useState<FaseMenu>({ tipo: 'caricamento' });
-  const [dati, setDati] = useState<T | null>(null);
+/**
+ * Lettura comune: prima volta e a ogni ritorno in primo piano; i dati già mostrati non si sostituiscono con un errore.
+ * `iniziale`: dati già in memoria da mostrare subito (fase pronta) mentre la lettura li aggiorna.
+ */
+export function useLetturaMenu<T>(leggi: Lettura<T>, iniziale?: () => T | null): { fase: FaseMenu; dati: T | null; ricarica: () => void } {
+  const [dati, setDati] = useState<T | null>(() => iniziale?.() ?? null);
+  const [fase, setFase] = useState<FaseMenu>(() => (dati !== null ? { tipo: 'pronto' } : { tipo: 'caricamento' }));
   const montato = useRef(true);
   const ricarica = useCallback(() => {
     let attivo = true;

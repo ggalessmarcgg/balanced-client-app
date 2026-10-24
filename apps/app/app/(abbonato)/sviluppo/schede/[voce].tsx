@@ -2,9 +2,9 @@ import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 
 import { PREFISSO_SCHEDE_SVILUPPO, type VoceNavigazione } from '@/core/navigazione/voci';
-import { SchermataPianoSegnaposto } from '@/ui/schermate/SchermateSegnaposto';
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
+import { PianoSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
 
 // Solo in sviluppo: le quattro schede con dati finti dentro il layout del gruppo (barra persistente), per verificare
@@ -27,7 +27,7 @@ export default function SchedeSviluppo() {
     case 'oggi':
       return <OggiSviluppo scenario="daIniziare" />;
     case 'piano':
-      return <SchermataPianoSegnaposto />;
+      return <PianoSchermataSviluppo variante="fisso" />;
     case 'revisioni':
       return <RevisioniSviluppo scenario="inCorso" />;
     case 'account':

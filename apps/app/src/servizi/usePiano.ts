@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 
 import { componiPiano, type PianoComposto } from '@/core/piano/composizione';
-import { leggiPiano } from '@/servizi/piano';
+import { leggiPiano, memoriaPiano } from '@/servizi/piano';
 import { useLetturaMenu, type Lettura } from '@/servizi/useMenu';
 
 export type DatiPiano = { piano: PianoComposto | null; daCache: boolean };
@@ -13,5 +13,10 @@ export function usePiano(clientId: string) {
     const esito = await leggiPiano(clientId);
     return esito.tipo === 'ok' ? { tipo: 'ok', dati: { piano: esito.piano ? componiPiano(esito.piano) : null, daCache: esito.daCache } } : esito;
   }, [clientId]);
-  return useLetturaMenu(leggi);
+  // La copia già in memoria (dall'avvio dell'app dell'abbonato o da un'apertura precedente) si mostra subito.
+  const iniziale = useCallback((): DatiPiano | null => {
+    const m = memoriaPiano();
+    return m.clientId === clientId && m.noto ? { piano: m.piano ? componiPiano(m.piano) : null, daCache: false } : null;
+  }, [clientId]);
+  return useLetturaMenu(leggi, iniziale);
 }

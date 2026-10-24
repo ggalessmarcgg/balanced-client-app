@@ -40,6 +40,7 @@ export default function RootLayout() {
         {/* Schede dell'abbonato (Oggi, Piano, Revisioni, Account): una sola barra di navigazione persistente nel layout del gruppo. */}
         <Stack.Screen name="(abbonato)" />
         <Stack.Screen name="revisione/[id]" options={{ animation: 'default' }} />
+        <Stack.Screen name="indicazioni" options={{ animation: 'default' }} />
         {/* Menu a tutta pagina (dall'icona Menu della barra superiore) e le sue schermate. */}
         <Stack.Screen name="menu" options={{ animation: 'default' }} />
         <Stack.Screen name="notifiche" options={{ animation: 'default' }} />
