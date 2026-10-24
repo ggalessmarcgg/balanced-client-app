@@ -521,6 +521,34 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Pagina di sviluppo: `/sviluppo/stati?stato=racconta-2-permesso|racconta-3-microfono-disattivato|racconta-4-pronto|racconta-5-registrazione|racconta-5-registrazione-animata|racconta-5-pausa|racconta-5.2-terminata|racconta-tutorial-3-pronto|racconta-tutorial-4-trascrizione|racconta-tutorial-5-crea-diario|racconta-6-racconto|racconta-6-tastiera|racconta-7-trascrizione|racconta-10-senza-connessione|racconta-11-non-ho-capito|racconta-12-errore|racconta-7-preparando|racconta-12-elaborazione|racconta-8-riepilogo|racconta-8-riepilogo-compilato|racconta-8-riepilogo-riposo|racconta-8-riepilogo-vuoto|racconta-8-riepilogo-tastiera|racconta-tutorial-6-invio|…`
   (registrazione finta con timer e livello voce); esiti dei confronti in `~/Desktop/censimenti-app/step10-confronti/lotto1/` e `lotto2/`.
 
+## Piano alimentare (step 8, lotto 1: lettura e regole, senza schermate)
+
+- Riferimenti: contratto `~/Desktop/balanced-agents/docs/piani/contratto-lettura-piani-app-v0_5.md` (§6: funzione e
+  risposta), censimento `~/Desktop/censimenti-app/step8-censimento-piano.md`. **L'app legge il piano solo con
+  `supabase.rpc('get_my_current_nutrition_plan', { p_known_plan_id, p_known_updated_at })`**: mai le tabelle
+  `nutrition_*` né `plans`; nessuna scrittura. Risposta con discriminante `esito`: `nessun_piano` | `invariato` | `piano`.
+- Logica pura in `src/core/piano/` (`tipi.ts` forma della risposta e `interpretaRisposta`, che porta a null i valori fuori
+  formato e rifiuta le forme sconosciute; `riga.ts` quantità e "nome · quantità", nome breve del pasto; `composizione.ts`
+  `componiPiano`; `preselezione.ts` giorno e pasto preselezionati). Regole (decisioni del 24/10/2026): sezioni senza
+  righe, pasti senza sezioni visibili e giorni senza pasti visibili si nascondono; un piano senza righe vale "nessun
+  piano" ("Piano in elaborazione"). Fisso: pasti per `position`, righe per sezione e poi per riga, senza categorie.
+  Variabile: unico giorno, righe per categoria nell'ordine fisso carboidrati, proteine, grassi, fibre, zuccheri
+  (sezioni della stessa categoria unite). Quantità: `a_piacere` → "a piacere"; altrimenti `practical_quantity` così
+  com'è; altrimenti `quantity` + `measure_type` con i numeri all'italiana; senza nulla solo il nome. Nome del pasto nel
+  selettore oltre i 6 caratteri: i primi 5 più "." ("Colaz.", "Spunt."), maiuscole come arrivano. Giorno preselezionato:
+  oggi in ora italiana (lunedì = 1) se visibile, altrimenti il primo; pasto preselezionato per fascia (fino alle 10:30
+  "colazione", 10:30–15:00 "pranzo", 15:00–18:30 "spuntin", dalle 18:30 "cena", confronto senza maiuscole e spazi ai
+  lati, il confine appartiene alla fascia che inizia), altrimenti il primo. "Aggiornato il 12 ottobre" da `updated_at`
+  in ora italiana (`etichettaGiornoMese`). Indicazioni per `position`; il pulsante esiste solo se ce n'è almeno una.
+- Servizio `src/servizi/piano.ts`: lettura all'avvio dell'app dell'abbonato e al rientro (`aggiornaPiano` in
+  `app/(abbonato)/abbonato.tsx`) e all'apertura della scheda (`usePiano`, `src/servizi/usePiano.ts`, sullo stampo di
+  `useLetturaMenu`); sempre con la versione nota: `invariato` tiene la copia, `piano` la sostituisce, `nessun_piano` la
+  cancella. Copia su file nella cache (`balanced.piano.<clientId>`), servita subito e senza rete; una sola chiamata in
+  corso per cliente; memoria con l'esito dell'ultima chiamata (`useMemoriaPiano`). "Esci" la cancella (`svuotaPiano`).
+- Vista di sviluppo: `/sviluppo/stati?stato=piano-lettura` (piano composto in forma testuale per l'account in
+  sessione; legge lo stato dal portachiavi se la rotta è aperta con `EXPO_PUBLIC_ROTTA_SVILUPPO`). Account: `+test4`
+  (fisso inviato), `alessandro@test10.com` (abbonato senza piano → "nessun piano").
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

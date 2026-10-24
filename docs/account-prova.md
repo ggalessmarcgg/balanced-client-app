@@ -49,3 +49,15 @@ Decisione del 19/10/2026 (censimento `~/Desktop/censimenti-app/step5-censimento-
 - L'**account personale abbonato** di Alessmarc (email base `aless.marchetto6@gmail.com`) **non si usa**
   per scrivere diari: è assegnato a una nutrizionista reale (Marta Veneziano) e ogni diario condiviso
   le entrerebbe in coda e farebbe avanzare la sua revisione.
+
+## Piano alimentare (stato J, step 8)
+
+Letto a database il 24/10/2026 (nessuna scrittura).
+
+- **`+test4`** (accesso con `alessandro@test16.com`) ha un piano `nutrition_plans` **fisso**, manuale, `inviato` e non
+  archiviato (7 giorni × 4 pasti, 81 righe libere, 4 indicazioni generali): è il suo piano corrente. Per un variabile o
+  per lo stato "in elaborazione" vedi `~/Desktop/censimenti-app/step8-censimento-piano.md` §G.2.
+- Abbonati sintetici **senza alcun piano** (la funzione risponde `nessun_piano` → "Piano in elaborazione"): gli account
+  `alessandro@testN.com` con N = 5, 7, 10, 11, 12, 13, 14, 15, 18, 19, tutti `subscribed`, utente auth confermato e
+  assegnati ad "Alessandra Marchina". Per le prove si usa **`alessandro@test10.com`** (password dalla dashboard Auth).
+  Nessun alias `aless.marchetto6+…` è `subscribed` oltre a `+test4`.
