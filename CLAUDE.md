@@ -548,6 +548,26 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Vista di sviluppo: `/sviluppo/stati?stato=piano-lettura` (piano composto in forma testuale per l'account in
   sessione; legge lo stato dal portachiavi se la rotta è aperta con `EXPO_PUBLIC_ROTTA_SVILUPPO`). Account: `+test4`
   (fisso inviato), `alessandro@test10.com` (abbonato senza piano → "nessun piano").
+- **Lotto 2 (schermate, 25/10/2026)**: `SchermataPiano` (`src/ui/schermate/SchermataPiano.tsx`, Figma 527:2947 fisso,
+  527:3070 variabile, 527:3174 in elaborazione): barra superiore, intestazione **fissa** (16 sopra, margini 20, gap 24)
+  con la riga del titolo ("Piano" in Accento serif + `AzioneTesto` "Indicazioni", Figma 775:7814, solo se il piano ha
+  indicazioni) e il `SelettoreSegmentato` (`src/ui/piano/`, Segmento 528:221: pillola sfondo/campo padding 3/4, voci a
+  larghezza uguale, evidenza sfondo/card); sotto, le pagine (giorni del fisso o pasti del variabile) in uno
+  ScrollView orizzontale con scatto alla pagina, ciascuna scorrevole in verticale sotto la barra di navigazione
+  (`INGOMBRO_BARRA_NAVIGAZIONE + 16`). Selettore e pagine condividono uno shared value di Reanimated (`posizione`):
+  trascinando l'evidenza segue il dito, a fine scorrimento si assesta in 300 ms ease-out (`TRANSIZIONI.tacchetteMs`, con
+  "Riduci movimento" niente scorrimento animato), il tocco su una voce anima l'evidenza e porta alla pagina. Contenuto:
+  `GruppoRighe` (Heading + righe Body con Separatore) e `PieDiPaginaPiano` ("Aggiornato il…"); "Ricetta" non c'è
+  (step 9) e non lascia spazio. Fasi: caricamento = segnaposti sulla forma della pagina; errore = Trasversali 3 con
+  titolo "Piano"; senza rete senza copia = Trasversali 1; con copia (`daCache`) = Avviso connessione sopra il titolo;
+  nessun piano = card "Piano in elaborazione" (padding 32, gap 16). `usePiano` parte dalla copia già in memoria
+  (`useLetturaMenu(leggi, iniziale)`). Indicazioni: `SchermataIndicazioni` (Figma 775:7878: freccia sola, titolo in
+  Accento serif, Heading + Body per indicazione), rotta `app/indicazioni.tsx` (`animation: 'default'`, gesto dal bordo),
+  legge `memoriaPiano()` senza richieste. **Reanimated su nativo ignora gli array di dipendenze** di `useAnimatedStyle`
+  e `useAnimatedScrollHandler` e lo segnala con un avviso: non passarli (il plugin Babel traccia da solo).
+- Pagina di sviluppo: `/sviluppo/stati?stato=piano-1-fisso|piano-1-fisso-nomi-lunghi|piano-1-fisso-giorno-vuoto|piano-1-senza-indicazioni|piano-2-variabile|piano-2-variabile-nomi-lunghi|piano-3-in-elaborazione|piano-caricamento|piano-errore|piano-senza-rete|piano-senza-rete-copia|piano-1.1-indicazioni|piano-reale|piano-reale-indicazioni|piano-lettura`
+  (piani sintetici con i testi di Figma in `src/ui/sviluppo/PianoSchermateSviluppo.tsx`; `piano-reale*` usa l'hook vero
+  per l'account in sessione); esiti dei confronti in `~/Desktop/censimenti-app/step8-confronti/`.
 
 ## Note su Xcode 27 / Device Hub
 
