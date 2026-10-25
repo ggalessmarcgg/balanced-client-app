@@ -6,7 +6,8 @@ import { dataOraRoma } from '../stato/orarioRoma.ts';
 import { nomeBreve, quantitaRiga, testoRiga } from './riga.ts';
 import { CATEGORIE, ETICHETTE_CATEGORIA, type CategoriaSezione, type GiornoServer, type IndicazioneServer, type PastoServer, type PianoServer, type SezioneServer } from './tipi.ts';
 
-export type RigaPiano = { nome: string; quantita: string | null; testo: string };
+/** `id` della riga sul server (v0.6), usato dal tocco per la sostituzione; null se il server non l'ha dato (riga non sostituibile). */
+export type RigaPiano = { id: string | null; nome: string; quantita: string | null; testo: string };
 export type GruppoPiano = { categoria: CategoriaSezione; etichetta: string; righe: RigaPiano[] };
 export type PastoFisso = { id: string; nome: string; nomeBreve: string; righe: RigaPiano[] };
 export type PastoVariabile = { id: string; nome: string; nomeBreve: string; gruppi: GruppoPiano[] };
@@ -32,7 +33,7 @@ function righeDiSezione(sezione: SezioneServer): RigaPiano[] {
     const nome = r.name?.trim();
     if (!nome) continue;
     const quantita = quantitaRiga(r);
-    righe.push({ nome, quantita, testo: testoRiga(nome, quantita) });
+    righe.push({ id: r.id, nome, quantita, testo: testoRiga(nome, quantita) });
   }
   return righe;
 }

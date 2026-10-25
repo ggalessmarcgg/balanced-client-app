@@ -4,7 +4,7 @@ import { describe, it } from 'node:test';
 import { componiPiano, etichettaAggiornamento, indicazioniVisibili } from './composizione.ts';
 import type { PastoServer, PianoServer, RigaServer, SezioneServer } from './tipi.ts';
 
-const riga = (position: number, name: string | null, parte: Partial<RigaServer> = {}): RigaServer => ({ position, name, quantity_type: 'libero', quantity: null, measure_type: null, practical_quantity: null, ...parte });
+const riga = (position: number, name: string | null, parte: Partial<RigaServer> = {}): RigaServer => ({ id: `r${position}-${name}`, position, name, quantity_type: 'libero', quantity: null, measure_type: null, practical_quantity: null, ...parte });
 const sezione = (position: number, category: SezioneServer['category'], rows: RigaServer[]): SezioneServer => ({ position, category, rows });
 const pasto = (position: number, name: string, sections: SezioneServer[]): PastoServer => ({ id: `p${position}-${name}`, position, name, sections });
 const piano = (plan_type: PianoServer['plan_type'], days: PianoServer['days'], indications: PianoServer['indications'] = []): PianoServer => ({ id: 'piano', plan_type, sent_at: null, updated_at: '2026-10-12T09:00:00+00:00', days, indications });

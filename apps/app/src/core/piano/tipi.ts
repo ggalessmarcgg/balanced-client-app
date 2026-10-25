@@ -1,5 +1,5 @@
 // Piano alimentare (step 8): la risposta della funzione get_my_current_nutrition_plan, l'unica lettura del piano
-// (contratto di lettura dei piani v0.5, §6). L'app non legge mai le tabelle nutrition_* né plans. La forma qui sotto
+// (contratto di lettura dei piani v0.6, §6). L'app non legge mai le tabelle nutrition_* né plans. La forma qui sotto
 // è quella del JSON della funzione; interpretaRisposta la verifica e porta a null i valori fuori formato.
 
 export const FUNZIONE_PIANO = 'get_my_current_nutrition_plan';
@@ -23,6 +23,8 @@ export const ETICHETTE_CATEGORIA: Record<CategoriaSezione, string> = {
 };
 
 export type RigaServer = {
+  /** nutrition_plan_rows.id (contratto v0.6 §3.1): serve solo a chiedere la sostituzione dell'alimento; null se fuori formato. */
+  id: string | null;
   position: number;
   name: string | null;
   quantity_type: TipoQuantita | null;
@@ -80,6 +82,7 @@ function leggiRiga(d: unknown): RigaServer | null {
   const o = oggetto(d);
   if (!o) return null;
   return {
+    id: testo(o.id),
     position: numero(o.position) ?? 0,
     name: testo(o.name),
     quantity_type: tra<TipoQuantita>(o.quantity_type, TIPI_QUANTITA),

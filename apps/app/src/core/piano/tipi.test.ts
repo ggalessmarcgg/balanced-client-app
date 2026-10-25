@@ -25,7 +25,7 @@ describe('risposta della funzione', () => {
           day_index: '1',
           name: 'Giornata tipo',
           meals: [
-            { id: 'm1', position: 1, name: 'Pranzo', sections: [{ category: 'dolci', position: 1, rows: [{ position: 1, name: 'Pasta', quantity_type: 'esatta', quantity: '120', measure_type: 'kg', practical_quantity: 7 }] }] },
+            { id: 'm1', position: 1, name: 'Pranzo', sections: [{ category: 'dolci', position: 1, rows: [{ id: 'r1', position: 1, name: 'Pasta', quantity_type: 'esatta', quantity: '120', measure_type: 'kg', practical_quantity: 7 }, { id: 7, position: 2, name: 'Senza id' }] }] },
             { position: 2, name: 'senza id' },
             'non un pasto',
           ],
@@ -41,7 +41,9 @@ describe('risposta della funzione', () => {
     assert.equal(piano.days[0]?.meals.length, 1);
     const sezione = piano.days[0]?.meals[0]?.sections[0];
     assert.equal(sezione?.category, null);
-    assert.deepEqual(sezione?.rows[0], { position: 1, name: 'Pasta', quantity_type: null, quantity: 120, measure_type: null, practical_quantity: null });
+    assert.deepEqual(sezione?.rows[0], { id: 'r1', position: 1, name: 'Pasta', quantity_type: null, quantity: 120, measure_type: null, practical_quantity: null });
+    // v0.6: l'id della riga si conserva; fuori formato → null (la riga resta visibile, non sostituibile).
+    assert.equal(sezione?.rows[1]?.id, null);
     assert.deepEqual(piano.indications, []);
   });
   it('parametri della versione nota solo con una copia', () => {

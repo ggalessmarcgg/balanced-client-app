@@ -1,10 +1,13 @@
 // Piano alimentare (step 8, lotto 1): una sola lettura, la funzione get_my_current_nutrition_plan con la versione
 // nota (id + updated_at della copia). "invariato" → si tiene la copia; "piano" → si sostituisce; "nessun_piano" → si
-// cancella. Copia su file per cliente nella cache (balanced.piano.<clientId>), servita subito e senza rete; memoria di
-// sessione con l'esito dell'ultima chiamata per la vista di sviluppo. Nessuna lettura delle tabelle, nessuna scrittura.
+// cancella. Copia su file per cliente nella cache (balanced.piano.<clientId>), servita subito e senza rete, con la
+// versione del formato (src/core/piano/copia.ts: una copia precedente alla v0.6, senza gli id delle righe, si scarta una
+// volta e la prima lettura parte senza versione nota); memoria di sessione con l'esito dell'ultima chiamata per la vista
+// di sviluppo. Nessuna lettura delle tabelle, nessuna scrittura.
 import { useSyncExternalStore } from 'react';
 
 import { classificaErrore } from '@/core/accesso/errori';
+import { nuovaCopia, pianoDallaCopia } from '@/core/piano/copia';
 import { FUNZIONE_PIANO, interpretaRisposta, parametriVersione, type PianoServer } from '@/core/piano/tipi';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 import { supabase } from '@/servizi/supabase';
@@ -23,7 +26,6 @@ export type MemoriaPiano = {
 export type EsitoPiano = { tipo: 'ok'; piano: PianoServer | null; daCache: boolean } | { tipo: 'nonAutenticato' } | { tipo: 'rete' } | { tipo: 'errore'; messaggio: string };
 
 const PREFISSO_CACHE = 'balanced.piano';
-type Cache = { clientId: string; piano: PianoServer; letto: string };
 
 const VUOTA: MemoriaPiano = { clientId: null, piano: null, noto: false, origine: null, ultimaChiamata: null };
 let memoria: MemoriaPiano = VUOTA;
@@ -57,9 +59,7 @@ function erroreDiRete(error: { code?: string | null; message?: string | null; na
 
 async function copiaSuFile(clientId: string): Promise<PianoServer | null> {
   try {
-    const testo = await leggiFile(chiave(clientId));
-    const cache = testo ? (JSON.parse(testo) as Partial<Cache>) : null;
-    return cache && cache.clientId === clientId && cache.piano ? cache.piano : null;
+    return pianoDallaCopia(await leggiFile(chiave(clientId)), clientId);
   } catch {
     return null;
   }
@@ -69,7 +69,12 @@ function registra(esito: EsitoChiamata, messaggio?: string, resto: Partial<Memor
   aggiorna({ ...resto, ultimaChiamata: { esito, quando: new Date().toISOString(), ...(messaggio ? { messaggio } : {}) } });
 }
 
-async function leggi(clientId: string): Promise<EsitoPiano> {
+export type OpzioniLettura = {
+  /** Chiamata senza versione nota: il server rimanda il piano intero (dopo riga_non_disponibile della sostituzione). */
+  ignoraVersione?: boolean;
+};
+
+async function leggi(clientId: string, opzioni: OpzioniLettura): Promise<EsitoPiano> {
   const { data: sessione } = await supabase.auth.getSession();
   if (!sessione.session) return { tipo: 'nonAutenticato' };
   if (memoria.clientId !== clientId) aggiorna({ ...VUOTA, clientId });
@@ -79,7 +84,7 @@ async function leggi(clientId: string): Promise<EsitoPiano> {
     if (copia && memoria.clientId === clientId && !memoria.noto) aggiorna({ piano: copia, noto: true, origine: 'file' });
   }
   const copia = memoria.piano;
-  const parametri = parametriVersione(copia);
+  const parametri = opzioni.ignoraVersione ? undefined : parametriVersione(copia);
   const { data, error } = parametri ? await supabase.rpc(FUNZIONE_PIANO, parametri) : await supabase.rpc(FUNZIONE_PIANO);
   if (error) {
     if (erroreDiRete(error)) {
@@ -104,18 +109,20 @@ async function leggi(clientId: string): Promise<EsitoPiano> {
       return { tipo: 'ok', piano: null, daCache: false };
     case 'piano': {
       registra('piano', undefined, { piano: risposta.piano, noto: true, origine: 'server' });
-      const cache: Cache = { clientId, piano: risposta.piano, letto: new Date().toISOString() };
-      scriviFile(chiave(clientId), JSON.stringify(cache)).catch(() => {});
+      scriviFile(chiave(clientId), JSON.stringify(nuovaCopia(clientId, risposta.piano, new Date()))).catch(() => {});
       return { tipo: 'ok', piano: risposta.piano, daCache: false };
     }
   }
 }
 
-/** Lettura del piano corrente: una sola chiamata in corso per cliente (avvio, rientro e scheda Piano possono coincidere). */
-export function leggiPiano(clientId: string): Promise<EsitoPiano> {
+/**
+ * Lettura del piano corrente: una sola chiamata in corso per cliente (avvio, rientro e scheda Piano possono coincidere);
+ * una lettura senza versione nota richiesta mentre un'altra è in corso parte dopo quella.
+ */
+export function leggiPiano(clientId: string, opzioni: OpzioniLettura = {}): Promise<EsitoPiano> {
   const pendente = inCorso.get(clientId);
-  if (pendente) return pendente;
-  const promessa = leggi(clientId).finally(() => {
+  if (pendente) return opzioni.ignoraVersione ? pendente.then(() => leggiPiano(clientId, opzioni)) : pendente;
+  const promessa = leggi(clientId, opzioni).finally(() => {
     inCorso.delete(clientId);
   });
   inCorso.set(clientId, promessa);
