@@ -569,6 +569,44 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (piani sintetici con i testi di Figma in `src/ui/sviluppo/PianoSchermateSviluppo.tsx`; `piano-reale*` usa l'hook vero
   per l'account in sessione); esiti dei confronti in `~/Desktop/censimenti-app/step8-confronti/`.
 
+## Sostituzione degli alimenti (step 9, lotto 3)
+
+- Riferimenti: contratto `~/Desktop/balanced-client-agents/docs/contratti/contratto-sostituzione-alimenti-v0_8.md` (§1 percorso,
+  §3 esiti), server `~/Desktop/balanced-client-agents/docs/server-sostituzione.md` (rotta `POST /v1/sostituzione/alternative`,
+  tabella degli errori), contratto di lettura v0.6 (`id` delle righe, §3.1). **L'app non scrive sul database**: il server
+  registra da sé ogni chiamata in `food_substitution_events` (mai il profilo).
+- Id delle righe: `RigaServer.id` e `RigaPiano.id` (null se fuori formato: la riga resta visibile ma non toccabile). La copia
+  del piano sul telefono è versionata (`src/core/piano/copia.ts`, `VERSIONE_COPIA` 2): una copia di un'altra versione (senza
+  id) si scarta una volta e la prima lettura parte senza versione nota; `leggiPiano(clientId, { ignoraVersione: true })`
+  forza la lettura intera (dopo `riga_non_disponibile`).
+- Logica pura in `src/core/sostituzione/` (`server.ts`: corpo `{ riga_id, in_casa }` con il testo pulito e mai oltre 200
+  caratteri, lettura della risposta con al massimo tre alternative e `fuori_catalogo` ignorato, codici d'errore → esiti,
+  `paragrafiSpiegazione` = spiegazione del server + secondo paragrafo con i motivi degli alimenti in casa non adatti solo se
+  il cliente ha scritto qualcosa, come frasi, senza ripetere quelli già nella spiegazione; `pannello.ts`: macchina a stati
+  chiuso / avvio / ricerca / alternative / nessunaAlternativa / nonRiconosciuto / errore, ogni apertura riparte da capo, la
+  chiamata parte solo da "Trova alternative", la risposta di una richiesta vecchia o dopo la chiusura si ignora,
+  `riga_non_disponibile` chiude il pannello ed emette `rileggiPiano`; testi delle card in `testiEsito`).
+- Servizi: `src/servizi/agenti.ts` (indirizzo `EXPO_PUBLIC_AGENTI_URL` e `tokenAccesso`, condivisi con il diario vocale),
+  `sostituzione.ts` (`trovaAlternative`: `expo/fetch`, attesa massima 35 s, rinnovo del token su 401 e una ripetizione,
+  `in_casa_troppo_lungo` → testo accorciato alla metà e una ripetizione; tutorial del Piano nel portachiavi
+  `balanced.piano.tutorial.<client_id>`, resta dopo "Esci"), hook `useSostituzione.ts` (stato del pannello, effetti, Notifica
+  breve "Il piano è stato aggiornato: tocca di nuovo l’alimento." con rilettura del piano) e `useTutorialPiano`.
+- Interfaccia: righe del piano toccabili (`RigaDelPiano` in `src/ui/piano/ContenutoPiano.tsx`, anche "a piacere", fisso e
+  variabile); `src/ui/piano/PannelloSostituzione.tsx` (Figma 4 531:3086, 4.1 531:3232, 4.2 531:3374, 4.3 531:3528, 4.4
+  789:7727, 4.5 789:7865) sul `PannelloDalBasso` con `spaziatura` 24; `EtichettaAI` (532:3430); Card spiegazione AI con lo
+  sfondo `gradienti.cardDiario` e Icona 20/Info; segnaposti della ricerca con il `Segnaposto` (barre 160 e 240); "La tua
+  nutrizionista" (4.3, 4.4) chiude il pannello e apre `/nutrizionista`; "Riprova" (4.5) solo per rete, timeout ed errori
+  riprovabili; sessione e abbonamento con i testi del diario vocale, senza "Riprova". Errori: rete, tempo scaduto,
+  `sostituzione_fallita`, `sostituzione_timeout`, `catalogo_non_disponibile`, `piano_non_leggibile`, `errore_interno` → 4.5.
+- Tutorial · 1 (586:5457): solo il fumetto della sostituzione, alla prima visita del Piano con un piano presente, una volta
+  per account, sulla prima riga della pagina corrente (misurata con `measureInWindow`, ascissa e larghezza dal margine di
+  pagina perché le pagine scorrono in orizzontale), evidenza sfondo/pagina con raggio piccolo (8 ai lati, 3 sopra e sotto);
+  `Tutorial` con `disposizione="sottoASinistra"` e `Suggerimento` con `freccia="sopra"` (punta a 32 dal bordo). Un solo
+  passo: niente "1 di 2", "Ho capito" come gli altri tutorial. Il fumetto della ricetta arriverà con le ricette.
+- Pagina di sviluppo: `/sviluppo/stati?stato=piano-4-sostituzione-avvio|piano-4.1-sostituzione-ricerca|piano-4.2-sostituzione-alternative|piano-4.2-sostituzione-una|piano-4.2-sostituzione-in-casa|piano-4.3-sostituzione-nessuna|piano-4.4-sostituzione-non-riconosciuto|piano-4.5-sostituzione-errore|piano-4.5-sostituzione-sessione|piano-tutorial-1-sostituzione`
+  (dati sintetici, nessun server; `piano-reale` usa la sostituzione vera); esiti dei confronti in
+  `~/Desktop/censimenti-app/step9-confronti/` (`strumenti/confronto-step9.sh`).
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**
