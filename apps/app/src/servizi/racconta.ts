@@ -15,16 +15,11 @@ import { durataDichiarata } from '@/core/racconta/audio';
 import { corpoCompilazione, erroreCompilazioneApp, interpretaRispostaCompilazione, PERCORSO_COMPILA, TEMPO_MASSIMO_COMPILAZIONE_MS, type EsitoCompilazione } from '@/core/racconta/compila';
 import { riduci, ripartiDallAvvio, STATO_INIZIALE, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
 import { erroreApp, interpretaRispostaTrascrizione, intestazioniTrascrizione, nuovoIdRichiesta, PERCORSO_TRASCRIVI, TEMPO_MASSIMO_TRASCRIZIONE_MS, type EsitoTrascrizione } from '@/core/racconta/server';
+import { tokenAccesso, URL_AGENTI } from '@/servizi/agenti';
 import { leggi, scrivi } from '@/servizi/archivio';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 import { salvaBozzaInAttesa } from '@/servizi/giornate';
 import { aggiornaMemoria, memoriaDiario, persistiMemoria } from '@/servizi/memoriaDiario';
-import { supabase } from '@/servizi/supabase';
-
-const URL_AGENTI = process.env.EXPO_PUBLIC_AGENTI_URL;
-if (!URL_AGENTI) {
-  throw new Error('Manca EXPO_PUBLIC_AGENTI_URL: copiare .env.example in .env e compilarlo.');
-}
 
 // ---- Stato del flusso ---------------------------------------------------------------------------------------------
 
@@ -363,20 +358,7 @@ export async function leggiAudioInAttesa(clientId: string, oggi: string): Promis
   return audio;
 }
 
-// ---- Chiamate al server -----------------------------------------------------------------------------------------------
-
-const MARGINE_SCADENZA_TOKEN_S = 60;
-
-/** L'access token della sessione, rinnovato se sta per scadere (o se `forza`). null senza sessione. */
-async function tokenAccesso(forza = false): Promise<string | null> {
-  const { data } = await supabase.auth.getSession();
-  const sessione = data.session;
-  if (!sessione) return null;
-  const inScadenza = sessione.expires_at !== undefined && sessione.expires_at - Date.now() / 1000 < MARGINE_SCADENZA_TOKEN_S;
-  if (!forza && !inScadenza) return sessione.access_token;
-  const rinnovo = await supabase.auth.refreshSession().catch(() => null);
-  return rinnovo?.data.session?.access_token ?? (forza ? null : sessione.access_token);
-}
+// ---- Chiamate al server (indirizzo e token in src/servizi/agenti.ts) ---------------------------------------------------
 
 async function inviaAudio(token: string, audio: AudioRacconto, byte: Uint8Array, richiestaId: string): Promise<EsitoTrascrizione> {
   const controllo = new AbortController();
