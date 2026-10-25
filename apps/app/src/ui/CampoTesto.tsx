@@ -37,6 +37,7 @@ export type CampoTestoProps = {
   | 'onFocus'
   | 'onBlur'
   | 'autoFocus'
+  | 'maxLength'
   | 'testID'
 >;
 

@@ -36,6 +36,8 @@ export type PannelloDalBassoProps = {
    * 0 quando Figma disegna le azioni a gap 20 dall'ultimo elemento (Pannello scelta orario 555:422).
    */
   distanzaPiede?: number;
+  /** Spazio tra gli elementi del contenuto e tra la maniglia e il primo elemento: 20 (predefinito) o 24 (Pannello sostituzione, Figma 531:3209). */
+  spaziatura?: number;
 };
 
 // Misure dalle schermate con pannello (es. 474:1430, 499:2709): raggi superiori 24, padding 12 / 20 / 34 (= area
@@ -64,6 +66,7 @@ export function PannelloDalBasso({
   pieno = false,
   piede,
   distanzaPiede = spazio[20],
+  spaziatura = spazio[20],
 }: PannelloDalBassoProps) {
   const { height: altezzaSchermo } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -281,7 +284,11 @@ export function PannelloDalBasso({
               style={riempie ? stili.scorrimentoPieno : stili.scorrimento}
               contentContainerStyle={[
                 stili.contenitore,
-                { paddingBottom: piede ? spazio[20] : paddingInferiore },
+                {
+                  // Il contenuto parte `spaziatura` sotto la maniglia (12 li dà l'area della maniglia).
+                  paddingTop: spaziatura - spazio[12],
+                  paddingBottom: piede ? spazio[20] : paddingInferiore,
+                },
               ]}
               keyboardShouldPersistTaps="handled"
               keyboardDismissMode="none"
@@ -292,7 +299,7 @@ export function PannelloDalBasso({
               onLayout={(e) => setAltezzaArea(e.nativeEvent.layout.height)}
             >
               {/* Il gap sta su un contenitore interno: lo spazio per la tastiera (alto 0 da chiusa) non deve aggiungere un gap in fondo. */}
-              <View style={stili.interno}>
+              <View style={[stili.interno, { gap: spaziatura }]}>
                 <FornitoreCampi value={campi}>{children}</FornitoreCampi>
               </View>
               <Reanimated.View style={spazioTastiera} />
@@ -381,7 +388,7 @@ const stili = StyleSheet.create({
   // piede resta sempre visibile e scorre solo il contenuto (in React Native flexShrink è 0 se non dichiarato).
   scorrimento: { flexGrow: 0, flexShrink: 1 },
   scorrimentoPieno: { flex: 1 },
-  contenitore: { paddingTop: spazio[8], paddingHorizontal: margine.pagina },
+  contenitore: { paddingHorizontal: margine.pagina },
   interno: { gap: spazio[20] },
   contenuto: {
     paddingTop: spazio[8],

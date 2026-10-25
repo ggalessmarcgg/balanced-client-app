@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { riquadroNellaFinestra, stessoRiquadro, type Riquadro } from '@/core/tutorial/riquadro';
 import { LARGHEZZA_SUGGERIMENTO, Suggerimento } from '@/ui/Suggerimento';
-import { colori, opacita, spazio } from '@/ui/theme';
+import { colori, margine, opacita, spazio } from '@/ui/theme';
 
 /** Posizione nella finestra dell'elemento da evidenziare. */
 export type RiquadroTutorial = Riquadro;
@@ -77,6 +77,11 @@ export type TutorialProps = {
   testo: string;
   /** "Ho capito", e anche un tocco sul velo: il tutorial si chiude e non ricompare. */
   onHoCapito: () => void;
+  /**
+   * Dove sta il fumetto rispetto all'elemento: sopra, centrato (Racconta, predefinito) oppure sotto, allineato al margine
+   * di pagina con la punta in alto (Tutorial · 1 del Piano 586:5457: fumetto a 20 dal bordo, 4 sotto l'evidenza).
+   */
+  disposizione?: 'sopraCentrato' | 'sottoASinistra';
 };
 
 /** Nuovi tentativi di misura dell'elemento da evidenziare: ogni 250 ms per 4 s. */
@@ -85,25 +90,29 @@ const DURATA_RIMISURA_MS = 4000;
 
 /** Distanza tra la punta del suggerimento e l'elemento evidenziato (Figma Tutorial · 3: 7 → spazio 8). */
 const DISTANZA = spazio[8];
+/** Con il fumetto sotto: 4 tra l'evidenza e la riga della punta (Figma 586:5457: evidenza fino a 356, suggerimento da 360). */
+const DISTANZA_SOTTO = spazio[4];
 
 /**
  * Tutorial a schermo (sezione Figma 1.1, schema delle schermate Tutorial): velo testo/primario al 40 %, l'elemento
  * evidenziato sopra il velo nella sua posizione e il Suggerimento con la punta verso di lui; si chiude con "Ho capito"
  * e, per sicurezza, con un tocco sul velo (così non può mai bloccare la schermata).
  */
-export function Tutorial({ riquadro, elemento, testo, onHoCapito }: TutorialProps) {
+export function Tutorial({ riquadro, elemento, testo, onHoCapito, disposizione = 'sopraCentrato' }: TutorialProps) {
   const { width: larghezzaFinestra } = useWindowDimensions();
   const [altezzaSuggerimento, setAltezzaSuggerimento] = useState(0);
   if (!riquadro) return null;
-  const sinistra = Math.round((larghezzaFinestra - LARGHEZZA_SUGGERIMENTO) / 2);
+  const sotto = disposizione === 'sottoASinistra';
+  const sinistra = sotto ? margine.pagina : Math.round((larghezzaFinestra - LARGHEZZA_SUGGERIMENTO) / 2);
+  const alto = sotto ? riquadro.y + riquadro.altezza + DISTANZA_SOTTO : riquadro.y - DISTANZA - altezzaSuggerimento;
   return (
     <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
       <Pressable style={[StyleSheet.absoluteFill, stili.velo]} onPress={onHoCapito} accessible={false} />
       <View style={{ position: 'absolute', left: riquadro.x, top: riquadro.y, width: riquadro.larghezza, height: riquadro.altezza }} pointerEvents="none" accessible={false} importantForAccessibility="no-hide-descendants">
         {elemento}
       </View>
-      <View style={[stili.suggerimento, { left: sinistra, top: riquadro.y - DISTANZA - altezzaSuggerimento, opacity: altezzaSuggerimento > 0 ? 1 : 0 }]} onLayout={(e) => setAltezzaSuggerimento(e.nativeEvent.layout.height)}>
-        <Suggerimento testo={testo} onHoCapito={onHoCapito} />
+      <View style={[stili.suggerimento, { left: sinistra, top: alto, opacity: altezzaSuggerimento > 0 ? 1 : 0 }]} onLayout={(e) => setAltezzaSuggerimento(e.nativeEvent.layout.height)}>
+        <Suggerimento testo={testo} onHoCapito={onHoCapito} freccia={sotto ? 'sopra' : 'sotto'} />
       </View>
     </View>
   );

@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -19,13 +19,17 @@ import {
   giornoPreselezionato,
   pastoPreselezionato,
 } from "@/core/piano/preselezione";
+import type { StatoPannello } from "@/core/sostituzione/pannello";
+import type { AzioniSostituzione, NotificaPiano } from "@/servizi/useSostituzione";
 import { AvvisoConnessione } from "@/ui/AvvisoConnessione";
 import { AzioneTesto } from "@/ui/AzioneTesto";
 import type { VoceNavigazione } from "@/ui/BarraNavigazione";
 import { BarraSuperiore } from "@/ui/BarraSuperiore";
-import { GruppoRighe, PieDiPaginaPiano } from "@/ui/piano/ContenutoPiano";
+import { GruppoRighe, PieDiPaginaPiano, RigaDelPiano } from "@/ui/piano/ContenutoPiano";
+import { PannelloSostituzione } from "@/ui/piano/PannelloSostituzione";
 import { SelettoreSegmentato } from "@/ui/piano/SelettoreSegmentato";
 import { TRANSIZIONI, useRiduciMovimento } from "@/ui/riduciMovimento";
+import { NotificaInBasso } from "@/ui/schermate/NotificaInBasso";
 import { Pagina } from "@/ui/schermate/Pagina";
 import {
   BarraNavigazioneFissa,
@@ -36,14 +40,28 @@ import {
 import { Segnaposto } from "@/ui/Segnaposto";
 import { Testo } from "@/ui/Testo";
 import { colori, margine, raggio, spazio } from "@/ui/theme";
+import { Tutorial, useRiquadroTutorial, type MisuraNellaFinestra } from "@/ui/Tutorial";
 
 export type FasePiano =
   | { tipo: "caricamento" }
   | { tipo: "rete" | "errore"; onRiprova: () => void }
   | { tipo: "pronto"; piano: PianoComposto | null; daCache: boolean };
 
+/** Pannello "Sostituisci" (step 9): stato e azioni dall'hook useSostituzione; "La tua nutrizionista" chiude e apre il menu. */
+export type SostituzionePiano = {
+  stato: StatoPannello;
+  azioni: AzioniSostituzione;
+  onNutrizionista: () => void;
+};
+
 export type SchermataPianoProps = {
   fase: FasePiano;
+  sostituzione?: SostituzionePiano;
+  /** Tutorial · 1 (586:5457) sulla prima riga della pagina: attivo alla prima visita con un piano presente. */
+  tutorial?: { attivo: boolean; onHoCapito: () => void };
+  /** Notifica breve in fondo (Trasversali · 5): "Il piano è stato aggiornato…" dopo riga_non_disponibile. */
+  notifica?: NotificaPiano | null;
+  onNotificaScomparsa?: () => void;
   /** Istante per la preselezione (giorno di oggi, pasto per fascia oraria); predefinito adesso. */
   adesso?: Date;
   /** Pagina iniziale forzata (pagina di sviluppo): al posto della preselezione. */
@@ -74,6 +92,11 @@ const TESTO_IN_ELABORAZIONE = {
 };
 const DESCRIZIONE_ERRORE =
   "Non riusciamo a caricare il tuo piano. Riprova tra poco.";
+/** Testo del Tutorial · 1 · Piano · sostituzione (Figma 586:5457). */
+export const TESTO_TUTORIAL_SOSTITUZIONE =
+  "Tocca un alimento per trovare un'alternativa equivalente.";
+/** Evidenza del tutorial attorno alla riga (586:5589: 369 × 50 attorno a una riga 353 × 44 → 8 ai lati, 3 sopra e sotto). */
+const EVIDENZA = { orizzontale: spazio[8], verticale: 3 };
 /** Altezza del selettore (padding 4 + voce 32 + 4), per il segnaposto del caricamento. */
 const ALTEZZA_SELETTORE = spazio[4] + spazio[6] + 20 + spazio[6] + spazio[4];
 
@@ -89,6 +112,10 @@ export function SchermataPiano({
   adesso,
   indiceIniziale,
   onIndicazioni,
+  sostituzione,
+  tutorial,
+  notifica,
+  onNotificaScomparsa,
   ...cornice
 }: SchermataPianoProps) {
   const struttura = {
@@ -121,6 +148,10 @@ export function SchermataPiano({
           adesso={adesso}
           indiceIniziale={indiceIniziale}
           onIndicazioni={onIndicazioni}
+          sostituzione={sostituzione}
+          tutorial={tutorial}
+          notifica={notifica}
+          onNotificaScomparsa={onNotificaScomparsa}
           {...cornice}
         />
       ) : (
@@ -276,14 +307,23 @@ function PianoPronto({
   adesso,
   indiceIniziale,
   onIndicazioni,
+  sostituzione,
+  tutorial,
+  notifica,
+  onNotificaScomparsa,
+  sovrapposti,
   ...cornice
-}: Cornice & {
-  piano: PianoComposto;
-  daCache: boolean;
-  adesso?: Date;
-  indiceIniziale?: number;
-  onIndicazioni?: () => void;
-}) {
+}: Cornice &
+  Pick<
+    SchermataPianoProps,
+    "sostituzione" | "tutorial" | "notifica" | "onNotificaScomparsa"
+  > & {
+    piano: PianoComposto;
+    daCache: boolean;
+    adesso?: Date;
+    indiceIniziale?: number;
+    onIndicazioni?: () => void;
+  }) {
   const pagine = pagineDi(piano);
   const { width: larghezza } = useWindowDimensions();
   const riduci = useRiduciMovimento();
@@ -346,8 +386,78 @@ function PianoPronto({
   });
   /* eslint-enable react-hooks/immutability */
 
+  // Tocco su una riga: apre il pannello "Sostituisci" sulla riga (solo righe con id; le altre non sono toccabili).
+  const { azioni: azioniSostituzione } = sostituzione ?? {};
+  const onRiga = useCallback(
+    (riga: RigaPiano) => {
+      if (riga.id !== null) azioniSostituzione?.apri({ id: riga.id, testo: riga.testo });
+    },
+    [azioniSostituzione],
+  );
+
+  // Tutorial · 1: la prima riga della pagina corrente, misurata nella finestra. Le pagine stanno in uno scorrimento
+  // orizzontale: l'ascissa misurata può portarsi dietro lo scorrimento, mentre la riga parte sempre dal margine di
+  // pagina e occupa tutta la larghezza, quindi si prendono dalla misura solo ordinata e altezza.
+  const tutorialAttivo = Boolean(tutorial?.attivo) && (sostituzione?.stato.tipo ?? "chiuso") === "chiuso";
+  const misura = useRiquadroTutorial(tutorialAttivo);
+  const { collegaMisura } = misura;
+  useEffect(() => {
+    const misuratore: MisuraNellaFinestra = (vista, esito) =>
+      vista.measureInWindow((_x, y, _w, altezza) =>
+        esito({ x: margine.pagina, y, larghezza: larghezza - 2 * margine.pagina, altezza }),
+      );
+    collegaMisura(misuratore);
+    return () => collegaMisura(null);
+  }, [collegaMisura, larghezza]);
+  const primaRiga = pagine[indice]?.gruppi[0]?.righe[0] ?? null;
+  const riquadroEvidenza = misura.riquadro
+    ? {
+        x: misura.riquadro.x - EVIDENZA.orizzontale,
+        y: misura.riquadro.y - EVIDENZA.verticale,
+        larghezza: misura.riquadro.larghezza + 2 * EVIDENZA.orizzontale,
+        altezza: misura.riquadro.altezza + 2 * EVIDENZA.verticale,
+      }
+    : null;
+
   return (
-    <Impalcatura scorrevole={false} {...cornice}>
+    <Impalcatura
+      scorrevole={false}
+      sovrapposti={
+        <>
+          {sostituzione && (
+            <PannelloSostituzione
+              stato={sostituzione.stato}
+              azioni={sostituzione.azioni}
+              onNutrizionista={sostituzione.onNutrizionista}
+            />
+          )}
+          {notifica && (
+            <NotificaInBasso
+              key={notifica.chiave}
+              testo={notifica.testo}
+              tipo={notifica.tipo}
+              onScomparsa={onNotificaScomparsa}
+              sopra={INGOMBRO_BARRA_NAVIGAZIONE}
+            />
+          )}
+          {tutorial && tutorialAttivo && primaRiga && (
+            <Tutorial
+              riquadro={riquadroEvidenza}
+              elemento={
+                <View style={stili.evidenza}>
+                  <RigaDelPiano riga={primaRiga} />
+                </View>
+              }
+              testo={TESTO_TUTORIAL_SOSTITUZIONE}
+              onHoCapito={tutorial.onHoCapito}
+              disposizione="sottoASinistra"
+            />
+          )}
+          {sovrapposti}
+        </>
+      }
+      {...cornice}
+    >
       <View style={stili.intestazione}>
         {daCache && <AvvisoConnessione posizione="nelContenuto" />}
         <Titolo
@@ -380,8 +490,18 @@ function PianoPronto({
             showsVerticalScrollIndicator={false}
           >
             <View style={stili.gruppi}>
-              {pagina.gruppi.map((g) => (
-                <GruppoRighe key={g.chiave} titolo={g.titolo} righe={g.righe} />
+              {pagina.gruppi.map((g, gi) => (
+                <GruppoRighe
+                  key={g.chiave}
+                  titolo={g.titolo}
+                  righe={g.righe}
+                  onRiga={sostituzione ? onRiga : undefined}
+                  misuraPrimaRiga={
+                    tutorialAttivo && gi === 0 && pagina === pagine[indice]
+                      ? { ref: misura.ref, onLayout: misura.onLayout }
+                      : undefined
+                  }
+                />
               ))}
             </View>
             {piano.aggiornatoIl && (
@@ -427,6 +547,14 @@ const stili = StyleSheet.create({
     backgroundColor: colori.sfondo.card,
   },
   pagine: { flex: 1 },
+  // Evidenza del tutorial (586:5589): fondo sfondo/pagina con raggio piccolo attorno alla riga ricopiata sopra il velo.
+  evidenza: {
+    flex: 1,
+    paddingHorizontal: EVIDENZA.orizzontale,
+    paddingVertical: EVIDENZA.verticale,
+    borderRadius: raggio.piccolo,
+    backgroundColor: colori.sfondo.pagina,
+  },
   contenutoPagina: {
     paddingTop: spazio[24],
     paddingHorizontal: margine.pagina,
