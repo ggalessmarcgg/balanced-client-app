@@ -15,7 +15,7 @@ import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConness
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
-import { PianoRealeSviluppo, PianoSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
+import { PianoRealeSviluppo, PianoSchermataSviluppo, SostituzioneSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
 import { PianoSviluppo } from '@/ui/sviluppo/PianoSviluppo';
 import { RaccontaSviluppo } from '@/ui/sviluppo/RaccontaSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
@@ -195,6 +195,16 @@ export const STATI_SVILUPPO = [
   ['piano-senza-rete', 'Piano senza connessione e senza copia (563:4517)'],
   ['piano-senza-rete-copia', 'Piano senza connessione con la copia: Avviso connessione sopra il titolo'],
   ['piano-1.1-indicazioni', 'Piano · 1.1 · Indicazioni (775:7878)'],
+  ['piano-4-sostituzione-avvio', 'Piano · 4 · Sostituzione · avvio (531:3086)'],
+  ['piano-4.1-sostituzione-ricerca', 'Piano · 4.1 · Sostituzione · ricerca in corso (531:3232)'],
+  ['piano-4.2-sostituzione-alternative', 'Piano · 4.2 · Sostituzione · tre alternative (531:3374)'],
+  ['piano-4.2-sostituzione-una', 'Piano · 4.2 con una sola alternativa'],
+  ['piano-4.2-sostituzione-in-casa', 'Piano · 4.2 con la frase sugli alimenti in casa (secondo paragrafo della Card spiegazione AI)'],
+  ['piano-4.3-sostituzione-nessuna', 'Piano · 4.3 · Sostituzione · nessuna alternativa (531:3528)'],
+  ['piano-4.4-sostituzione-non-riconosciuto', 'Piano · 4.4 · Sostituzione · non riconosciuto (789:7727)'],
+  ['piano-4.5-sostituzione-errore', 'Piano · 4.5 · Sostituzione · errore con "Riprova" (789:7865)'],
+  ['piano-4.5-sostituzione-sessione', 'Piano · 4.5 senza "Riprova": sessione scaduta (come il diario vocale)'],
+  ['piano-tutorial-1-sostituzione', 'Tutorial · 1 · Piano · sostituzione (586:5457) sul fisso'],
   ['piano-reale', 'Scheda Piano vera per l\'account in sessione (serve un abbonato, es. +test4)'],
   ['piano-reale-indicazioni', 'Indicazioni vere per l\'account in sessione'],
   ['piano-lettura', 'Piano · lettura (step 8, lotto 1): il piano composto per l\'account in sessione, in forma testuale (serve un abbonato, es. +test4)'],
@@ -584,6 +594,26 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <PianoSchermataSviluppo variante="senza-rete-copia" />;
     case 'piano-1.1-indicazioni':
       return <PianoSchermataSviluppo variante="indicazioni" />;
+    case 'piano-4-sostituzione-avvio':
+      return <SostituzioneSchermataSviluppo variante="avvio" />;
+    case 'piano-4.1-sostituzione-ricerca':
+      return <SostituzioneSchermataSviluppo variante="ricerca" />;
+    case 'piano-4.2-sostituzione-alternative':
+      return <SostituzioneSchermataSviluppo variante="tre" />;
+    case 'piano-4.2-sostituzione-una':
+      return <SostituzioneSchermataSviluppo variante="una" />;
+    case 'piano-4.2-sostituzione-in-casa':
+      return <SostituzioneSchermataSviluppo variante="in-casa" />;
+    case 'piano-4.3-sostituzione-nessuna':
+      return <SostituzioneSchermataSviluppo variante="nessuna" />;
+    case 'piano-4.4-sostituzione-non-riconosciuto':
+      return <SostituzioneSchermataSviluppo variante="non-riconosciuto" />;
+    case 'piano-4.5-sostituzione-errore':
+      return <SostituzioneSchermataSviluppo variante="errore" />;
+    case 'piano-4.5-sostituzione-sessione':
+      return <SostituzioneSchermataSviluppo variante="errore-sessione" />;
+    case 'piano-tutorial-1-sostituzione':
+      return <PianoSchermataSviluppo variante="tutorial" />;
     case 'piano-reale':
       return <PianoRealeSviluppo cosa="piano" />;
     case 'piano-reale-indicazioni':

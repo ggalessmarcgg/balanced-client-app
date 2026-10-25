@@ -1,17 +1,19 @@
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { componiPiano } from '@/core/piano/composizione';
 import type { GiornoServer, IndicazioneServer, PastoServer, PianoServer, RigaServer, SezioneServer } from '@/core/piano/tipi';
+import type { StatoPannello } from '@/core/sostituzione/pannello';
 import { usePiano } from '@/servizi/usePiano';
+import { useSostituzione, useTutorialPiano, type AzioniSostituzione } from '@/servizi/useSostituzione';
 import { SchermataIndicazioni } from '@/ui/schermate/SchermataIndicazioni';
-import { SchermataPiano, type FasePiano } from '@/ui/schermate/SchermataPiano';
+import { SchermataPiano, type FasePiano, type SostituzionePiano } from '@/ui/schermate/SchermataPiano';
 import { useClientIdSviluppo } from '@/ui/sviluppo/PianoSviluppo';
 
 // Piani sintetici per la pagina degli stati (step 8, lotto 2): i testi del fisso e del variabile sono quelli dei
 // disegni Figma 527:2947 e 527:3070, le indicazioni quelle di 775:7878.
 const nulla = () => {};
-const riga = (position: number, name: string, practical_quantity: string | null = null, parte: Partial<RigaServer> = {}): RigaServer => ({ position, name, quantity_type: 'libero', quantity: null, measure_type: null, practical_quantity, ...parte });
+const riga = (position: number, name: string, practical_quantity: string | null = null, parte: Partial<RigaServer> = {}): RigaServer => ({ id: `${position}-${name}`, position, name, quantity_type: 'libero', quantity: null, measure_type: null, practical_quantity, ...parte });
 const aPiacere = (position: number, name: string): RigaServer => riga(position, name, null, { quantity_type: 'a_piacere' });
 const sezione = (position: number, category: SezioneServer['category'], rows: RigaServer[]): SezioneServer => ({ position, category, rows });
 const pasto = (position: number, name: string, sections: SezioneServer[]): PastoServer => ({ id: `${position}-${name}`, position, name, sections });
@@ -58,7 +60,30 @@ function variabile(nomi: [string, string, string, string] = ['Colazione', 'Pranz
 const NOMI_LUNGHI_FISSO: [string, string, string, string, string] = ['Colazione (salata o dolce semplice, più sostanziosa nei giorni di allenamento)', 'Spuntino di metà mattina', 'Pranzo (mensa nei giorni in ufficio)', 'Spuntino delle 17 (pre-allenamento nei giorni di palestra)', 'Cena'];
 const NOMI_LUNGHI_VARIABILE: [string, string, string, string] = ['colazione (salata o dolce, a scelta)', 'Pranzo (mensa nei giorni in ufficio)', "Cena (leggera nei giorni di riposo)", "Spuntino pomeridiano prima dell'allenamento"];
 
-export type VariantePianoSviluppo = 'fisso' | 'fisso-nomi-lunghi' | 'fisso-giorno-vuoto' | 'senza-indicazioni' | 'variabile' | 'variabile-nomi-lunghi' | 'in-elaborazione' | 'caricamento' | 'errore' | 'senza-rete' | 'senza-rete-copia' | 'indicazioni';
+export type VariantePianoSviluppo = 'fisso' | 'fisso-nomi-lunghi' | 'fisso-giorno-vuoto' | 'senza-indicazioni' | 'variabile' | 'variabile-nomi-lunghi' | 'in-elaborazione' | 'caricamento' | 'errore' | 'senza-rete' | 'senza-rete-copia' | 'indicazioni' | 'tutorial';
+
+/** Stati del pannello "Sostituisci" con dati sintetici (testi dei disegni Figma 531:3086 … 789:7865), sul fisso con "G" selezionato. */
+export type VarianteSostituzioneSviluppo = 'avvio' | 'ricerca' | 'tre' | 'una' | 'in-casa' | 'nessuna' | 'non-riconosciuto' | 'errore' | 'errore-sessione';
+const RIGA_FIGMA = { id: 'riso', testo: 'Riso basmati · 70 g' };
+const ALTERNATIVE_FIGMA = [
+  { nome: 'Farro', quantita: 'Farro · 70 g', aPiacere: false },
+  { nome: 'Pane integrale', quantita: 'Pane integrale · 105 g · 3,5 fette', aPiacere: false },
+  { nome: 'Patate', quantita: 'Patate · 305 g', aPiacere: false },
+];
+const SPIEGAZIONE_FIGMA = 'Farro, pane integrale e patate danno la stessa energia del riso e stanno bene con pollo e zucchine.';
+const ERRORE_RETE = { esito: 'rete' as const, codice: 'rete', messaggio: 'Nessuna connessione', richiestaId: null, httpStatus: null };
+const ERRORE_SESSIONE = { esito: 'sessione' as const, codice: 'token_non_valido', messaggio: 'Token non valido', richiestaId: 'app-x', httpStatus: 401 };
+const STATI_SOSTITUZIONE: Record<VarianteSostituzioneSviluppo, StatoPannello> = {
+  avvio: { tipo: 'avvio', riga: RIGA_FIGMA, inCasa: '' },
+  ricerca: { tipo: 'ricerca', richiesta: 1, riga: RIGA_FIGMA, inCasa: '' },
+  tre: { tipo: 'alternative', riga: RIGA_FIGMA, inCasa: '', alternative: ALTERNATIVE_FIGMA, spiegazione: { primo: SPIEGAZIONE_FIGMA, secondo: null } },
+  una: { tipo: 'alternative', riga: RIGA_FIGMA, inCasa: '', alternative: ALTERNATIVE_FIGMA.slice(0, 1), spiegazione: { primo: 'Il farro dà la stessa energia del riso e sta bene con pollo e zucchine.', secondo: null } },
+  'in-casa': { tipo: 'alternative', riga: RIGA_FIGMA, inCasa: 'pollo, ceci', alternative: ALTERNATIVE_FIGMA, spiegazione: { primo: SPIEGAZIONE_FIGMA, secondo: 'Il pollo è una fonte di proteine, non di carboidrati.' } },
+  nessuna: { tipo: 'nessunaAlternativa', riga: RIGA_FIGMA, inCasa: '' },
+  'non-riconosciuto': { tipo: 'nonRiconosciuto', riga: { id: 'gnocchi', testo: 'Gnocchi alla romana · 200 g' }, inCasa: '' },
+  errore: { tipo: 'errore', riga: RIGA_FIGMA, inCasa: '', errore: ERRORE_RETE, riprovabile: true },
+  'errore-sessione': { tipo: 'errore', riga: RIGA_FIGMA, inCasa: '', errore: ERRORE_SESSIONE, riprovabile: false },
+};
 
 const PIANI: Record<string, () => PianoServer> = {
   fisso: () => fisso(() => pastiFigma()),
@@ -70,19 +95,55 @@ const PIANI: Record<string, () => PianoServer> = {
   'senza-rete-copia': () => fisso(() => pastiFigma()),
 };
 /** Pagina iniziale come nei disegni: "G" nel fisso, "Pranzo" nel variabile. */
-const INDICE_FIGMA: Partial<Record<VariantePianoSviluppo, number>> = { fisso: 3, 'senza-indicazioni': 3, 'senza-rete-copia': 3, variabile: 1 };
+const INDICE_FIGMA: Partial<Record<VariantePianoSviluppo, number>> = { fisso: 3, 'senza-indicazioni': 3, 'senza-rete-copia': 3, tutorial: 3, variabile: 1 };
 
 export function PianoSchermataSviluppo({ variante }: { variante: VariantePianoSviluppo }) {
   const router = useRouter();
   const onIndicazioni = useCallback(() => router.push({ pathname: '/sviluppo/stati', params: { stato: 'piano-1.1-indicazioni' } }), [router]);
   const piano = useMemo(() => {
-    const costruisci = PIANI[variante];
+    const costruisci = PIANI[variante === 'tutorial' ? 'fisso' : variante];
     return costruisci ? componiPiano(costruisci()) : null;
   }, [variante]);
+  const [tutorialAttivo, setTutorialAttivo] = useState(variante === 'tutorial');
+  const sostituzione = useSostituzioneSviluppo();
   if (variante === 'indicazioni') return <SchermataIndicazioni indicazioni={componiPiano(fisso(() => pastiFigma()))?.indicazioni ?? []} onIndietro={() => router.back()} />;
   const fase: FasePiano =
     variante === 'caricamento' ? { tipo: 'caricamento' } : variante === 'errore' ? { tipo: 'errore', onRiprova: nulla } : variante === 'senza-rete' ? { tipo: 'rete', onRiprova: nulla } : variante === 'in-elaborazione' ? { tipo: 'pronto', piano: null, daCache: false } : { tipo: 'pronto', piano, daCache: variante === 'senza-rete-copia' };
-  return <SchermataPiano fase={fase} indiceIniziale={INDICE_FIGMA[variante]} onIndicazioni={onIndicazioni} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
+  return (
+    <SchermataPiano
+      fase={fase}
+      indiceIniziale={INDICE_FIGMA[variante]}
+      sostituzione={sostituzione}
+      tutorial={{ attivo: tutorialAttivo, onHoCapito: () => setTutorialAttivo(false) }}
+      onIndicazioni={onIndicazioni}
+      onNavigazione={nulla}
+      onMenu={nulla}
+      onNotifiche={nulla}
+    />
+  );
+}
+
+/** Pannello "Sostituisci" di sviluppo: lo stato richiesto con dati sintetici; si chiude e si riapre (dall'avvio) toccando una riga, senza server. */
+function useSostituzioneSviluppo(iniziale: VarianteSostituzioneSviluppo | null = null): SostituzionePiano {
+  const [stato, setStato] = useState<StatoPannello>(() => (iniziale ? STATI_SOSTITUZIONE[iniziale] : { tipo: 'chiuso' }));
+  const azioni = useMemo<AzioniSostituzione>(
+    () => ({
+      apri: (riga) => setStato({ tipo: 'avvio', riga, inCasa: '' }),
+      chiudi: () => setStato({ tipo: 'chiuso' }),
+      scrivi: (testo) => setStato((s) => (s.tipo === 'avvio' ? { ...s, inCasa: testo } : s)),
+      trova: () => setStato((s) => (s.tipo === 'avvio' ? { tipo: 'ricerca', richiesta: 1, riga: s.riga, inCasa: s.inCasa } : s)),
+      riprova: () => setStato((s) => (s.tipo === 'errore' ? { tipo: 'ricerca', richiesta: 1, riga: s.riga, inCasa: s.inCasa } : s)),
+    }),
+    [],
+  );
+  return { stato, azioni, onNutrizionista: azioni.chiudi };
+}
+
+/** Piano · 4 … 4.5 (step 9): il fisso con "G" selezionato e il pannello nello stato richiesto. */
+export function SostituzioneSchermataSviluppo({ variante }: { variante: VarianteSostituzioneSviluppo }) {
+  const piano = useMemo(() => componiPiano(fisso(() => pastiFigma())), []);
+  const sostituzione = useSostituzioneSviluppo(variante);
+  return <SchermataPiano fase={{ tipo: 'pronto', piano, daCache: false }} indiceIniziale={INDICE_FIGMA.fisso} sostituzione={sostituzione} onIndicazioni={nulla} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
 }
 
 /** La scheda Piano vera (o le sue Indicazioni) per l'account in sessione: stesso hook della rotta, senza il gruppo dell'abbonato. */
@@ -95,9 +156,30 @@ export function PianoRealeSviluppo({ cosa }: { cosa: 'piano' | 'indicazioni' }) 
 }
 
 function PianoReale({ clientId, cosa, onIndicazioni, onIndietro }: { clientId: string; cosa: 'piano' | 'indicazioni'; onIndicazioni: () => void; onIndietro: () => void }) {
+  const router = useRouter();
   const { fase, dati, ricarica } = usePiano(clientId);
+  // Sostituzione vera (server degli agenti con la sessione in corso) e tutorial per account, come nella rotta.
+  const sostituzione = useSostituzione(clientId, ricarica);
+  const tutorial = useTutorialPiano(clientId);
+  const { chiudi } = sostituzione.azioni;
+  const onNutrizionista = useCallback(() => {
+    chiudi();
+    router.push('/nutrizionista');
+  }, [chiudi, router]);
   if (cosa === 'indicazioni') return <SchermataIndicazioni indicazioni={dati?.piano?.indicazioni ?? []} onIndietro={onIndietro} />;
   const faseSchermata: FasePiano =
     fase.tipo === 'pronto' && dati ? { tipo: 'pronto', piano: dati.piano, daCache: dati.daCache } : fase.tipo === 'caricamento' || fase.tipo === 'pronto' ? { tipo: 'caricamento' } : { tipo: fase.tipo, onRiprova: ricarica };
-  return <SchermataPiano fase={faseSchermata} onIndicazioni={onIndicazioni} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
+  return (
+    <SchermataPiano
+      fase={faseSchermata}
+      sostituzione={{ stato: sostituzione.stato, azioni: sostituzione.azioni, onNutrizionista }}
+      tutorial={{ attivo: tutorial.daMostrare, onHoCapito: tutorial.hoCapito }}
+      notifica={sostituzione.notifica}
+      onNotificaScomparsa={sostituzione.chiudiNotifica}
+      onIndicazioni={onIndicazioni}
+      onNavigazione={nulla}
+      onMenu={nulla}
+      onNotifiche={nulla}
+    />
+  );
 }
