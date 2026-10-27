@@ -18,22 +18,33 @@ const OPACITA_MINIMA = 0.5;
 
 // Un solo valore animato per tutta l'app: tutti i segnaposti pulsano insieme (come animate-pulse del CRM).
 const pulsazione = new Animated.Value(1);
-let cicloAvviato = false;
+let ciclo: Animated.CompositeAnimation | null = null;
+let montati = 0;
 let ridurreMovimento = false;
+/**
+ * Avvia il ciclo se c'è almeno un segnaposto montato e non è già in corso. Quando l'ultimo segnaposto si smonta,
+ * React Native stacca il valore animato e ferma da sé il ciclo (`AnimatedValue.__detach` → `stopAnimation`): il
+ * callback di fine lo registra, così il montaggio successivo lo fa ripartire (difetto del 28/10/2026: dopo il primo
+ * caricamento nessun segnaposto pulsava più, neanche nella ricerca delle alternative).
+ */
 function avviaPulsazione() {
-  if (cicloAvviato || ridurreMovimento) return;
-  cicloAvviato = true;
-  Animated.loop(
+  if (ciclo || ridurreMovimento || montati === 0) return;
+  pulsazione.setValue(1);
+  const avviato = Animated.loop(
     Animated.sequence([
       Animated.timing(pulsazione, { toValue: OPACITA_MINIMA, duration: DURATA_PULSAZIONE_MS / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       Animated.timing(pulsazione, { toValue: 1, duration: DURATA_PULSAZIONE_MS / 2, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
     ]),
-  ).start();
+  );
+  ciclo = avviato;
+  avviato.start(() => {
+    if (ciclo === avviato) ciclo = null;
+  });
 }
 function fermaPulsazione() {
-  pulsazione.stopAnimation();
+  ciclo?.stop();
+  ciclo = null;
   pulsazione.setValue(1);
-  cicloAvviato = false;
 }
 
 /**
@@ -44,6 +55,8 @@ export function Segnaposto({ righe = RIGHE_FIGMA, altezza, style }: SegnapostoPr
   const [riduci, setRiduci] = useState(ridurreMovimento);
   useEffect(() => {
     let attivo = true;
+    montati += 1;
+    avviaPulsazione();
     AccessibilityInfo.isReduceMotionEnabled().then((v) => attivo && applica(v));
     const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', applica);
     function applica(v: boolean) {
@@ -55,6 +68,8 @@ export function Segnaposto({ righe = RIGHE_FIGMA, altezza, style }: SegnapostoPr
     return () => {
       attivo = false;
       sub.remove();
+      montati -= 1;
+      if (montati === 0) fermaPulsazione();
     };
   }, []);
   return (
