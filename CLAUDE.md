@@ -633,7 +633,7 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Interfaccia: accesso "Ricetta" sotto il selettore, a destra, in ogni pagina del fisso e del variabile
   (`EtichettaAIToccabile` in `src/ui/piano/EtichettaAI.tsx`, area toccabile 44 con l'hitSlop; riga alta 20 seguita subito dal
   primo pasto, Figma 817:7859); `src/ui/piano/PannelloRicetta.tsx` (Figma 5 536:3448, 5.1 536:3626, 5.2 537:4384, 5.3
-  536:3770, 5.3.1 824:8046, 5.7 818:8055, 5.8 818:8193) con le `Opzione` dei pasti a capo (gap 4), le card delle idee (bordo 2
+  536:3770, 5.3.1 824:8046, 5.3.2 826:8118, 5.3.3 826:8283, 5.7 818:8055, 5.8 818:8193, 5.8.1 826:8443) con le `Opzione` dei pasti a capo (gap 4), le card delle idee (bordo 2
   `bordo/selezione` sulla scelta) e la Card spiegazione AI con la nota fissa e la frase sugli ingredienti;
   `src/ui/piano/BarraAttesa.tsx` (barra 4 che si riempie in 10 s con "Circa 10 secondi", poi ferma quasi piena con "Ancora
   qualche secondo…"; compare aprendosi in 300 ms ease-out, senza animazione con "Riduci movimento"; 10 s perché il server è
@@ -646,9 +646,11 @@ npx expo install --fix                   # riallinea versioni alla SDK
   un fumetto vede la versione nuova): "1 di 2" sulla prima riga con "Avanti" (586:5457), "2 di 2" su "Ricetta" con "Ho capito"
   (586:5598, `Tutorial` con `disposizione="sottoADestra"`, punta sotto il centro dell'elemento, evidenza 8 ai lati e 6 sopra e
   sotto). `Suggerimento` ha `passo`, `azione` e `centroPunta`.
-- Da Figma: la 5.6 disegna la Notifica breve in alto; l'app la mostra in basso come tutte le Notifiche brevi (regola degli
-  stati trasversali). Il testo dell'errore della seconda chiamata ("Non siamo riusciti a preparare la ricetta…") non ha disegno.
-- Pagina di sviluppo: `/sviluppo/stati?stato=piano-5-ricetta-fisso|piano-5-ricetta-fisso-scelto|piano-5.1-ricetta-variabile|piano-5.2-ricetta-ricerca|piano-5.3-ricetta-idee|piano-5.3-ricetta-idee-selezionata|piano-5.3-ricetta-idee-frase|piano-5.3.1-ricetta-attesa|piano-5.3.1-ricetta-attesa-oltre|piano-5.4-ricetta|piano-5.5-ricetta-porzioni|piano-5.5-ricetta-riposo|piano-5.6-ricetta-salvata|piano-5.6-ricetta-errore-salvataggio|piano-5.7-ricetta-nessuna-idea|piano-5.8-ricetta-errore|piano-5.8-ricetta-errore-ricetta|piano-5.8-ricetta-errore-sessione|piano-tutorial-1-sostituzione|piano-tutorial-2-ricette|menu-7-ricette|menu-7.1-ricette-vuoto|menu-7.2-ricetta-salvata|menu-7-ricette-caricamento|menu-7-ricette-errore|menu-7-ricette-senza-rete-copia`
+- Disegni aggiunti il 29/10/2026: 5.3.2 attesa oltre il tempo stimato (826:8118, barra ferma a 335/353), 5.3.3 idee con
+  ingredienti non usati (826:8283, secondo paragrafo della Card spiegazione AI), 5.8.1 errore nella preparazione (826:8443),
+  riposo nel sottotitolo di 5.5 ("50 minuti · più 2 ore di riposo · Spuntino"). La Notifica breve di 5.6 sta in basso come
+  tutte le Notifiche brevi.
+- Pagina di sviluppo: `/sviluppo/stati?stato=piano-5-ricetta-fisso|piano-5-ricetta-fisso-scelto|piano-5.1-ricetta-variabile|piano-5.2-ricetta-ricerca|piano-5.3-ricetta-idee|piano-5.3-ricetta-idee-selezionata|piano-5.3.3-ricetta-idee-frase|piano-5.3.1-ricetta-attesa|piano-5.3.2-ricetta-attesa-oltre|piano-5.4-ricetta|piano-5.5-ricetta-porzioni|piano-5.6-ricetta-salvata|piano-5.6-ricetta-errore-salvataggio|piano-5.7-ricetta-nessuna-idea|piano-5.8-ricetta-errore|piano-5.8.1-ricetta-errore-ricetta|piano-5.8-ricetta-errore-sessione|piano-tutorial-1-sostituzione|piano-tutorial-2-ricette|menu-7-ricette|menu-7.1-ricette-vuoto|menu-7.2-ricetta-salvata|menu-7-ricette-caricamento|menu-7-ricette-errore|menu-7-ricette-senza-rete-copia`
   (dati sintetici, nessun server; `piano-reale` usa le ricette vere); esiti dei confronti in
   `~/Desktop/censimenti-app/step9-confronti-ricette/` (`strumenti/confronto-step9-ricette.sh`).
 
