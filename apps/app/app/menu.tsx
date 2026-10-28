@@ -6,11 +6,11 @@ import { statoCorrente } from '@/servizi/statoCliente';
 import { useAzioniStato } from '@/servizi/useAzioniStato';
 import { SchermataMenu, type VoceMenu } from '@/ui/schermate/SchermataMenu';
 
-/** Voci già costruite ("Le tue ricette" arriva con lo step 9). */
-const VOCI_ABBONATO: VoceMenu[] = ['nutrizionista', 'appuntamenti', 'pesoEMisure', 'contenuti'];
+/** Le voci dell'abbonato nell'ordine di Figma (Menu · 1 508:2614). */
+const VOCI_ABBONATO: VoceMenu[] = ['nutrizionista', 'appuntamenti', 'pesoEMisure', 'ricette', 'contenuti'];
 /** Prima dell'abbonamento (stati C, D, F, G; step 12): solo la nutrizionista, oltre a "Esci". */
 const VOCI_PRENOTAZIONE: VoceMenu[] = ['nutrizionista'];
-const ROTTE: Record<VoceMenu, '/nutrizionista' | '/appuntamenti' | '/peso-misure' | '/contenuti'> = { nutrizionista: '/nutrizionista', appuntamenti: '/appuntamenti', pesoEMisure: '/peso-misure', contenuti: '/contenuti' };
+const ROTTE: Record<VoceMenu, '/nutrizionista' | '/appuntamenti' | '/peso-misure' | '/ricette' | '/contenuti'> = { nutrizionista: '/nutrizionista', appuntamenti: '/appuntamenti', pesoEMisure: '/peso-misure', ricette: '/ricette', contenuti: '/contenuti' };
 
 /** Menu a tutta pagina (step 11): dall'icona Menu della barra superiore dell'abbonato e, dallo step 12, degli stati prima dell'abbonamento. */
 export default function RottaMenu() {

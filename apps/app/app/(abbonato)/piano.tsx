@@ -6,6 +6,7 @@ import { useNuovaRevisione } from '@/servizi/memoriaRevisioni';
 import { useNotificheNuove } from '@/servizi/notifiche';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { usePiano } from '@/servizi/usePiano';
+import { useRicette } from '@/servizi/useRicette';
 import { useSostituzione, useTutorialPiano } from '@/servizi/useSostituzione';
 import { SchermataPiano, type FasePiano } from '@/ui/schermate/SchermataPiano';
 
@@ -21,14 +22,29 @@ function Piano({ profilo }: { profilo: Profilo }) {
   const notificheNuove = useNotificheNuove();
   const revisioneNuova = useNuovaRevisione();
   const { fase, dati, ricarica } = usePiano(profilo.clientId);
-  // Sostituzione (step 9): pannello sulla riga toccata; dopo riga_non_disponibile il piano riletto si mostra subito.
+  // Sostituzione e ricette (step 9): pannelli dalla riga toccata e da "Ricetta"; dopo riga_non_disponibile o
+  // pasto_non_disponibile il piano riletto si mostra subito. La ricetta pronta apre la sua pagina.
   const sostituzione = useSostituzione(profilo.clientId, ricarica);
+  const apriRicetta = useCallback(() => router.push('/ricetta'), [router]);
+  const ricette = useRicette(profilo.clientId, apriRicetta, ricarica);
   const tutorial = useTutorialPiano(profilo.clientId);
   const { chiudi: chiudiPannello } = sostituzione.azioni;
+  const { chiudi: chiudiPannelloRicette } = ricette.azioni;
   const onNutrizionista = useCallback(() => {
     chiudiPannello();
     router.push('/nutrizionista');
   }, [chiudiPannello, router]);
+  const onNutrizionistaRicette = useCallback(() => {
+    chiudiPannelloRicette();
+    router.push('/nutrizionista');
+  }, [chiudiPannelloRicette, router]);
+  const notifica = ricette.notifica ?? sostituzione.notifica;
+  const { chiudiNotifica: chiudiNotificaRicette } = ricette;
+  const { chiudiNotifica: chiudiNotificaSostituzione } = sostituzione;
+  const chiudiNotifica = useCallback(() => {
+    chiudiNotificaRicette();
+    chiudiNotificaSostituzione();
+  }, [chiudiNotificaRicette, chiudiNotificaSostituzione]);
   const onIndicazioni = useCallback(() => router.push('/indicazioni'), [router]);
   const onMenu = useCallback(() => router.push('/menu'), [router]);
   const onNotifiche = useCallback(() => router.push('/notifiche'), [router]);
@@ -38,9 +54,10 @@ function Piano({ profilo }: { profilo: Profilo }) {
     <SchermataPiano
       fase={faseSchermata}
       sostituzione={{ stato: sostituzione.stato, azioni: sostituzione.azioni, onNutrizionista }}
-      tutorial={{ attivo: tutorial.daMostrare, onHoCapito: tutorial.hoCapito }}
-      notifica={sostituzione.notifica}
-      onNotificaScomparsa={sostituzione.chiudiNotifica}
+      ricette={{ stato: ricette.stato, azioni: ricette.azioni, onNutrizionista: onNutrizionistaRicette }}
+      tutorial={{ passo: tutorial.passo, onAvanti: tutorial.avanti, onHoCapito: tutorial.hoCapito }}
+      notifica={notifica}
+      onNotificaScomparsa={chiudiNotifica}
       onIndicazioni={onIndicazioni}
       onMenu={onMenu}
       onNotifiche={onNotifiche}

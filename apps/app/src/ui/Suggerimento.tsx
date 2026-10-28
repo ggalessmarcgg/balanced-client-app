@@ -15,6 +15,10 @@ export type SuggerimentoProps = {
    * (Racconta, punta centrata); "sopra" quando sta sotto (Tutorial · 1 del Piano 586:5457, punta a 32 dal bordo sinistro).
    */
   freccia?: 'sotto' | 'sopra';
+  /** Con la freccia sopra: centro della punta dal bordo sinistro del fumetto (predefinito 32; Tutorial · 2 586:5598: sotto il centro dell'elemento). */
+  centroPunta?: number;
+  /** Etichetta dell'azione: "Ho capito" (predefinito) oppure "Avanti" nel primo passo di un tutorial a più fumetti (586:5457). */
+  azione?: string;
 };
 
 /** Larghezza del fumetto e misure della punta (Figma "Suggerimento" nelle schermate Tutorial · 3, 4, 5). */
@@ -23,9 +27,9 @@ const PUNTA = { larghezza: 14, altezza: 7.5, riga: 10 };
 /** Centro della punta con Freccia=Sopra (Figma 586:5590: il triangolo va da 25 a 39 nella riga larga 280). */
 const CENTRO_PUNTA_SOPRA = 32;
 
-function tracciatoPunta(freccia: 'sotto' | 'sopra'): string {
+function tracciatoPunta(freccia: 'sotto' | 'sopra', centroPunta: number): string {
   if (freccia === 'sopra') {
-    const c = CENTRO_PUNTA_SOPRA;
+    const c = Math.max(PUNTA.larghezza / 2, Math.min(LARGHEZZA_SUGGERIMENTO - PUNTA.larghezza / 2, centroPunta));
     return `M${c} 0L${c + PUNTA.larghezza / 2} ${PUNTA.altezza}L${c - PUNTA.larghezza / 2} ${PUNTA.altezza}Z`;
   }
   const c = LARGHEZZA_SUGGERIMENTO / 2;
@@ -34,13 +38,14 @@ function tracciatoPunta(freccia: 'sotto' | 'sopra'): string {
 
 /**
  * Suggerimento del tutorial: fumetto su testo/primario (raggio foto, padding 14 / 16, gap 10) con il testo in Body
- * details su azione, il piede con il passo e "Ho capito" (Link in badge/sfondo), e la punta verso l'elemento evidenziato.
+ * details su azione, il piede con il passo ("1 di 2") e l'azione ("Ho capito" o "Avanti", Link in badge/sfondo), e la
+ * punta verso l'elemento evidenziato.
  */
-export function Suggerimento({ testo, passo = ' ', onHoCapito, freccia = 'sotto' }: SuggerimentoProps) {
+export function Suggerimento({ testo, passo = ' ', onHoCapito, freccia = 'sotto', centroPunta = CENTRO_PUNTA_SOPRA, azione = 'Ho capito' }: SuggerimentoProps) {
   const { hitSlop, onLayout } = useAreaToccabile();
   const punta = (
     <Svg width={LARGHEZZA_SUGGERIMENTO} height={PUNTA.riga} accessible={false} importantForAccessibility="no-hide-descendants">
-      <Path d={tracciatoPunta(freccia)} fill={colori.testo.primario} />
+      <Path d={tracciatoPunta(freccia, centroPunta)} fill={colori.testo.primario} />
     </Svg>
   );
   return (
@@ -54,9 +59,9 @@ export function Suggerimento({ testo, passo = ' ', onHoCapito, freccia = 'sotto'
           <Testo stile="caption" colore={colori.testo.suAzione} style={stili.passo}>
             {passo}
           </Testo>
-          <Pressable onPress={onHoCapito} hitSlop={hitSlop} onLayout={onLayout} accessibilityRole="button" accessibilityLabel="Ho capito">
+          <Pressable onPress={onHoCapito} hitSlop={hitSlop} onLayout={onLayout} accessibilityRole="button" accessibilityLabel={azione}>
             <Testo stile="link" colore={colori.badge.sfondo}>
-              Ho capito
+              {azione}
             </Testo>
           </Pressable>
         </View>

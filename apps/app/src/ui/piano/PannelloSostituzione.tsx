@@ -156,8 +156,8 @@ function CardAlternativa({ alternativa }: { alternativa: Alternativa }) {
   );
 }
 
-/** Card informativa (Figma 531:3658, 789:7799, 789:7937): titolo in Etichetta e testo in Body details attenuato, gap 4. */
-function CardInformativa({ titolo, testo }: { titolo: string; testo: string }) {
+/** Card informativa (Figma 531:3658, 789:7799, 789:7937, 818:8127): titolo in Etichetta e testo in Body details attenuato, gap 4. */
+export function CardInformativa({ titolo, testo }: { titolo: string; testo: string }) {
   return (
     <View style={stili.cardInformativa} accessibilityLiveRegion="polite">
       <Testo stile="etichetta">{titolo}</Testo>
@@ -171,9 +171,9 @@ function CardInformativa({ titolo, testo }: { titolo: string; testo: string }) {
 /**
  * Card spiegazione AI (Figma 532:3440): sfondo App/Gradiente card diario (sfondo/card → sfondo/campo al 30 %), raggio foto,
  * padding 16, gap 12: Icona / 20 / Info, il primo paragrafo (perché le alternative sono adatte) e il secondo solo se la
- * persona ha indicato alimenti propri non adatti.
+ * persona ha indicato alimenti propri non adatti. Nel pannello "Ricetta" porta la nota sull'apporto e la frase sugli ingredienti.
  */
-function CardSpiegazioneAI({ spiegazione }: { spiegazione: Spiegazione }) {
+export function CardSpiegazioneAI({ spiegazione }: { spiegazione: Spiegazione }) {
   const [misura, setMisura] = useState({ larghezza: 0, altezza: 0 });
   const onLayout = (e: LayoutChangeEvent) => {
     const { width, height } = e.nativeEvent.layout;

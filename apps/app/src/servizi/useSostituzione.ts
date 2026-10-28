@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { NOTIFICA_PIANO_AGGIORNATO, riduci, STATO_CHIUSO, type EventoPannello, type RigaScelta, type StatoPannello } from '@/core/sostituzione/pannello';
 import { leggiPiano } from '@/servizi/piano';
-import { segnaTutorialPianoVisto, trovaAlternative, tutorialPianoVisto } from '@/servizi/sostituzione';
+import { segnaTutorialPianoVisto, trovaAlternative, tutorialPianoVisto, type PassoTutorialPiano, type TutorialPianoVisto } from '@/servizi/sostituzione';
 
 export type AzioniSostituzione = {
   apri: (riga: RigaScelta) => void;
@@ -77,12 +77,13 @@ export function useSostituzione(clientId: string, onPianoRiletto?: () => void): 
 }
 
 /**
- * Tutorial · 1 della sostituzione: compare alla prima visita del Piano con un piano presente, una volta per account;
- * `null` finché non si sa se è già stato visto. "Ho capito" lo registra nel portachiavi.
+ * Tutorial del Piano a due fumetti: "1 di 2" sulla prima riga (sostituzione, "Avanti") e "2 di 2" su "Ricetta" ("Ho
+ * capito"), alla prima visita del Piano con un piano presente, una volta per account; `passo` null finché non si sa
+ * cosa è già stato visto o quando è tutto chiuso. Ogni chiusura si registra nel portachiavi.
  */
-export function useTutorialPiano(clientId: string): { daMostrare: boolean; hoCapito: () => void } {
+export function useTutorialPiano(clientId: string): { passo: PassoTutorialPiano | null; avanti: () => void; hoCapito: () => void } {
   // Esito della lettura per cliente: un altro cliente riparte da "non ancora letto" senza setState nell'effetto.
-  const [letto, setLetto] = useState<{ clientId: string; visto: boolean } | null>(null);
+  const [letto, setLetto] = useState<{ clientId: string; visto: TutorialPianoVisto } | null>(null);
   useEffect(() => {
     let attivo = true;
     tutorialPianoVisto(clientId).then((visto) => {
@@ -92,9 +93,14 @@ export function useTutorialPiano(clientId: string): { daMostrare: boolean; hoCap
       attivo = false;
     };
   }, [clientId]);
-  const hoCapito = useCallback(() => {
-    setLetto({ clientId, visto: true });
-    segnaTutorialPianoVisto(clientId);
+  const avanti = useCallback(() => {
+    setLetto({ clientId, visto: 'sostituzione' });
+    segnaTutorialPianoVisto(clientId, 'sostituzione');
   }, [clientId]);
-  return { daMostrare: letto !== null && letto.clientId === clientId && !letto.visto, hoCapito };
+  const hoCapito = useCallback(() => {
+    setLetto({ clientId, visto: 'ricetta' });
+    segnaTutorialPianoVisto(clientId, 'ricetta');
+  }, [clientId]);
+  const passo = letto === null || letto.clientId !== clientId || letto.visto === 'ricetta' ? null : letto.visto === 'sostituzione' ? 'ricetta' : 'sostituzione';
+  return { passo, avanti, hoCapito };
 }

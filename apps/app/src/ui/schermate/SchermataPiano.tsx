@@ -19,13 +19,19 @@ import {
   giornoPreselezionato,
   pastoPreselezionato,
 } from "@/core/piano/preselezione";
+import { contestoRicetta } from "@/core/ricette/contesto";
+import type { StatoPannello as StatoPannelloRicette } from "@/core/ricette/pannello";
 import type { StatoPannello } from "@/core/sostituzione/pannello";
+import type { PassoTutorialPiano } from "@/servizi/sostituzione";
+import type { AzioniRicette } from "@/servizi/useRicette";
 import type { AzioniSostituzione, NotificaPiano } from "@/servizi/useSostituzione";
 import { AvvisoConnessione } from "@/ui/AvvisoConnessione";
 import { AzioneTesto } from "@/ui/AzioneTesto";
 import type { VoceNavigazione } from "@/ui/BarraNavigazione";
 import { BarraSuperiore } from "@/ui/BarraSuperiore";
 import { GruppoRighe, PieDiPaginaPiano, RigaDelPiano } from "@/ui/piano/ContenutoPiano";
+import { EtichettaAI, EtichettaAIToccabile } from "@/ui/piano/EtichettaAI";
+import { PannelloRicetta, TESTI_RICETTA } from "@/ui/piano/PannelloRicetta";
 import { PannelloSostituzione } from "@/ui/piano/PannelloSostituzione";
 import { SelettoreSegmentato } from "@/ui/piano/SelettoreSegmentato";
 import { TRANSIZIONI, useRiduciMovimento } from "@/ui/riduciMovimento";
@@ -54,12 +60,26 @@ export type SostituzionePiano = {
   onNutrizionista: () => void;
 };
 
+/** Pannello "Ricetta" (step 9, lotto 3): stato e azioni dall'hook useRicette; "La tua nutrizionista" chiude e apre il menu. */
+export type RicettePiano = {
+  stato: StatoPannelloRicette;
+  azioni: AzioniRicette;
+  onNutrizionista: () => void;
+  /** Pagina di sviluppo: la barra dell'attesa parte già a questo punto (ms) e, se `attesaFerma`, non avanza. */
+  attesaTrascorsa?: number;
+  attesaFerma?: boolean;
+};
+
+/** Tutorial del Piano a due fumetti: "1 di 2" sulla prima riga (586:5457, "Avanti"), "2 di 2" su "Ricetta" (586:5598, "Ho capito"). */
+export type TutorialPiano = { passo: PassoTutorialPiano | null; onAvanti: () => void; onHoCapito: () => void };
+
 export type SchermataPianoProps = {
   fase: FasePiano;
   sostituzione?: SostituzionePiano;
-  /** Tutorial · 1 (586:5457) sulla prima riga della pagina: attivo alla prima visita con un piano presente. */
-  tutorial?: { attivo: boolean; onHoCapito: () => void };
-  /** Notifica breve in fondo (Trasversali · 5): "Il piano è stato aggiornato…" dopo riga_non_disponibile. */
+  ricette?: RicettePiano;
+  /** Attivo alla prima visita con un piano presente, una volta per account. */
+  tutorial?: TutorialPiano;
+  /** Notifica breve in fondo (Trasversali · 5): "Il piano è stato aggiornato…" dopo riga_non_disponibile o pasto_non_disponibile. */
   notifica?: NotificaPiano | null;
   onNotificaScomparsa?: () => void;
   /** Istante per la preselezione (giorno di oggi, pasto per fascia oraria); predefinito adesso. */
@@ -95,8 +115,14 @@ const DESCRIZIONE_ERRORE =
 /** Testo del Tutorial · 1 · Piano · sostituzione (Figma 586:5457). */
 export const TESTO_TUTORIAL_SOSTITUZIONE =
   "Tocca un alimento per trovare un'alternativa equivalente.";
+/** Testo del Tutorial · 2 · Piano · ricette (Figma 586:5598). */
+export const TESTO_TUTORIAL_RICETTE =
+  "Trova una ricetta con lo stesso apporto di un tuo pasto.";
+const PASSI_TUTORIAL = { sostituzione: "1 di 2", ricetta: "2 di 2" } as const;
 /** Evidenza del tutorial attorno alla riga (586:5589: 369 × 50 attorno a una riga 353 × 44 → 8 ai lati, 3 sopra e sotto). */
 const EVIDENZA = { orizzontale: spazio[8], verticale: 3 };
+/** Evidenza attorno a "Ricetta" (586:5837: 89 × 32 attorno all'etichetta 73 × 20 → 8 ai lati, 6 sopra e sotto). */
+const EVIDENZA_RICETTA = { orizzontale: spazio[8], verticale: spazio[6] };
 /** Altezza del selettore (padding 4 + voce 32 + 4), per il segnaposto del caricamento. */
 const ALTEZZA_SELETTORE = spazio[4] + spazio[6] + 20 + spazio[6] + spazio[4];
 
@@ -104,7 +130,8 @@ const ALTEZZA_SELETTORE = spazio[4] + spazio[6] + 20 + spazio[6] + spazio[4];
  * Scheda Piano (Figma Piano · 1 fisso 527:2947, · 2 variabile 527:3070, · 3 in elaborazione 527:3174). Barra superiore
  * completa, poi l'intestazione fissa (16 sopra, margini 20, gap 24): riga del titolo "Piano" con "Indicazioni" a
  * destra se il piano ne ha, e il selettore segmentato; sotto, le pagine (giorni del fisso o pasti del variabile) che
- * scorrono in orizzontale con lo scatto alla pagina e in verticale ciascuna per sé, sotto la barra di navigazione.
+ * scorrono in orizzontale con lo scatto alla pagina e in verticale ciascuna per sé, sotto la barra di navigazione; in
+ * ogni pagina l'accesso "Ricetta" (Etichetta AI toccabile) sotto il selettore, a destra, sopra il primo pasto.
  * Stati trasversali dentro la stessa struttura (titolo "Piano", barra con Piano attiva).
  */
 export function SchermataPiano({
@@ -113,6 +140,7 @@ export function SchermataPiano({
   indiceIniziale,
   onIndicazioni,
   sostituzione,
+  ricette,
   tutorial,
   notifica,
   onNotificaScomparsa,
@@ -149,6 +177,7 @@ export function SchermataPiano({
           indiceIniziale={indiceIniziale}
           onIndicazioni={onIndicazioni}
           sostituzione={sostituzione}
+          ricette={ricette}
           tutorial={tutorial}
           notifica={notifica}
           onNotificaScomparsa={onNotificaScomparsa}
@@ -308,6 +337,7 @@ function PianoPronto({
   indiceIniziale,
   onIndicazioni,
   sostituzione,
+  ricette,
   tutorial,
   notifica,
   onNotificaScomparsa,
@@ -316,7 +346,7 @@ function PianoPronto({
 }: Cornice &
   Pick<
     SchermataPianoProps,
-    "sostituzione" | "tutorial" | "notifica" | "onNotificaScomparsa"
+    "sostituzione" | "ricette" | "tutorial" | "notifica" | "onNotificaScomparsa"
   > & {
     piano: PianoComposto;
     daCache: boolean;
@@ -395,11 +425,20 @@ function PianoPronto({
     [azioniSostituzione],
   );
 
-  // Tutorial · 1: la prima riga della pagina corrente, misurata nella finestra. Le pagine stanno in uno scorrimento
-  // orizzontale: l'ascissa misurata può portarsi dietro lo scorrimento, mentre la riga parte sempre dal margine di
-  // pagina e occupa tutta la larghezza, quindi si prendono dalla misura solo ordinata e altezza.
-  const tutorialAttivo = Boolean(tutorial?.attivo) && (sostituzione?.stato.tipo ?? "chiuso") === "chiuso";
-  const misura = useRiquadroTutorial(tutorialAttivo);
+  // "Ricetta" sotto il selettore (step 9): apre il pannello sul giorno (fisso) o sul pasto (variabile) della pagina corrente.
+  const { azioni: azioniRicette } = ricette ?? {};
+  const onRicetta = useCallback(() => {
+    const contesto = contestoRicetta(piano, indice);
+    if (contesto) azioniRicette?.apri(contesto);
+  }, [azioniRicette, piano, indice]);
+
+  // Tutorial a due fumetti, con entrambi i pannelli chiusi. Passo 1: la prima riga della pagina corrente, misurata nella
+  // finestra. Le pagine stanno in uno scorrimento orizzontale: l'ascissa misurata può portarsi dietro lo scorrimento,
+  // mentre la riga parte sempre dal margine di pagina e occupa tutta la larghezza, quindi si prendono dalla misura solo
+  // ordinata e altezza. Passo 2: l'etichetta "Ricetta", allineata al margine destro: dalla misura larghezza, ordinata e altezza.
+  const pannelliChiusi = (sostituzione?.stato.tipo ?? "chiuso") === "chiuso" && (ricette?.stato.tipo ?? "chiuso") === "chiuso";
+  const passoTutorial = tutorial && pannelliChiusi ? tutorial.passo : null;
+  const misura = useRiquadroTutorial(passoTutorial === "sostituzione");
   const { collegaMisura } = misura;
   useEffect(() => {
     const misuratore: MisuraNellaFinestra = (vista, esito) =>
@@ -409,6 +448,16 @@ function PianoPronto({
     collegaMisura(misuratore);
     return () => collegaMisura(null);
   }, [collegaMisura, larghezza]);
+  const misuraRicetta = useRiquadroTutorial(passoTutorial === "ricetta");
+  const { collegaMisura: collegaMisuraRicetta } = misuraRicetta;
+  useEffect(() => {
+    const misuratore: MisuraNellaFinestra = (vista, esito) =>
+      vista.measureInWindow((_x, y, w, altezza) =>
+        esito({ x: larghezza - margine.pagina - w, y, larghezza: w, altezza }),
+      );
+    collegaMisuraRicetta(misuratore);
+    return () => collegaMisuraRicetta(null);
+  }, [collegaMisuraRicetta, larghezza]);
   const primaRiga = pagine[indice]?.gruppi[0]?.righe[0] ?? null;
   const riquadroEvidenza = misura.riquadro
     ? {
@@ -416,6 +465,14 @@ function PianoPronto({
         y: misura.riquadro.y - EVIDENZA.verticale,
         larghezza: misura.riquadro.larghezza + 2 * EVIDENZA.orizzontale,
         altezza: misura.riquadro.altezza + 2 * EVIDENZA.verticale,
+      }
+    : null;
+  const riquadroEvidenzaRicetta = misuraRicetta.riquadro
+    ? {
+        x: misuraRicetta.riquadro.x - EVIDENZA_RICETTA.orizzontale,
+        y: misuraRicetta.riquadro.y - EVIDENZA_RICETTA.verticale,
+        larghezza: misuraRicetta.riquadro.larghezza + 2 * EVIDENZA_RICETTA.orizzontale,
+        altezza: misuraRicetta.riquadro.altezza + 2 * EVIDENZA_RICETTA.verticale,
       }
     : null;
 
@@ -431,6 +488,15 @@ function PianoPronto({
               onNutrizionista={sostituzione.onNutrizionista}
             />
           )}
+          {ricette && (
+            <PannelloRicetta
+              stato={ricette.stato}
+              azioni={ricette.azioni}
+              onNutrizionista={ricette.onNutrizionista}
+              attesaTrascorsa={ricette.attesaTrascorsa}
+              attesaFerma={ricette.attesaFerma}
+            />
+          )}
           {notifica && (
             <NotificaInBasso
               key={notifica.chiave}
@@ -440,7 +506,7 @@ function PianoPronto({
               sopra={INGOMBRO_BARRA_NAVIGAZIONE}
             />
           )}
-          {tutorial && tutorialAttivo && primaRiga && (
+          {tutorial && passoTutorial === "sostituzione" && primaRiga && (
             <Tutorial
               riquadro={riquadroEvidenza}
               elemento={
@@ -449,8 +515,24 @@ function PianoPronto({
                 </View>
               }
               testo={TESTO_TUTORIAL_SOSTITUZIONE}
-              onHoCapito={tutorial.onHoCapito}
+              passo={PASSI_TUTORIAL.sostituzione}
+              azione="Avanti"
+              onHoCapito={tutorial.onAvanti}
               disposizione="sottoASinistra"
+            />
+          )}
+          {tutorial && passoTutorial === "ricetta" && (
+            <Tutorial
+              riquadro={riquadroEvidenzaRicetta}
+              elemento={
+                <View style={stili.evidenzaRicetta}>
+                  <EtichettaAI etichetta={TESTI_RICETTA.testata} />
+                </View>
+              }
+              testo={TESTO_TUTORIAL_RICETTE}
+              passo={PASSI_TUTORIAL.ricetta}
+              onHoCapito={tutorial.onHoCapito}
+              disposizione="sottoADestra"
             />
           )}
           {sovrapposti}
@@ -489,6 +571,17 @@ function PianoPronto({
             contentContainerStyle={stili.contenutoPagina}
             showsVerticalScrollIndicator={false}
           >
+            {ricette && (
+              <View style={stili.rigaRicetta}>
+                <EtichettaAIToccabile
+                  etichetta={TESTI_RICETTA.testata}
+                  onPress={onRicetta}
+                  accessibilityHint="Trova una ricetta con lo stesso apporto di un pasto"
+                  riferimento={passoTutorial === "ricetta" && pagina === pagine[indice] ? misuraRicetta.ref : undefined}
+                  onLayout={passoTutorial === "ricetta" && pagina === pagine[indice] ? misuraRicetta.onLayout : undefined}
+                />
+              </View>
+            )}
             <View style={stili.gruppi}>
               {pagina.gruppi.map((g, gi) => (
                 <GruppoRighe
@@ -497,7 +590,7 @@ function PianoPronto({
                   righe={g.righe}
                   onRiga={sostituzione ? onRiga : undefined}
                   misuraPrimaRiga={
-                    tutorialAttivo && gi === 0 && pagina === pagine[indice]
+                    passoTutorial === "sostituzione" && gi === 0 && pagina === pagine[indice]
                       ? { ref: misura.ref, onLayout: misura.onLayout }
                       : undefined
                   }
@@ -560,6 +653,25 @@ const stili = StyleSheet.create({
     paddingHorizontal: margine.pagina,
     paddingBottom: INGOMBRO_BARRA_NAVIGAZIONE + spazio[16],
     gap: spazio[24],
+  },
+  // "Ricetta" sotto il selettore, a destra, alto 20; il primo pasto segue subito (Figma 817:7859: riga a 0, gruppi a 20).
+  rigaRicetta: {
+    alignSelf: "stretch",
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    paddingLeft: spazio[4],
+    marginBottom: -spazio[24],
+  },
+  // Evidenza del Tutorial · 2 (586:5837): fondo sfondo/pagina con raggio piccolo attorno all'etichetta ricopiata sopra il velo.
+  evidenzaRicetta: {
+    flex: 1,
+    paddingHorizontal: EVIDENZA_RICETTA.orizzontale,
+    paddingVertical: EVIDENZA_RICETTA.verticale,
+    borderRadius: raggio.piccolo,
+    backgroundColor: colori.sfondo.pagina,
+    alignItems: "center",
+    justifyContent: "center",
   },
   gruppi: { alignSelf: "stretch", gap: spazio[24] },
 });

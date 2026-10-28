@@ -9,17 +9,18 @@ import { Separatore } from '@/ui/Separatore';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio, type IconaPerMisura } from '@/ui/theme';
 
-export type VoceMenu = 'nutrizionista' | 'appuntamenti' | 'pesoEMisure' | 'contenuti';
+export type VoceMenu = 'nutrizionista' | 'appuntamenti' | 'pesoEMisure' | 'ricette' | 'contenuti';
 
 const VOCI: Record<VoceMenu, { etichetta: string; icona: IconaPerMisura[24] }> = {
   nutrizionista: { etichetta: 'La tua nutrizionista', icona: 'Nutrizionista' },
   appuntamenti: { etichetta: 'Appuntamenti', icona: 'Calendario semplice' },
   pesoEMisure: { etichetta: 'Peso e misure', icona: 'Grafico' },
+  ricette: { etichetta: 'Le tue ricette', icona: 'Ricette' },
   contenuti: { etichetta: 'Contenuti', icona: 'Contenuti' },
 };
 
 export type SchermataMenuProps = {
-  /** Voci mostrate, nell'ordine di Figma; una voce compare solo quando la sua schermata esiste ("Le tue ricette" allo step 9). */
+  /** Voci mostrate, nell'ordine di Figma (Menu · 1 508:2614). */
   voci: VoceMenu[];
   versione: string;
   onVoce: (voce: VoceMenu) => void;

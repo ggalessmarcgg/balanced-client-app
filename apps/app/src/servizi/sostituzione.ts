@@ -1,6 +1,6 @@
 // Sostituzione degli alimenti (step 9, lotto 3): chiamata POST /v1/sostituzione/alternative del server degli agenti con
-// l'accesso Supabase del cliente (docs/server-sostituzione.md §3, sullo stampo del diario vocale) e tutorial del Piano
-// ricordato nel portachiavi per account. L'app non scrive mai sul database: il server registra da sé ogni chiamata.
+// l'accesso Supabase del cliente (docs/server-sostituzione.md §3, sullo stampo del diario vocale) e tutorial del Piano a
+// due fumetti (sostituzione, ricetta) ricordato nel portachiavi per account. L'app non scrive mai sul database: il server registra da sé ogni chiamata.
 import { fetch as fetchExpo } from 'expo/fetch';
 
 import { nuovoIdRichiesta } from '@/core/racconta/server';
@@ -61,19 +61,27 @@ export async function trovaAlternative(rigaId: string, inCasa: string): Promise<
   return esito;
 }
 
-// ---- Tutorial del Piano (Figma Tutorial · 1 · Piano · sostituzione 586:5457): una volta per account ------------------
+// ---- Tutorial del Piano (Figma Tutorial · 1 · sostituzione 586:5457 e · 2 · ricette 586:5598): una volta per account ----
 
-const PREFISSO_TUTORIAL = 'balanced.piano.tutorial';
+/**
+ * Chiave nuova con i due fumetti (decisione del 28/10/2026): chi aveva già chiuso il tutorial a un fumetto
+ * (`balanced.piano.tutorial.<client_id>`) vede la versione nuova. Valore: il passo già chiuso.
+ */
+const PREFISSO_TUTORIAL = 'balanced.piano.tutorial-2';
 
-/** Vero se il suggerimento della sostituzione è già stato chiuso con "Ho capito" su questo account. */
-export async function tutorialPianoVisto(clientId: string): Promise<boolean> {
+export type PassoTutorialPiano = 'sostituzione' | 'ricetta';
+/** `null` = nessun passo visto; "sostituzione" = chiuso con "Avanti"; "ricetta" = tutto chiuso con "Ho capito". */
+export type TutorialPianoVisto = PassoTutorialPiano | null;
+
+export async function tutorialPianoVisto(clientId: string): Promise<TutorialPianoVisto> {
   try {
-    return (await leggi(`${PREFISSO_TUTORIAL}.${clientId}`)) !== null;
+    const valore = await leggi(`${PREFISSO_TUTORIAL}.${clientId}`);
+    return valore === 'sostituzione' || valore === 'ricetta' ? valore : null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-export function segnaTutorialPianoVisto(clientId: string, adesso: Date = new Date()): void {
-  scrivi(`${PREFISSO_TUTORIAL}.${clientId}`, adesso.toISOString()).catch(() => {});
+export function segnaTutorialPianoVisto(clientId: string, passo: PassoTutorialPiano): void {
+  scrivi(`${PREFISSO_TUTORIAL}.${clientId}`, passo).catch(() => {});
 }

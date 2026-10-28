@@ -78,10 +78,15 @@ export type TutorialProps = {
   /** "Ho capito", e anche un tocco sul velo: il tutorial si chiude e non ricompare. */
   onHoCapito: () => void;
   /**
-   * Dove sta il fumetto rispetto all'elemento: sopra, centrato (Racconta, predefinito) oppure sotto, allineato al margine
-   * di pagina con la punta in alto (Tutorial · 1 del Piano 586:5457: fumetto a 20 dal bordo, 4 sotto l'evidenza).
+   * Dove sta il fumetto rispetto all'elemento: sopra, centrato (Racconta, predefinito); sotto, allineato al margine
+   * sinistro con la punta in alto (Tutorial · 1 del Piano 586:5457: fumetto a 20 dal bordo, 4 sotto l'evidenza);
+   * sotto, allineato al margine destro con la punta sotto il centro dell'elemento (Tutorial · 2 586:5598).
    */
-  disposizione?: 'sopraCentrato' | 'sottoASinistra';
+  disposizione?: 'sopraCentrato' | 'sottoASinistra' | 'sottoADestra';
+  /** Indicazione del passo nel piede del fumetto ("1 di 2"); vuota nei tutorial a un solo fumetto. */
+  passo?: string;
+  /** Etichetta dell'azione ("Ho capito" predefinito, "Avanti" nel primo passo). */
+  azione?: string;
 };
 
 /** Nuovi tentativi di misura dell'elemento da evidenziare: ogni 250 ms per 4 s. */
@@ -92,19 +97,22 @@ const DURATA_RIMISURA_MS = 4000;
 const DISTANZA = spazio[8];
 /** Con il fumetto sotto: 4 tra l'evidenza e la riga della punta (Figma 586:5457: evidenza fino a 356, suggerimento da 360). */
 const DISTANZA_SOTTO = spazio[4];
+/** Tutorial · 2 (586:5598): evidenza fino a 285, suggerimento da 287. */
+const DISTANZA_SOTTO_DESTRA = spazio[2];
 
 /**
  * Tutorial a schermo (sezione Figma 1.1, schema delle schermate Tutorial): velo testo/primario al 40 %, l'elemento
  * evidenziato sopra il velo nella sua posizione e il Suggerimento con la punta verso di lui; si chiude con "Ho capito"
  * e, per sicurezza, con un tocco sul velo (così non può mai bloccare la schermata).
  */
-export function Tutorial({ riquadro, elemento, testo, onHoCapito, disposizione = 'sopraCentrato' }: TutorialProps) {
+export function Tutorial({ riquadro, elemento, testo, onHoCapito, disposizione = 'sopraCentrato', passo, azione }: TutorialProps) {
   const { width: larghezzaFinestra } = useWindowDimensions();
   const [altezzaSuggerimento, setAltezzaSuggerimento] = useState(0);
   if (!riquadro) return null;
-  const sotto = disposizione === 'sottoASinistra';
-  const sinistra = sotto ? margine.pagina : Math.round((larghezzaFinestra - LARGHEZZA_SUGGERIMENTO) / 2);
-  const alto = sotto ? riquadro.y + riquadro.altezza + DISTANZA_SOTTO : riquadro.y - DISTANZA - altezzaSuggerimento;
+  const sotto = disposizione !== 'sopraCentrato';
+  const sinistra = disposizione === 'sottoASinistra' ? margine.pagina : disposizione === 'sottoADestra' ? larghezzaFinestra - margine.pagina - LARGHEZZA_SUGGERIMENTO : Math.round((larghezzaFinestra - LARGHEZZA_SUGGERIMENTO) / 2);
+  const alto = disposizione === 'sottoASinistra' ? riquadro.y + riquadro.altezza + DISTANZA_SOTTO : disposizione === 'sottoADestra' ? riquadro.y + riquadro.altezza + DISTANZA_SOTTO_DESTRA : riquadro.y - DISTANZA - altezzaSuggerimento;
+  const centroPunta = disposizione === 'sottoADestra' ? riquadro.x + riquadro.larghezza / 2 - sinistra : undefined;
   return (
     <View style={StyleSheet.absoluteFill} accessibilityViewIsModal>
       <Pressable style={[StyleSheet.absoluteFill, stili.velo]} onPress={onHoCapito} accessible={false} />
@@ -112,7 +120,7 @@ export function Tutorial({ riquadro, elemento, testo, onHoCapito, disposizione =
         {elemento}
       </View>
       <View style={[stili.suggerimento, { left: sinistra, top: alto, opacity: altezzaSuggerimento > 0 ? 1 : 0 }]} onLayout={(e) => setAltezzaSuggerimento(e.nativeEvent.layout.height)}>
-        <Suggerimento testo={testo} onHoCapito={onHoCapito} freccia={sotto ? 'sopra' : 'sotto'} />
+        <Suggerimento testo={testo} passo={passo} azione={azione} onHoCapito={onHoCapito} freccia={sotto ? 'sopra' : 'sotto'} centroPunta={centroPunta} />
       </View>
     </View>
   );
