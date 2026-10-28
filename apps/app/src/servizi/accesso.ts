@@ -12,6 +12,8 @@ import { svuotaContenutiInMemoria } from '@/servizi/contenuti';
 import { svuotaRevisioni } from '@/servizi/memoriaRevisioni';
 import { svuotaNotifiche } from '@/servizi/notifiche';
 import { svuotaPiano } from '@/servizi/piano';
+import { svuotaRicette } from '@/servizi/ricette';
+import { svuotaRicetteSalvate } from '@/servizi/ricetteSalvate';
 import { svuotaCacheStato, svuotaStatoInMemoria } from '@/servizi/statoCliente';
 import { supabase } from '@/servizi/supabase';
 
@@ -75,6 +77,8 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   svuotaRacconta();
   await svuotaNotifiche();
   await svuotaPiano();
+  svuotaRicette();
+  await svuotaRicetteSalvate();
   await svuotaArchivioFile();
   return { revocaGlobale };
 }
