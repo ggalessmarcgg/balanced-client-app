@@ -291,3 +291,44 @@ Contratto del server: `balanced-client-agents/docs/server-diario-vocale.md`; pro
   scarta il file ed esce. Negli altri stati si esce senza avvisi.
 - Il testo trascritto resta nella cartella documenti fino a fine giornata o alla creazione del diario.
 - Nessuna scrittura sul database in questo lotto; il server registra solo consumi ed esiti (`voice_diary_events`).
+
+## Ricette e Le tue ricette (step 9, lotto 3)
+
+Nomi in `src/core/ricette/nomi.ts`. Due chiamate al server degli agenti (`balanced-client-agents`, `docs/server-ricette.md`),
+senza stato tra l'una e l'altra; l'unica scrittura dell'app sul database è in `client_saved_recipes`.
+
+### Schermate
+
+| Nome | Figma | Quando |
+|---|---|---|
+| `piano · ricetta · pannello` | Piano · 5 (`536:3448`) e 5.1 (`536:3626`) | tocco su "Ricetta" sotto il selettore: nel fisso i pasti del giorno (nessuno scelto), nel variabile il pasto del selettore; campo facoltativo fino a 200 caratteri |
+| `piano · ricetta · ricerca delle idee` | Piano · 5.2 (`537:4384`) | `POST /v1/ricette/idee` in corso (segnaposti) |
+| `piano · ricetta · idee` | Piano · 5.3 (`536:3770`) | da una a tre idee con la nota sull'apporto e l'eventuale frase sugli ingredienti non usati; "Vedi la ricetta" dopo il tocco di un'idea |
+| `piano · ricetta · attesa della ricetta` | Piano · 5.3.1 (`824:8046`) | `POST /v1/ricette/ricetta` in corso: idee visibili, "Preparo la ricetta…", barra dei 10 secondi, poi "Ancora qualche secondo…" |
+| `piano · ricetta` | Piano · 5.4 (`539:3500`), 5.5 (`818:7834`), 5.6 (`818:7907`) | la ricetta a pagina intera con "Salva ricetta" → "Salvata" |
+| `piano · ricetta · nessuna idea` | Piano · 5.7 (`818:8055`) | esito `nessuna_idea`: card informativa e "La tua nutrizionista" |
+| `piano · ricetta · errore` | Piano · 5.8 (`818:8193`) | rete, tempo scaduto (65 s idee, 95 s ricetta), `ricette_fallita`, `ricette_timeout`, `ricetta_non_disponibile`, `catalogo_non_disponibile`, `piano_non_leggibile`, `errore_interno` con "Riprova"; sessione, abbonamento ed errori definitivi senza |
+| `piano · tutorial · ricette` | Tutorial · 2 (`586:5598`) | secondo fumetto ("2 di 2") su "Ricetta", dopo "Avanti" del primo (`586:5457`); una volta per account (`balanced.piano.tutorial-2.<client_id>`) |
+| `menu · le tue ricette` | Menu · 7 (`539:3724`), 7.1 (`539:3777`) | elenco dalla più recente da `client_saved_recipes` (RLS, copia su file nella cache) |
+| `menu · ricetta salvata` | Menu · 7.2 (`818:7983`) | la stessa pagina della ricetta con "Elimina ricetta" |
+
+### Azioni
+
+| Nome | Dove | Effetto sui dati |
+|---|---|---|
+| `piano · ricetta · apri` | "Ricetta" sotto il selettore | nessuna chiamata: il pannello riparte da capo |
+| `piano · ricetta · scegli il pasto` | pillole del fisso | solo in memoria |
+| `piano · ricetta · trova idee` | "Trova idee" | `POST /v1/ricette/idee` con `{ pasto_id, campo }` e `Authorization: Bearer <access_token>`; il server registra una riga in `recipe_generation_events` |
+| `piano · ricetta · scegli idea` / `· vedi la ricetta` | card delle idee, "Vedi la ricetta" | `POST /v1/ricette/ricetta` con `richiesta_id`, `stima` e `idea` rimandati tali e quali; una seconda riga nel registro |
+| `piano · ricetta · riprova` | "Riprova" (5.8) | ripete la chiamata fallita (idee o ricetta) |
+| `piano · ricetta · salva` | "Salva ricetta" (5.4 / 5.5) | un inserimento in `client_saved_recipes` (ricetta così com'è ricevuta, pasto, giorno, tipo di piano, titolo, tempo, `request_id`, versione delle istruzioni); Notifica breve "Ricetta salvata" |
+| `menu · ricetta salvata · elimina` | "Elimina ricetta" (7.2) con l'avviso di sistema | un'eliminazione per id in `client_saved_recipes`; ritorno all'elenco aggiornato |
+| `piano · tutorial · avanti` / `· ho capito` | fumetti del tutorial | registrano il passo nel portachiavi |
+
+### Regole
+
+- `pasto_non_disponibile` (idee o ricetta): il pannello si chiude, il piano si rilegge senza versione nota e compare la
+  Notifica breve "Il piano è stato aggiornato: tocca di nuovo “Ricetta”."; `stima_non_plausibile` e `idea_non_ammessa`
+  riportano alla ricerca delle idee; `campo_troppo_lungo` accorcia il testo alla metà e ripete una volta.
+- La `stima` dell'apporto è un dato interno: l'app non la mostra mai e non scrive mai calorie o macronutrienti.
+

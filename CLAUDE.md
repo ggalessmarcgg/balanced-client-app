@@ -607,6 +607,51 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (dati sintetici, nessun server; `piano-reale` usa la sostituzione vera); esiti dei confronti in
   `~/Desktop/censimenti-app/step9-confronti/` (`strumenti/confronto-step9.sh`).
 
+## Ricette e Le tue ricette (step 9, lotto 3)
+
+- Riferimenti: contratto `~/Desktop/balanced-client-agents/docs/contratti/contratto-ricette-v0_2.md` (§1 percorso, §3.2
+  porzioni, §5 esiti), server `~/Desktop/balanced-client-agents/docs/server-ricette.md` (rotte `POST /v1/ricette/idee` e
+  `/v1/ricette/ricetta`, tabella degli errori), tabella `client_saved_recipes` (migrazione `20261028220205` del repo degli
+  agenti). **Unica scrittura dell'app sul database:** inserimento ed eliminazione in `client_saved_recipes` con la sessione
+  del cliente (RLS, come il diario), mai modifiche; il server registra da sé ogni chiamata in `recipe_generation_events`.
+- Logica pura in `src/core/ricette/` (`server.ts`: corpi delle due chiamate, campo pulito e mai oltre 200 caratteri, lettura
+  delle risposte con al massimo tre idee, `richiesta_id` e `stima` rimandati tali e quali, ricetta con la forma `grezza` da
+  salvare, codici d'errore → esiti; `tempo.ts`: "20 minuti · Pranzo", "30 minuti · più 3 ore di riposo · Spuntino", "Pranzo ·
+  20 min", riga "Per 8 porzioni · La tua porzione: …"; `contesto.ts`: nel fisso il giorno del selettore con i pasti del giorno
+  nel loro ordine e senza preselezione, nel variabile il pasto del selettore; `pannello.ts`: macchina a stati chiuso / avvio /
+  ricerca / idee / attesaRicetta / nessunaIdea / errore, la chiamata parte solo da "Trova idee" e la seconda solo da "Vedi la
+  ricetta" dopo il tocco di un'idea, risposte vecchie o dopo la chiusura ignorate, `pasto_non_disponibile` chiude il pannello
+  ed emette `rileggiPiano` (Notifica breve "Il piano è stato aggiornato: tocca di nuovo “Ricetta”."), `stima_non_plausibile` e
+  `idea_non_ammessa` tornano alla ricerca delle idee, "Riprova" ripete la chiamata fallita; `salvate.ts`: riga da inserire,
+  elenco dalla più recente, `salvaRicetta` / `eliminaRicetta` con uno scrittore iniettabile per i test; `nomi.ts` →
+  `docs/diario-nomi.md`).
+- Servizi: `src/servizi/ricette.ts` (`trovaIdee` attesa 65 s, `preparaRicetta` attesa 95 s, `expo/fetch`, rinnovo del token su
+  401 e una ripetizione, `campo_troppo_lungo` → testo accorciato alla metà; memoria della ricetta pronta per la pagina),
+  `ricetteSalvate.ts` (lettura con colonne esplicite filtrata per cliente e copia su file `balanced.ricette.<clientId>` nella
+  cache, inserimento con `select('id, created_at')`, eliminazione per id, memoria aggiornata subito), hook `useRicette.ts`
+  (pannello + `useRicetteSalvate`). "Esci" svuota memoria e copia.
+- Interfaccia: accesso "Ricetta" sotto il selettore, a destra, in ogni pagina del fisso e del variabile
+  (`EtichettaAIToccabile` in `src/ui/piano/EtichettaAI.tsx`, area toccabile 44 con l'hitSlop; riga alta 20 seguita subito dal
+  primo pasto, Figma 817:7859); `src/ui/piano/PannelloRicetta.tsx` (Figma 5 536:3448, 5.1 536:3626, 5.2 537:4384, 5.3
+  536:3770, 5.3.1 824:8046, 5.7 818:8055, 5.8 818:8193) con le `Opzione` dei pasti a capo (gap 4), le card delle idee (bordo 2
+  `bordo/selezione` sulla scelta) e la Card spiegazione AI con la nota fissa e la frase sugli ingredienti;
+  `src/ui/piano/BarraAttesa.tsx` (barra 4 che si riempie in 10 s con "Circa 10 secondi", poi ferma quasi piena con "Ancora
+  qualche secondo…"; compare aprendosi in 300 ms ease-out, senza animazione con "Riduci movimento"; 10 s perché il server è
+  pubblicato con `RICETTE_EFFORT=low`); `SchermataRicetta` (5.4 539:3500, 5.5 818:7834, 5.6 818:7907, Menu 7.2 818:7983: H2,
+  sottotitolo, Ingredienti con l'eventuale riga della porzione, Preparazione, Card spiegazione AI, "Salva ricetta" →
+  "Salvata" oppure "Elimina ricetta" con l'`Alert` di sistema) e `SchermataRicetteSalvate` (Menu 7 539:3724, 7.1 539:3777,
+  righe `RigaElenco dueRighe`). Rotte `app/ricetta.tsx` (legge la memoria, nessuna richiesta), `app/ricette/index.tsx`,
+  `app/ricette/[id].tsx`; voce "Le tue ricette" nel menu tra Peso e misure e Contenuti.
+- **Tutorial del Piano a due fumetti** (chiave nuova `balanced.piano.tutorial-2.<client_id>`, così chi aveva chiuso quello a
+  un fumetto vede la versione nuova): "1 di 2" sulla prima riga con "Avanti" (586:5457), "2 di 2" su "Ricetta" con "Ho capito"
+  (586:5598, `Tutorial` con `disposizione="sottoADestra"`, punta sotto il centro dell'elemento, evidenza 8 ai lati e 6 sopra e
+  sotto). `Suggerimento` ha `passo`, `azione` e `centroPunta`.
+- Da Figma: la 5.6 disegna la Notifica breve in alto; l'app la mostra in basso come tutte le Notifiche brevi (regola degli
+  stati trasversali). Il testo dell'errore della seconda chiamata ("Non siamo riusciti a preparare la ricetta…") non ha disegno.
+- Pagina di sviluppo: `/sviluppo/stati?stato=piano-5-ricetta-fisso|piano-5-ricetta-fisso-scelto|piano-5.1-ricetta-variabile|piano-5.2-ricetta-ricerca|piano-5.3-ricetta-idee|piano-5.3-ricetta-idee-selezionata|piano-5.3-ricetta-idee-frase|piano-5.3.1-ricetta-attesa|piano-5.3.1-ricetta-attesa-oltre|piano-5.4-ricetta|piano-5.5-ricetta-porzioni|piano-5.5-ricetta-riposo|piano-5.6-ricetta-salvata|piano-5.6-ricetta-errore-salvataggio|piano-5.7-ricetta-nessuna-idea|piano-5.8-ricetta-errore|piano-5.8-ricetta-errore-ricetta|piano-5.8-ricetta-errore-sessione|piano-tutorial-1-sostituzione|piano-tutorial-2-ricette|menu-7-ricette|menu-7.1-ricette-vuoto|menu-7.2-ricetta-salvata|menu-7-ricette-caricamento|menu-7-ricette-errore|menu-7-ricette-senza-rete-copia`
+  (dati sintetici, nessun server; `piano-reale` usa le ricette vere); esiti dei confronti in
+  `~/Desktop/censimenti-app/step9-confronti-ricette/` (`strumenti/confronto-step9-ricette.sh`).
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

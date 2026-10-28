@@ -131,7 +131,7 @@ Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione sen
 | Menu · 6.1 · Peso e misure · tabelle | `525:2930` | 1265 |
 | Menu · 3.1 · La tua nutrizionista · in ferie | `596:5846` | 1868 |
 
-### 7 · Piano · `527:2946` · 14 schermate
+### 7 · Piano · `527:2946` · 20 schermate (5.3.1, 5.5–5.8 e Menu · 7.2 aggiunte il 28/10/2026)
 
 | Schermata | node-id | Altezza |
 |---|---|---|
@@ -147,9 +147,15 @@ Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione sen
 | Piano · 5.1 · Genera ricetta · piano variabile | `536:3626` | 852 |
 | Piano · 5.2 · Genera ricetta · ricerca delle idee | `537:4384` | 852 |
 | Piano · 5.3 · Genera ricetta · tre idee | `536:3770` | 852 |
-| Piano · 5.4 · Ricetta | `539:3500` | 993 |
+| Piano · 5.3.1 · Ricetta · attesa della ricetta | `824:8046` | 852 |
+| Piano · 5.4 · Ricetta | `539:3500` | 1132 |
+| Piano · 5.5 · Ricetta · più porzioni | `818:7834` | 1179 |
+| Piano · 5.6 · Ricetta · salvata | `818:7907` | 1132 |
+| Piano · 5.7 · Ricetta · nessuna idea | `818:8055` | 852 |
+| Piano · 5.8 · Ricetta · errore | `818:8193` | 852 |
 | Menu · 7 (spostata qui da Alessmarc il 18/10/2026) · Le tue ricette | `539:3724` | 852 |
 | Menu · 7.1 (spostata qui da Alessmarc il 18/10/2026) · Le tue ricette · nessuna ricetta | `539:3777` | 852 |
+| Menu · 7.2 · Ricetta salvata | `818:7983` | 1132 |
 
 ### 8 · Stati dell'account · `550:3635` · 15 schermate
 
