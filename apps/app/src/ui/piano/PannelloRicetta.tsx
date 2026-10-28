@@ -45,7 +45,8 @@ export type PannelloRicettaProps = {
 
 /**
  * Pannello "Ricetta" (Figma Piano · 5 fisso 536:3448, 5.1 variabile 536:3626, 5.2 ricerca 537:4384, 5.3 idee 536:3770,
- * 5.3.1 attesa 824:8046, 5.7 nessuna idea 818:8055, 5.8 errore 818:8193): Pannello dal basso con la testata Etichetta AI,
+ * 5.3.1 attesa 824:8046, 5.3.2 attesa oltre il tempo stimato 826:8118, 5.3.3 idee con ingredienti non usati 826:8283, 5.7
+ * nessuna idea 818:8055, 5.8 errore 818:8193, 5.8.1 errore nella preparazione 826:8443): Pannello dal basso con la testata Etichetta AI,
  * poi il contenuto dello stato, gap 24. Si chiude con la maniglia, il velo e il gesto; ogni riapertura riparte dall'avvio.
  */
 export function PannelloRicetta({ stato, azioni, onNutrizionista, attesaTrascorsa, attesaFerma }: PannelloRicettaProps) {

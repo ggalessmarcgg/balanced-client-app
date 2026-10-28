@@ -154,7 +154,7 @@ export function riduci(stato: StatoPannello, evento: EventoPannello, prossimaRic
   }
 }
 
-/** Testi delle card degli esiti senza idee e dell'errore (Figma 5.7 818:8055, 5.8 818:8193; sessione e abbonamento come il diario vocale). */
+/** Testi delle card degli esiti senza idee e dell'errore (Figma 5.7 818:8055, 5.8 818:8193, 5.8.1 826:8443; sessione e abbonamento come il diario vocale). */
 export function testiEsito(stato: Extract<StatoPannello, { tipo: 'nessunaIdea' | 'errore' }>): { titolo: string; testo: string } {
   if (stato.tipo === 'nessunaIdea') return { titolo: 'Nessuna idea disponibile', testo: 'Per questo pasto non abbiamo trovato ricette adatte. La tua nutrizionista può aiutarti a scegliere.' };
   switch (stato.errore.esito) {

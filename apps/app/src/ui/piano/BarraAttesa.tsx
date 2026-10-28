@@ -8,8 +8,8 @@ import { colori, spazio } from '@/ui/theme';
 
 /** Tempo atteso della ricetta (docs/server-ricette.md §5: 10 s con RICETTE_EFFORT=low, com'è pubblicato il server). */
 export const ATTESA_RICETTA_MS = 10_000;
-/** Dove si ferma la barra se la ricetta tarda ("quasi piena"). */
-const RIEMPIMENTO_MASSIMO = 0.96;
+/** Dove si ferma la barra se la ricetta tarda ("quasi piena": Figma 5.3.2 826:8207, 335 su 353). */
+const RIEMPIMENTO_MASSIMO = 335 / 353;
 const ALTEZZA_BARRA = 4;
 export const TESTI_ATTESA = { stimato: 'Circa 10 secondi', oltre: 'Ancora qualche secondo…' } as const;
 
@@ -23,9 +23,9 @@ export type BarraAttesaProps = {
 };
 
 /**
- * Indicatore del tempo d'attesa della ricetta (Figma Piano · 5.3.1 824:8208): barra sottile (4, sfondo/card, raggio 2)
- * che si riempie di azione/primaria nel tempo atteso con "Circa 10 secondi" in Body details secondario centrato (gap 8);
- * oltre, la barra si ferma quasi piena e il testo diventa "Ancora qualche secondo…". Compare aprendosi in 300 ms
+ * Indicatore del tempo d'attesa della ricetta (Figma Piano · 5.3.1 824:8208 e 5.3.2 826:8207): barra sottile (4,
+ * sfondo/card, raggio 2) che si riempie di azione/primaria nel tempo atteso con "Circa 10 secondi" in Body details
+ * secondario centrato (gap 8); oltre, la barra si ferma quasi piena e il testo diventa "Ancora qualche secondo…". Compare aprendosi in 300 ms
  * ease-out (come il selettore del Piano), senza animazione con "Riduci movimento".
  */
 export function BarraAttesa({ spaziatura, trascorsoIniziale = 0, ferma = false }: BarraAttesaProps) {

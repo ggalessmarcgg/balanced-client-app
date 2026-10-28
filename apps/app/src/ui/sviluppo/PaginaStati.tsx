@@ -213,17 +213,16 @@ export const STATI_SVILUPPO = [
   ['piano-5.2-ricetta-ricerca', 'Piano · 5.2 · Ricetta · ricerca delle idee (537:4384)'],
   ['piano-5.3-ricetta-idee', 'Piano · 5.3 · Ricetta · tre idee senza selezione: "Vedi la ricetta" disattivo'],
   ['piano-5.3-ricetta-idee-selezionata', 'Piano · 5.3 · Ricetta · tre idee con la prima selezionata (536:3770)'],
-  ['piano-5.3-ricetta-idee-frase', 'Piano · 5.3 con la frase sugli ingredienti scritti non usati (senza disegno)'],
+  ['piano-5.3.3-ricetta-idee-frase', 'Piano · 5.3.3 · Ricetta · idee con ingredienti non usati (826:8283)'],
   ['piano-5.3.1-ricetta-attesa', 'Piano · 5.3.1 · Ricetta · attesa della ricetta (824:8046): barra a 6 s, "Circa 10 secondi"'],
-  ['piano-5.3.1-ricetta-attesa-oltre', 'Piano · 5.3.1 oltre i 10 s: barra quasi piena, "Ancora qualche secondo…" (senza disegno)'],
+  ['piano-5.3.2-ricetta-attesa-oltre', 'Piano · 5.3.2 · Ricetta · attesa oltre il tempo stimato (826:8118): barra quasi piena, "Ancora qualche secondo…"'],
   ['piano-5.4-ricetta', 'Piano · 5.4 · Ricetta (539:3500), "Salva ricetta" (il tocco simula il salvataggio)'],
-  ['piano-5.5-ricetta-porzioni', 'Piano · 5.5 · Ricetta · più porzioni (818:7834) con "La tua porzione"'],
-  ['piano-5.5-ricetta-riposo', 'Ricetta con il riposo nel sottotitolo: "30 minuti · più 3 ore di riposo · Spuntino" (senza disegno)'],
+  ['piano-5.5-ricetta-porzioni', 'Piano · 5.5 · Ricetta · più porzioni (818:7834) con "La tua porzione" e il riposo nel sottotitolo'],
   ['piano-5.6-ricetta-salvata', 'Piano · 5.6 · Ricetta · salvata (818:7907): Notifica breve e "Salvata" disattivo'],
   ['piano-5.6-ricetta-errore-salvataggio', 'Ricetta con la Notifica breve d\'errore del salvataggio (senza disegno)'],
   ['piano-5.7-ricetta-nessuna-idea', 'Piano · 5.7 · Ricetta · nessuna idea (818:8055)'],
   ['piano-5.8-ricetta-errore', 'Piano · 5.8 · Ricetta · errore con "Riprova" (818:8193)'],
-  ['piano-5.8-ricetta-errore-ricetta', 'Piano · 5.8 · errore della seconda chiamata: "Riprova" ripete la ricetta (senza disegno)'],
+  ['piano-5.8.1-ricetta-errore-ricetta', 'Piano · 5.8.1 · Ricetta · errore nella preparazione (826:8443): "Riprova" ripete la ricetta'],
   ['piano-5.8-ricetta-errore-sessione', 'Piano · 5.8 senza "Riprova": sessione scaduta (come il diario vocale)'],
   ['menu-7-ricette', 'Menu · 7 · Le tue ricette (539:3724)'],
   ['menu-7.1-ricette-vuoto', 'Menu · 7.1 · Le tue ricette · nessuna ricetta (539:3777)'],
@@ -654,18 +653,16 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <RicetteSchermataSviluppo variante="idee" />;
     case 'piano-5.3-ricetta-idee-selezionata':
       return <RicetteSchermataSviluppo variante="idee-selezionata" />;
-    case 'piano-5.3-ricetta-idee-frase':
+    case 'piano-5.3.3-ricetta-idee-frase':
       return <RicetteSchermataSviluppo variante="idee-frase" />;
     case 'piano-5.3.1-ricetta-attesa':
       return <RicetteSchermataSviluppo variante="attesa" />;
-    case 'piano-5.3.1-ricetta-attesa-oltre':
+    case 'piano-5.3.2-ricetta-attesa-oltre':
       return <RicetteSchermataSviluppo variante="attesa-oltre" />;
     case 'piano-5.4-ricetta':
       return <PaginaRicettaSviluppo variante="ricetta" />;
     case 'piano-5.5-ricetta-porzioni':
       return <PaginaRicettaSviluppo variante="porzioni" />;
-    case 'piano-5.5-ricetta-riposo':
-      return <PaginaRicettaSviluppo variante="riposo" />;
     case 'piano-5.6-ricetta-salvata':
       return <PaginaRicettaSviluppo variante="salvata" />;
     case 'piano-5.6-ricetta-errore-salvataggio':
@@ -674,7 +671,7 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <RicetteSchermataSviluppo variante="nessuna" />;
     case 'piano-5.8-ricetta-errore':
       return <RicetteSchermataSviluppo variante="errore" />;
-    case 'piano-5.8-ricetta-errore-ricetta':
+    case 'piano-5.8.1-ricetta-errore-ricetta':
       return <RicetteSchermataSviluppo variante="errore-ricetta" />;
     case 'piano-5.8-ricetta-errore-sessione':
       return <RicetteSchermataSviluppo variante="errore-sessione" />;

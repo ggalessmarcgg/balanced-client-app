@@ -33,7 +33,7 @@ const IDEE_FIGMA: Idea[] = [
   idea('Riso venere con gamberi e piselli', 'Piatto unico saporito, pronto in meno di mezz’ora.'),
   idea('Insalata tiepida di pollo e quinoa', 'Insalata completa e leggera, buona anche da portare via.'),
 ];
-const FRASE_INGREDIENTI = 'Il cioccolato non si abbina a un pranzo a base di pesce: le idee partono dal salmone.';
+const FRASE_INGREDIENTI = 'Il cioccolato non è adatto a una cena con merluzzo e verdure.';
 const ERRORE_RETE = { esito: 'rete' as const, codice: 'rete', messaggio: 'Nessuna connessione', richiestaId: null, httpStatus: null };
 const ERRORE_SESSIONE = { esito: 'sessione' as const, codice: 'token_non_valido', messaggio: 'Token non valido', richiestaId: 'app-x', httpStatus: 401 };
 
@@ -49,7 +49,7 @@ export const STATI_RICETTE: Record<VarianteRicetteSviluppo, StatoPannello> = {
   ricerca: { tipo: 'ricerca', richiesta: 1, ...base },
   idee: { tipo: 'idee', ...base, dati: dati(null) },
   'idee-selezionata': { tipo: 'idee', ...base, dati: dati(0) },
-  'idee-frase': { tipo: 'idee', ...base, campo: 'cioccolato, salmone', dati: dati(null, FRASE_INGREDIENTI) },
+  'idee-frase': { tipo: 'idee', ...base, campo: 'cioccolato', dati: dati(0, FRASE_INGREDIENTI) },
   attesa: { tipo: 'attesaRicetta', richiesta: 2, ...base, dati: dati(0) as ReturnType<typeof dati> & { scelta: number } },
   'attesa-oltre': { tipo: 'attesaRicetta', richiesta: 2, ...base, dati: dati(0) as ReturnType<typeof dati> & { scelta: number } },
   nessuna: { tipo: 'nessunaIdea', ...base },
@@ -111,7 +111,7 @@ const RICETTA_FIGMA: Ricetta = {
 const CHEESECAKE_FIGMA: Ricetta = {
   titolo: 'Cheesecake proteica ai frutti di bosco',
   tempoMinuti: 50,
-  riposoMinuti: null,
+  riposoMinuti: 120,
   tipo: 'piu_porzioni',
   ingredienti: [
     { nome: 'Biscotti secchi integrali', quantita: '120 g' },
@@ -132,9 +132,9 @@ const CHEESECAKE_FIGMA: Ricetta = {
   grezza: {},
 };
 
-export type VariantePaginaRicettaSviluppo = 'ricetta' | 'porzioni' | 'riposo' | 'salvata' | 'errore-salvataggio' | 'dettaglio';
+export type VariantePaginaRicettaSviluppo = 'ricetta' | 'porzioni' | 'salvata' | 'errore-salvataggio' | 'dettaglio';
 
-/** Piano · 5.4 (539:3500), 5.5 (818:7834), 5.6 (818:7907), Menu · 7.2 (818:7983) con i testi dei disegni. */
+/** Piano · 5.4 (539:3500), 5.5 con il riposo nel sottotitolo (818:7834), 5.6 (818:7907), Menu · 7.2 (818:7983) con i testi dei disegni. */
 export function PaginaRicettaSviluppo({ variante }: { variante: VariantePaginaRicettaSviluppo }) {
   const router = useRouter();
   // ?scorri=fondo: la pagina parte scorsa in fondo (screenshot della card AI e del pulsante, sotto la piega).
@@ -143,8 +143,8 @@ export function PaginaRicettaSviluppo({ variante }: { variante: VariantePaginaRi
   const [notifica, setNotifica] = useState<NotificaPiano | null>(() =>
     variante === 'salvata' ? { chiave: 1, testo: 'Ricetta salvata', tipo: 'conferma' } : variante === 'errore-salvataggio' ? { chiave: 1, testo: 'Non siamo riusciti a salvare la ricetta.', tipo: 'errore' } : null,
   );
-  const ricetta = variante === 'porzioni' ? CHEESECAKE_FIGMA : variante === 'riposo' ? { ...CHEESECAKE_FIGMA, tempoMinuti: 30, riposoMinuti: 180 } : RICETTA_FIGMA;
-  const pasto = variante === 'porzioni' || variante === 'riposo' ? 'Spuntino' : 'Pranzo';
+  const ricetta = variante === 'porzioni' ? CHEESECAKE_FIGMA : RICETTA_FIGMA;
+  const pasto = variante === 'porzioni' ? 'Spuntino' : 'Pranzo';
   const salva = () => {
     setStato('inCorso');
     setTimeout(() => {
