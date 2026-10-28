@@ -77,7 +77,7 @@ export type ScenarioMenu =
 export function MenuSviluppo({ scenario }: { scenario: ScenarioMenu }) {
   switch (scenario) {
     case 'menu':
-      return <SchermataMenu voci={['nutrizionista', 'appuntamenti', 'pesoEMisure', 'contenuti']} versione="1.0.0" onVoce={nulla} onChiudi={nulla} onEsci={nulla} />;
+      return <SchermataMenu voci={['nutrizionista', 'appuntamenti', 'pesoEMisure', 'ricette', 'contenuti']} versione="1.0.0" onVoce={nulla} onChiudi={nulla} onEsci={nulla} />;
     case 'menuUscita':
       return (
         <SchermataMenu

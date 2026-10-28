@@ -15,7 +15,8 @@ import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConness
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
-import { PianoRealeSviluppo, PianoSchermataSviluppo, SostituzioneSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
+import { PianoRealeSviluppo, PianoSchermataSviluppo, RicetteSchermataSviluppo, SostituzioneSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
+import { PaginaRicettaSviluppo, RicetteSalvateSviluppo } from '@/ui/sviluppo/RicetteSviluppo';
 import { PianoSviluppo } from '@/ui/sviluppo/PianoSviluppo';
 import { RaccontaSviluppo } from '@/ui/sviluppo/RaccontaSviluppo';
 import { RevisioniSviluppo } from '@/ui/sviluppo/RevisioniSviluppo';
@@ -204,7 +205,32 @@ export const STATI_SVILUPPO = [
   ['piano-4.4-sostituzione-non-riconosciuto', 'Piano · 4.4 · Sostituzione · non riconosciuto (789:7727)'],
   ['piano-4.5-sostituzione-errore', 'Piano · 4.5 · Sostituzione · errore con "Riprova" (789:7865)'],
   ['piano-4.5-sostituzione-sessione', 'Piano · 4.5 senza "Riprova": sessione scaduta (come il diario vocale)'],
-  ['piano-tutorial-1-sostituzione', 'Tutorial · 1 · Piano · sostituzione (586:5457) sul fisso'],
+  ['piano-tutorial-1-sostituzione', 'Tutorial · 1 · Piano · sostituzione (586:5457) sul fisso: "1 di 2", "Avanti" porta al 2'],
+  ['piano-tutorial-2-ricette', 'Tutorial · 2 · Piano · ricette (586:5598) sul fisso: "2 di 2", "Ho capito"'],
+  ['piano-5-ricetta-fisso', 'Piano · 5 · Ricetta · pannello sul fisso (536:3448): pasti del giorno, nessuno scelto, "Trova idee" disattivo'],
+  ['piano-5-ricetta-fisso-scelto', 'Piano · 5 · pannello sul fisso con "Pranzo" scelto (come nel disegno)'],
+  ['piano-5.1-ricetta-variabile', 'Piano · 5.1 · Ricetta · pannello sul variabile (536:3626): testata con il pasto del selettore'],
+  ['piano-5.2-ricetta-ricerca', 'Piano · 5.2 · Ricetta · ricerca delle idee (537:4384)'],
+  ['piano-5.3-ricetta-idee', 'Piano · 5.3 · Ricetta · tre idee senza selezione: "Vedi la ricetta" disattivo'],
+  ['piano-5.3-ricetta-idee-selezionata', 'Piano · 5.3 · Ricetta · tre idee con la prima selezionata (536:3770)'],
+  ['piano-5.3-ricetta-idee-frase', 'Piano · 5.3 con la frase sugli ingredienti scritti non usati (senza disegno)'],
+  ['piano-5.3.1-ricetta-attesa', 'Piano · 5.3.1 · Ricetta · attesa della ricetta (824:8046): barra a 6 s, "Circa 10 secondi"'],
+  ['piano-5.3.1-ricetta-attesa-oltre', 'Piano · 5.3.1 oltre i 10 s: barra quasi piena, "Ancora qualche secondo…" (senza disegno)'],
+  ['piano-5.4-ricetta', 'Piano · 5.4 · Ricetta (539:3500), "Salva ricetta" (il tocco simula il salvataggio)'],
+  ['piano-5.5-ricetta-porzioni', 'Piano · 5.5 · Ricetta · più porzioni (818:7834) con "La tua porzione"'],
+  ['piano-5.5-ricetta-riposo', 'Ricetta con il riposo nel sottotitolo: "30 minuti · più 3 ore di riposo · Spuntino" (senza disegno)'],
+  ['piano-5.6-ricetta-salvata', 'Piano · 5.6 · Ricetta · salvata (818:7907): Notifica breve e "Salvata" disattivo'],
+  ['piano-5.6-ricetta-errore-salvataggio', 'Ricetta con la Notifica breve d\'errore del salvataggio (senza disegno)'],
+  ['piano-5.7-ricetta-nessuna-idea', 'Piano · 5.7 · Ricetta · nessuna idea (818:8055)'],
+  ['piano-5.8-ricetta-errore', 'Piano · 5.8 · Ricetta · errore con "Riprova" (818:8193)'],
+  ['piano-5.8-ricetta-errore-ricetta', 'Piano · 5.8 · errore della seconda chiamata: "Riprova" ripete la ricetta (senza disegno)'],
+  ['piano-5.8-ricetta-errore-sessione', 'Piano · 5.8 senza "Riprova": sessione scaduta (come il diario vocale)'],
+  ['menu-7-ricette', 'Menu · 7 · Le tue ricette (539:3724)'],
+  ['menu-7.1-ricette-vuoto', 'Menu · 7.1 · Le tue ricette · nessuna ricetta (539:3777)'],
+  ['menu-7.2-ricetta-salvata', 'Menu · 7.2 · Ricetta salvata con "Elimina ricetta" (818:7983)'],
+  ['menu-7-ricette-caricamento', 'Le tue ricette in caricamento'],
+  ['menu-7-ricette-errore', 'Le tue ricette con errore di caricamento'],
+  ['menu-7-ricette-senza-rete-copia', 'Le tue ricette senza connessione con la copia: Avviso connessione sopra l\'elenco'],
   ['piano-reale', 'Scheda Piano vera per l\'account in sessione (serve un abbonato, es. +test4)'],
   ['piano-reale-indicazioni', 'Indicazioni vere per l\'account in sessione'],
   ['piano-lettura', 'Piano · lettura (step 8, lotto 1): il piano composto per l\'account in sessione, in forma testuale (serve un abbonato, es. +test4)'],
@@ -614,6 +640,56 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <SostituzioneSchermataSviluppo variante="errore-sessione" />;
     case 'piano-tutorial-1-sostituzione':
       return <PianoSchermataSviluppo variante="tutorial" />;
+    case 'piano-tutorial-2-ricette':
+      return <PianoSchermataSviluppo variante="tutorial-2" />;
+    case 'piano-5-ricetta-fisso':
+      return <RicetteSchermataSviluppo variante="avvio-fisso" />;
+    case 'piano-5-ricetta-fisso-scelto':
+      return <RicetteSchermataSviluppo variante="avvio-fisso-scelto" />;
+    case 'piano-5.1-ricetta-variabile':
+      return <RicetteSchermataSviluppo variante="avvio-variabile" />;
+    case 'piano-5.2-ricetta-ricerca':
+      return <RicetteSchermataSviluppo variante="ricerca" />;
+    case 'piano-5.3-ricetta-idee':
+      return <RicetteSchermataSviluppo variante="idee" />;
+    case 'piano-5.3-ricetta-idee-selezionata':
+      return <RicetteSchermataSviluppo variante="idee-selezionata" />;
+    case 'piano-5.3-ricetta-idee-frase':
+      return <RicetteSchermataSviluppo variante="idee-frase" />;
+    case 'piano-5.3.1-ricetta-attesa':
+      return <RicetteSchermataSviluppo variante="attesa" />;
+    case 'piano-5.3.1-ricetta-attesa-oltre':
+      return <RicetteSchermataSviluppo variante="attesa-oltre" />;
+    case 'piano-5.4-ricetta':
+      return <PaginaRicettaSviluppo variante="ricetta" />;
+    case 'piano-5.5-ricetta-porzioni':
+      return <PaginaRicettaSviluppo variante="porzioni" />;
+    case 'piano-5.5-ricetta-riposo':
+      return <PaginaRicettaSviluppo variante="riposo" />;
+    case 'piano-5.6-ricetta-salvata':
+      return <PaginaRicettaSviluppo variante="salvata" />;
+    case 'piano-5.6-ricetta-errore-salvataggio':
+      return <PaginaRicettaSviluppo variante="errore-salvataggio" />;
+    case 'piano-5.7-ricetta-nessuna-idea':
+      return <RicetteSchermataSviluppo variante="nessuna" />;
+    case 'piano-5.8-ricetta-errore':
+      return <RicetteSchermataSviluppo variante="errore" />;
+    case 'piano-5.8-ricetta-errore-ricetta':
+      return <RicetteSchermataSviluppo variante="errore-ricetta" />;
+    case 'piano-5.8-ricetta-errore-sessione':
+      return <RicetteSchermataSviluppo variante="errore-sessione" />;
+    case 'menu-7-ricette':
+      return <RicetteSalvateSviluppo variante="elenco" />;
+    case 'menu-7.1-ricette-vuoto':
+      return <RicetteSalvateSviluppo variante="vuoto" />;
+    case 'menu-7.2-ricetta-salvata':
+      return <PaginaRicettaSviluppo variante="dettaglio" />;
+    case 'menu-7-ricette-caricamento':
+      return <RicetteSalvateSviluppo variante="caricamento" />;
+    case 'menu-7-ricette-errore':
+      return <RicetteSalvateSviluppo variante="errore" />;
+    case 'menu-7-ricette-senza-rete-copia':
+      return <RicetteSalvateSviluppo variante="senza-rete-copia" />;
     case 'piano-reale':
       return <PianoRealeSviluppo cosa="piano" />;
     case 'piano-reale-indicazioni':
