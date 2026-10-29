@@ -687,6 +687,10 @@ npx expo install --fix                   # riallinea versioni alla SDK
   nessuna Notifica breve dopo la copia (il sistema mostra la sua anteprima). Peso e misure: la copia su file compare
   subito (`useLetturaMenu` con `copia`, vale anche per iOS). Permesso microfono «solo questa volta»: alla scadenza
   il flusso riparte dalla schermata del consenso senza errori (nessuna modifica necessaria).
+- Scorrimenti: ogni ScrollView, FlatList e pagina orizzontale del Piano prende `{...PROPRIETA_SCORRIMENTO}`
+  (`src/ui/scorrimento.ts`): su Android `overScrollMode="never"` (niente stretch overscroll di Android 12+), su iOS
+  la costante è vuota. Vale anche per le liste future. Verifica: screenshot a metà di un trascinamento oltre il bordo
+  uguale a quello a riposo (`android-verifica/dopo/app/overscroll/`).
 - Restano come sono: avvisi di sistema in stile Android, tastiera che segue il tema del telefono, richiesta
   «dispositivi nelle vicinanze» (solo build di sviluppo, `ACCESS_LOCAL_NETWORK` del manifest debug di react-android).
 
