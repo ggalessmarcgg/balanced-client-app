@@ -15,6 +15,16 @@ function erroreDiRete(error: { code?: string | null; message?: string | null; na
   return classificaErrore(error) === 'rete' || error.code === '' || /network|fetch|offline/i.test(error.message ?? '');
 }
 
+/** Copia su file dell'ultima lettura (null se non c'è o non si legge): la schermata la mostra subito. */
+export async function copiaMisure(clientId: string): Promise<{ riga: RigaMisure | null } | null> {
+  try {
+    const testo = await leggiFile(`${PREFISSO_CACHE}.${clientId}`);
+    return testo ? { riga: (JSON.parse(testo) as Cache).riga } : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function leggiMisure(clientId: string): Promise<EsitoMisure> {
   const { data: sessione } = await supabase.auth.getSession();
   const userId = sessione.session?.user.id;

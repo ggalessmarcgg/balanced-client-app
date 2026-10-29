@@ -7,7 +7,7 @@ import type { RigaContenuto } from '@/core/contenuti/contenuti';
 import { datiMisure, type DatiMisure } from '@/core/misure/misure';
 import { leggiAppuntamenti } from '@/servizi/appuntamenti';
 import { leggiContenuti } from '@/servizi/contenuti';
-import { leggiMisure } from '@/servizi/misure';
+import { copiaMisure, leggiMisure } from '@/servizi/misure';
 import { leggiNutrizionista, type DatiNutrizionista } from '@/servizi/nutrizionista';
 
 export type FaseMenu = { tipo: 'caricamento' } | { tipo: 'rete' } | { tipo: 'errore' } | { tipo: 'pronto' };
@@ -17,8 +17,11 @@ export type Lettura<T> = () => Promise<{ tipo: 'ok'; dati: T } | { tipo: 'nonAut
 /**
  * Lettura comune: prima volta e a ogni ritorno in primo piano; i dati già mostrati non si sostituiscono con un errore.
  * `iniziale`: dati già in memoria da mostrare subito (fase pronta) mentre la lettura li aggiorna.
+ * `copia`: copia salvata su file (lettura asincrona), mostrata appena arriva se la lettura dal server non ha ancora
+ * risposto; i dati del server, quando arrivano, la sostituiscono. Senza, con la rete assente la schermata restava sui
+ * segnaposti finché la richiesta non scadeva (su Android anche 20 s, correzione del 30/10/2026).
  */
-export function useLetturaMenu<T>(leggi: Lettura<T>, iniziale?: () => T | null): { fase: FaseMenu; dati: T | null; ricarica: () => void } {
+export function useLetturaMenu<T>(leggi: Lettura<T>, iniziale?: () => T | null, copia?: () => Promise<T | null>): { fase: FaseMenu; dati: T | null; ricarica: () => void } {
   const [dati, setDati] = useState<T | null>(() => iniziale?.() ?? null);
   const [fase, setFase] = useState<FaseMenu>(() => (dati !== null ? { tipo: 'pronto' } : { tipo: 'caricamento' }));
   const montato = useRef(true);
@@ -38,6 +41,14 @@ export function useLetturaMenu<T>(leggi: Lettura<T>, iniziale?: () => T | null):
   useEffect(() => {
     montato.current = true;
     const annulla = ricarica();
+    if (copia) {
+      copia().then((c) => {
+        if (!montato.current || c === null) return;
+        // Solo se il server non ha ancora risposto: i suoi dati, se già arrivati, restano.
+        setDati((d) => d ?? c);
+        setFase((f) => (f.tipo === 'pronto' ? f : { tipo: 'pronto' }));
+      });
+    }
     const sub = AppState.addEventListener('change', (stato: AppStateStatus) => {
       if (stato === 'active') ricarica();
     });
@@ -46,7 +57,7 @@ export function useLetturaMenu<T>(leggi: Lettura<T>, iniziale?: () => T | null):
       annulla();
       sub.remove();
     };
-  }, [ricarica]);
+  }, [ricarica, copia]);
   return { fase, dati, ricarica };
 }
 
@@ -71,7 +82,12 @@ export function usePesoMisure(clientId: string) {
     const esito = await leggiMisure(clientId);
     return esito.tipo === 'ok' ? { tipo: 'ok', dati: datiMisure(esito.riga) } : esito;
   }, [clientId]);
-  return useLetturaMenu(leggi);
+  // La copia su file compare subito, come nelle altre schermate; la lettura dal server poi la aggiorna.
+  const copia = useCallback(async () => {
+    const salvata = await copiaMisure(clientId);
+    return salvata ? datiMisure(salvata.riga) : null;
+  }, [clientId]);
+  return useLetturaMenu(leggi, undefined, copia);
 }
 
 export function useContenuti() {
