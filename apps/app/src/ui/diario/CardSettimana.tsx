@@ -1,8 +1,9 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { etichettaData } from '@/core/diario/data';
 import type { GiornoSettimana as Giorno, StatoGiorno } from '@/core/diario/settimana';
 import type { Valutazione } from '@/core/diario/valutazione';
+import { Alone } from '@/ui/Alone';
 import { Icona } from '@/ui/icone';
 import { Testo } from '@/ui/Testo';
 import { colori, opacita, raggio, spazio, tocco } from '@/ui/theme';
@@ -89,9 +90,12 @@ function GiornoSettimana({ giorno, onPress }: { giorno: Giorno; onPress?: () => 
       accessibilityLabel={`${etichettaData(data)}: ${DESCRIZIONE_STATO[stato]}${valutazione ? `, ${DESCRIZIONE_VALUTAZIONE[valutazione]}` : ''}`}
       accessibilityHint={onPress ? 'Apre la giornata' : undefined}
     >
-      <View style={[stili.cerchio, stili[cerchio]]}>
-        {stato === 'nonCondiviso' && <View style={stili.trattino} />}
-        {pallino && <View style={[stili.pallino, pallino === 'daLeggere' ? stili.pallinoDaLeggere : stili.pallinoLetto]} />}
+      <View>
+        {cerchio === 'oggi' && <Alone diametro={CERCHIO} sfocatura={SFOCATURA_OGGI} colore={colori.badge.sfondo} />}
+        <View style={[stili.cerchio, stili[cerchio]]}>
+          {stato === 'nonCondiviso' && <View style={stili.trattino} />}
+          {pallino && <View style={[stili.pallino, pallino === 'daLeggere' ? stili.pallinoDaLeggere : stili.pallinoLetto]} />}
+        </View>
       </View>
       <Testo stile="caption" colore={letteraPrimaria ? colori.testo.primario : colori.testo.terziario}>
         {iniziale}
@@ -111,13 +115,13 @@ const stili = StyleSheet.create({
   condiviso: { backgroundColor: colori.azione.primaria },
   condivisoDaRivedere: { backgroundColor: colori.stato.daRivedere },
   condivisoInAttesa: { backgroundColor: colori.sfondo.pagina },
+  // L'alone: ombra iOS; su Android la rende il componente Alone (l'elevation darebbe solo un'ombra grigia).
   oggi: {
     backgroundColor: colori.badge.sfondo,
-    shadowColor: colori.badge.sfondo,
-    shadowOpacity: 1,
-    shadowRadius: SFOCATURA_OGGI,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 4,
+    ...Platform.select({
+      ios: { shadowColor: colori.badge.sfondo, shadowOpacity: 1, shadowRadius: SFOCATURA_OGGI, shadowOffset: { width: 0, height: 0 } },
+      default: {},
+    }),
   },
   futuro: { backgroundColor: colori.sfondo.campo },
   nonCondiviso: {},

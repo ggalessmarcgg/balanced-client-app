@@ -1,7 +1,8 @@
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 
 import type { AutoreRevisione } from '@/core/revisioni/autore';
 import { etichettaDiari, frazioneAvanzamento, titoloRevisione, DIARI_PER_REVISIONE } from '@/core/revisioni/stato';
+import { Alone } from '@/ui/Alone';
 import { CardSfumata } from '@/ui/diario/CardDiario';
 import { FotoProfilo } from '@/ui/FotoProfilo';
 import { Pulsante } from '@/ui/Pulsante';
@@ -95,7 +96,10 @@ function Intestazione({ titolo, stato }: { titolo: string; stato: keyof typeof E
         {titolo}
       </Testo>
       <View style={stili.badge} accessible accessibilityLabel={ETICHETTE[stato]}>
-        <View style={[stili.pallino, stili[`pallino_${stato}`]]} />
+        <View>
+          {(stato === 'inizia' || stato === 'daSbloccare') && <Alone diametro={PALLINO} sfocatura={SFOCATURA_PALLINO} colore={colori.badge.sfondo} />}
+          <View style={[stili.pallino, stili[`pallino_${stato}`]]} />
+        </View>
         <Testo stile="caption" colore={colori.testo.attenuato}>
           {ETICHETTE[stato]}
         </Testo>
@@ -104,13 +108,13 @@ function Intestazione({ titolo, stato }: { titolo: string; stato: keyof typeof E
   );
 }
 
+// L'alone: ombra iOS; su Android la rende il componente Alone (l'elevation darebbe solo un'ombra grigia).
 const PALLINO_ALONE = {
   backgroundColor: colori.badge.sfondo,
-  shadowColor: colori.badge.sfondo,
-  shadowOpacity: 1,
-  shadowRadius: SFOCATURA_PALLINO,
-  shadowOffset: { width: 0, height: 0 },
-  elevation: 2,
+  ...Platform.select({
+    ios: { shadowColor: colori.badge.sfondo, shadowOpacity: 1, shadowRadius: SFOCATURA_PALLINO, shadowOffset: { width: 0, height: 0 } },
+    default: {},
+  }),
 } as const;
 
 const stili = StyleSheet.create({
