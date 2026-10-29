@@ -659,6 +659,37 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (dati sintetici, nessun server; `piano-reale` usa le ricette vere); esiti dei confronti in
   `~/Desktop/censimenti-app/step9-confronti-ricette/` (`strumenti/confronto-step9-ricette.sh`).
 
+## Android (verifica del 29/10/2026 e lotto 1 di correzioni del 30/10/2026)
+
+- Strumenti sul Mac: OpenJDK 17 (formula Homebrew `openjdk@17`, la cask Zulu chiede sudo) e SDK da riga di comando in
+  `/opt/homebrew/share/android-commandlinetools` (platform-tools, emulator, platforms 37.0 e 36, build-tools 37.0.0,
+  NDK 27.1, CMake, immagine Android 17 con Google Play); AVD `Pixel_9a_API_37`. Variabili d'ambiente in
+  `~/Desktop/censimenti-app/strumenti/env-android.sh` (da aggiungere a `~/.zshrc`). Build: `npx expo run:android
+  --device emulator-5554` (12 min la prima volta; `npx expo prebuild -p android` dopo ogni modifica ad `app.json`), poi
+  `adb reverse tcp:8081 tcp:8081`. Screenshot e tocchi con `strumenti/android-azioni.sh` (pixel fisici 1080×2424;
+  `input text` non accetta accenti); debugger di Metro per dispositivo con `strumenti/valuta-su.mjs sdk_gphone|iPhone`.
+  Fast Refresh non sempre arriva al bundle Android: dopo una modifica ai moduli del tema riavviare l'app.
+- **Le correzioni Android stanno in rami `Platform.OS === 'android'`**: su iOS non cambia nulla, verificato con il
+  confronto a pixel prima/dopo (`android-verifica/dopo/ios-confronto/`). Esiti e confronti con Figma in
+  `~/Desktop/censimenti-app/android-verifica/` (`report.md`, `dopo/`).
+- Indietro di sistema (tasto o gesto): nel layout del gruppo `(abbonato)` un `BackHandler` con `useFocusEffect` porta a
+  Oggi da Piano, Revisioni e Account e da Oggi lascia fare al sistema (app in secondo piano, ripresa senza riavvio);
+  `Tutorial` e `PannelloDalBasso` hanno il loro gestore (registrato dopo, quindi chiamato prima) e chiudono se stessi;
+  Racconta usa `usePreventRemove`. Nelle pagine sopra le schede vale lo stack.
+- Testi: `correzioneVerticaleAndroid` in `testo-correzioni.ts` (scelta in `Testo` per piattaforma), misurata con
+  `strumenti/misura-titoli2.mjs` (distanza cella → primo pixel del titolo su `/sviluppo/titoli`, emulatore 2,625× vs
+  simulatore 3×, tolleranza 0,5 dp); per h1 e h1Accesso conta la riga mista di `TitoloAccento`.
+- Alone sfumato (giorno di oggi in Card settimana, pallino della card revisione): `src/ui/Alone.tsx`, sfumatura radiale
+  SVG sotto il cerchio con il profilo del rendering Figma 449:253, solo Android; su iOS resta `shadow*`.
+- Piede dei pannelli: `paddingInferioreSicuro` (`src/ui/areaSicura.ts`) aggiunge 8 all'area di sistema di Android
+  (24 gesti / 48 tre tasti, Figma «Schermo Android» 414:34) così la distanza dal bordo è quella dell'iPhone.
+- Avvio: `android.backgroundColor` crema in `app.json` (finestra tra splash e primo frame). Appunti: su Android 13+
+  nessuna Notifica breve dopo la copia (il sistema mostra la sua anteprima). Peso e misure: la copia su file compare
+  subito (`useLetturaMenu` con `copia`, vale anche per iOS). Permesso microfono «solo questa volta»: alla scadenza
+  il flusso riparte dalla schermata del consenso senza errori (nessuna modifica necessaria).
+- Restano come sono: avvisi di sistema in stile Android, tastiera che segue il tema del telefono, richiesta
+  «dispositivi nelle vicinanze» (solo build di sviluppo, `ACCESS_LOCAL_NETWORK` del manifest debug di react-android).
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**
