@@ -31,6 +31,11 @@ export type StatoPannello =
   | ({ tipo: 'idee'; pasto: PastoScelto; dati: DatiIdee } & Base)
   /** Piano · 5.3.1: seconda chiamata in corso con le idee visibili e quella scelta evidenziata. */
   | ({ tipo: 'attesaRicetta'; richiesta: number; pasto: PastoScelto; dati: DatiIdee & { scelta: number } } & Base)
+  /**
+   * La ricetta è arrivata e la sua pagina si sta aprendo sopra: il pannello resta aperto (stesso aspetto della 5.3.1)
+   * finché la transizione non è finita, poi si chiude sotto la pagina senza animazione (`ricettaMostrata`).
+   */
+  | ({ tipo: 'ricettaPronta'; pasto: PastoScelto; dati: DatiIdee & { scelta: number } } & Base)
   /** Piano · 5.7 */
   | ({ tipo: 'nessunaIdea'; pasto: PastoScelto } & Base)
   /** Piano · 5.8: "Riprova" ripete la chiamata fallita (idee o ricetta); senza "Riprova" per sessione, abbonamento ed errori definitivi. */
@@ -46,7 +51,9 @@ export type EventoPannello =
   | { tipo: 'vediRicetta' }
   | { tipo: 'riprova' }
   | { tipo: 'rispostaIdee'; richiesta: number; esito: EsitoIdee }
-  | { tipo: 'rispostaRicetta'; richiesta: number; esito: EsitoRicetta };
+  | { tipo: 'rispostaRicetta'; richiesta: number; esito: EsitoRicetta }
+  /** La pagina della ricetta ha finito la transizione: il pannello si chiude sotto di lei, senza animazione. */
+  | { tipo: 'ricettaMostrata' };
 
 export type EffettoPannello =
   /** POST /v1/ricette/idee con il pasto e il testo del campo. */
@@ -55,7 +62,7 @@ export type EffettoPannello =
   | { tipo: 'chiamaRicetta'; richiesta: number; pastoId: string; richiestaId: string; stima: Stima; idea: Idea; campo: string }
   /** pasto_non_disponibile: il piano si rilegge senza versione nota e il cliente vede la Notifica breve. */
   | { tipo: 'rileggiPiano' }
-  /** La ricetta è arrivata: il pannello si chiude e si apre la pagina (5.4 / 5.5). */
+  /** La ricetta è arrivata: si apre la pagina (5.4 / 5.5) sopra il pannello, che resta aperto fino a `ricettaMostrata`. */
   | { tipo: 'apriRicetta'; ricetta: RicettaPronta };
 
 export const STATO_CHIUSO: StatoPannello = { tipo: 'chiuso' };
@@ -100,6 +107,8 @@ export function riduci(stato: StatoPannello, evento: EventoPannello, prossimaRic
       return nulla({ tipo: 'avvio', contesto: evento.contesto, pasto: pastoIniziale(evento.contesto), campo: '' });
     case 'chiudi':
       return nulla(STATO_CHIUSO);
+    case 'ricettaMostrata':
+      return stato.tipo === 'ricettaPronta' ? nulla(STATO_CHIUSO) : nulla(stato);
     case 'scegliPasto':
       return stato.tipo === 'avvio' && stato.contesto.tipo === 'fisso' ? nulla({ ...stato, pasto: evento.pasto }) : nulla(stato);
     case 'scrivi':
@@ -143,7 +152,7 @@ export function riduci(stato: StatoPannello, evento: EventoPannello, prossimaRic
           richiestaId: r.richiestaId ?? stato.dati.richiestaId,
           versioneIstruzioni: r.versioneIstruzioni ?? stato.dati.versioneIstruzioni,
         };
-        return { stato: STATO_CHIUSO, effetti: [{ tipo: 'apriRicetta', ricetta }] };
+        return { stato: { tipo: 'ricettaPronta', ...base, dati: stato.dati }, effetti: [{ tipo: 'apriRicetta', ricetta }] };
       }
       const errore = evento.esito.errore;
       if (errore.esito === 'pastoNonDisponibile') return { stato: STATO_CHIUSO, effetti: [{ tipo: 'rileggiPiano' }] };

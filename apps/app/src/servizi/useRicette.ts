@@ -7,7 +7,7 @@ import type { ContestoRicetta, PastoScelto } from '@/core/ricette/contesto';
 import { NOTIFICA_PIANO_AGGIORNATO, riduci, STATO_CHIUSO, type EventoPannello, type RicettaPronta, type StatoPannello } from '@/core/ricette/pannello';
 import type { RicettaSalvata } from '@/core/ricette/salvate';
 import { leggiPiano } from '@/servizi/piano';
-import { impostaRicettaPronta, preparaRicetta, trovaIdee } from '@/servizi/ricette';
+import { ascoltaRicettaMostrata, impostaRicettaPronta, preparaRicetta, trovaIdee } from '@/servizi/ricette';
 import { leggiRicetteSalvate, useRicetteSalvateInMemoria } from '@/servizi/ricetteSalvate';
 import { useLetturaMenu, type FaseMenu, type Lettura } from '@/servizi/useMenu';
 import type { NotificaPiano } from '@/servizi/useSostituzione';
@@ -24,6 +24,9 @@ export type AzioniRicette = {
 };
 
 export type Ricette = { stato: StatoPannello; azioni: AzioniRicette; notifica: NotificaPiano | null; chiudiNotifica: () => void };
+
+/** Se la pagina della ricetta non segnala la fine della transizione (evento perso), il pannello si chiude comunque dopo questo tempo. */
+const RISERVA_RICETTA_MOSTRATA_MS = 1500;
 
 /**
  * `onRicettaPronta` apre la pagina della ricetta (la ricetta è già in memoria); `onPianoRiletto` mostra subito il
@@ -79,6 +82,9 @@ export function useRicette(clientId: string, onRicettaPronta: (ricetta: RicettaP
           case 'apriRicetta':
             impostaRicettaPronta(effetto.ricetta);
             apriRicetta.current(effetto.ricetta);
+            setTimeout(() => {
+              if (montato.current) inviaRef.current({ tipo: 'ricettaMostrata' });
+            }, RISERVA_RICETTA_MOSTRATA_MS);
             break;
         }
       }
@@ -88,6 +94,8 @@ export function useRicette(clientId: string, onRicettaPronta: (ricetta: RicettaP
   useEffect(() => {
     inviaRef.current = invia;
   }, [invia]);
+  // La pagina della ricetta ha finito la transizione: il pannello si chiude sotto di lei, senza animazione.
+  useEffect(() => ascoltaRicettaMostrata(() => inviaRef.current({ tipo: 'ricettaMostrata' })), []);
 
   const azioni: AzioniRicette = {
     apri: useCallback((contesto: ContestoRicetta) => invia({ tipo: 'apri', contesto }), [invia]),

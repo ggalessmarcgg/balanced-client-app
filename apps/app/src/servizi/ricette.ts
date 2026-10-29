@@ -118,6 +118,21 @@ export function impostaRicettaPronta(ricetta: RicettaPronta | null): void {
   notifica();
 }
 
+// ---- Segnale "la pagina della ricetta ha finito la transizione" (dalla rotta /ricetta al pannello del Piano) ----------------
+
+const ascoltatoriMostrata = new Set<() => void>();
+
+/** La rotta della ricetta lo chiama a transizione completata: il pannello del Piano si chiude sotto la pagina. */
+export function segnalaRicettaMostrata(): void {
+  for (const a of ascoltatoriMostrata) a();
+}
+export function ascoltaRicettaMostrata(a: () => void): () => void {
+  ascoltatoriMostrata.add(a);
+  return () => {
+    ascoltatoriMostrata.delete(a);
+  };
+}
+
 /** All'uscita. */
 export function svuotaRicette(): void {
   impostaRicettaPronta(null);

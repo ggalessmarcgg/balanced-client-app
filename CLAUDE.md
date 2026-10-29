@@ -620,7 +620,12 @@ npx expo install --fix                   # riallinea versioni alla SDK
   20 min", riga "Per 8 porzioni · La tua porzione: …"; `contesto.ts`: nel fisso il giorno del selettore con i pasti del giorno
   nel loro ordine e senza preselezione, nel variabile il pasto del selettore; `pannello.ts`: macchina a stati chiuso / avvio /
   ricerca / idee / attesaRicetta / nessunaIdea / errore, la chiamata parte solo da "Trova idee" e la seconda solo da "Vedi la
-  ricetta" dopo il tocco di un'idea, risposte vecchie o dopo la chiusura ignorate, `pasto_non_disponibile` chiude il pannello
+  ricetta" dopo il tocco di un'idea, risposte vecchie o dopo la chiusura ignorate; **ricetta pronta** (decisione del
+  29/10/2026): il pannello resta aperto (`ricettaPronta`, stesso aspetto dell'attesa) mentre la pagina della ricetta entra da
+  destra sopra di lui, e si chiude **senza animazione** solo a transizione finita (`transitionEnd` della rotta `/ricetta` →
+  `segnalaRicettaMostrata` → evento `ricettaMostrata`; riserva di 1,5 s se l'evento non arriva; `PannelloDalBasso
+  chiusuraIstantanea`), così tornando indietro si vede il Piano senza pannello e in mezzo non compare mai il Piano;
+  `pasto_non_disponibile` chiude il pannello
   ed emette `rileggiPiano` (Notifica breve "Il piano è stato aggiornato: tocca di nuovo “Ricetta”."), `stima_non_plausibile` e
   `idea_non_ammessa` tornano alla ricerca delle idee, "Riprova" ripete la chiamata fallita; `salvate.ts`: riga da inserire,
   elenco dalla più recente, `salvaRicetta` / `eliminaRicetta` con uno scrittore iniettabile per i test; `nomi.ts` →

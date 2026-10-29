@@ -65,7 +65,12 @@ describe('pannello Ricetta: idee', () => {
     // Una risposta con un numero di richiesta diverso non cambia nulla.
     assert.deepEqual(riduci(v.stato, { tipo: 'rispostaRicetta', richiesta: 2, esito: ricettaOk }, 10).stato, v.stato);
     const ok = riduci(v.stato, { tipo: 'rispostaRicetta', richiesta: 9, esito: ricettaOk }, 10);
-    assert.equal(ok.stato.tipo, 'chiuso');
+    // Il pannello resta aperto (stesso aspetto dell'attesa) finché la pagina della ricetta non ha finito la transizione.
+    assert.ok(ok.stato.tipo === 'ricettaPronta' && ok.stato.dati.scelta === 1);
+    assert.deepEqual(riduci(ok.stato, { tipo: 'ricettaMostrata' }, 11), { stato: STATO_CHIUSO, effetti: [] });
+    // Fuori da ricettaPronta il segnale non fa nulla; una chiusura dal velo chiude comunque.
+    assert.deepEqual(riduci(v.stato, { tipo: 'ricettaMostrata' }, 11), { stato: v.stato, effetti: [] });
+    assert.deepEqual(riduci(ok.stato, { tipo: 'chiudi' }, 11).stato, STATO_CHIUSO);
     assert.equal(ok.effetti.length, 1);
     const effetto = ok.effetti[0];
     assert.ok(effetto && effetto.tipo === 'apriRicetta');

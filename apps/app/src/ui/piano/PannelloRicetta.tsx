@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CARATTERI_MASSIMI_CAMPO, type Idea } from '@/core/ricette/server';
@@ -50,8 +51,13 @@ export type PannelloRicettaProps = {
  * poi il contenuto dello stato, gap 24. Si chiude con la maniglia, il velo e il gesto; ogni riapertura riparte dall'avvio.
  */
 export function PannelloRicetta({ stato, azioni, onNutrizionista, attesaTrascorsa, attesaFerma }: PannelloRicettaProps) {
+  // Da "ricettaPronta" a chiuso il pannello sparisce sotto la pagina della ricetta, che lo ha già coperto: niente scorrimento.
+  // L'ultimo stato aperto è stato derivato in render (come `apertoPrecedente` nel Pannello dal basso).
+  const [ultimoAperto, setUltimoAperto] = useState<StatoPannello['tipo']>('chiuso');
+  if (stato.tipo !== 'chiuso' && stato.tipo !== ultimoAperto) setUltimoAperto(stato.tipo);
+  const chiusuraIstantanea = stato.tipo === 'chiuso' && ultimoAperto === 'ricettaPronta';
   return (
-    <PannelloDalBasso aperto={stato.tipo !== 'chiuso'} onChiudi={azioni.chiudi} etichetta="Trova una ricetta" spaziatura={SPAZIATURA}>
+    <PannelloDalBasso aperto={stato.tipo !== 'chiuso'} onChiudi={azioni.chiudi} etichetta="Trova una ricetta" spaziatura={SPAZIATURA} chiusuraIstantanea={chiusuraIstantanea}>
       {stato.tipo !== 'chiuso' && (
         <>
           <EtichettaAI etichetta={TESTI_RICETTA.testata} />
@@ -107,8 +113,9 @@ function Contenuto({ stato, azioni, onNutrizionista, attesaTrascorsa, attesaFerm
         </>
       );
     case 'idee':
-    case 'attesaRicetta': {
-      const inAttesa = stato.tipo === 'attesaRicetta';
+    case 'attesaRicetta':
+    case 'ricettaPronta': {
+      const inAttesa = stato.tipo !== 'idee';
       return (
         <>
           <Pasto nome={stato.pasto.nome} />

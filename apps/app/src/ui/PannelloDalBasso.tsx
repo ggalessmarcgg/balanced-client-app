@@ -38,6 +38,11 @@ export type PannelloDalBassoProps = {
   distanzaPiede?: number;
   /** Spazio tra gli elementi del contenuto e tra la maniglia e il primo elemento: 20 (predefinito) o 24 (Pannello sostituzione, Figma 531:3209). */
   spaziatura?: number;
+  /**
+   * Quando `aperto` passa a false il foglio sparisce subito, senza scorrere verso il basso: per chiudere il pannello sotto
+   * una pagina che lo ha già coperto (pannello "Ricetta" dopo la transizione della pagina della ricetta).
+   */
+  chiusuraIstantanea?: boolean;
 };
 
 // Misure dalle schermate con pannello (es. 474:1430, 499:2709): raggi superiori 24, padding 12 / 20 / 34 (= area
@@ -67,6 +72,7 @@ export function PannelloDalBasso({
   piede,
   distanzaPiede = spazio[20],
   spaziatura = spazio[20],
+  chiusuraIstantanea = false,
 }: PannelloDalBassoProps) {
   const { height: altezzaSchermo } = useWindowDimensions();
   const insets = useSafeAreaInsets();
@@ -93,7 +99,9 @@ export function PannelloDalBasso({
   const [inChiusura, setInChiusura] = useState(false);
   if (aperto !== apertoPrecedente) {
     setApertoPrecedente(aperto);
-    if (!aperto) setInChiusura(true);
+    // Chiusura istantanea: niente fase di chiusura, il foglio si smonta subito (gli Animated.Value si azzerano nell'effetto).
+    if (!aperto && !chiusuraIstantanea) setInChiusura(true);
+    if (!aperto && chiusuraIstantanea) setEspanso(pieno);
   }
   const montato = aperto || inChiusura;
 
@@ -105,6 +113,9 @@ export function PannelloDalBasso({
         duration: DURATA_MS,
         useNativeDriver: true,
       }).start();
+    } else if (chiusuraIstantanea) {
+      scorrimento.setValue(altezzaSchermo);
+      estensione.setValue(pieno ? 1 : 0);
     } else {
       Animated.timing(scorrimento, {
         toValue: altezzaSchermo,
@@ -116,7 +127,7 @@ export function PannelloDalBasso({
         estensione.setValue(pieno ? 1 : 0);
       });
     }
-  }, [aperto, scorrimento, trascinamento, altezzaSchermo, estensione, pieno]);
+  }, [aperto, scorrimento, trascinamento, altezzaSchermo, estensione, pieno, chiusuraIstantanea]);
 
   // Tasto indietro di Android: chiude il pannello.
   useEffect(() => {
