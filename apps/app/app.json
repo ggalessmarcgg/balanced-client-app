@@ -20,6 +20,7 @@
     },
     "android": {
       "package": "it.joinbalanced.app",
+      "backgroundColor": "#FAF8F5",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
