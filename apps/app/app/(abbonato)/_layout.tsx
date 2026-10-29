@@ -1,6 +1,6 @@
-import { Slot, usePathname, useRouter } from 'expo-router';
+import { Slot, useFocusEffect, usePathname, useRouter } from 'expo-router';
 import { useCallback } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { BackHandler, Platform, StyleSheet, View } from 'react-native';
 
 import { percorsoDiSviluppo, percorsoDiVoce, voceDaPercorso, type VoceNavigazione } from '@/core/navigazione/voci';
 import { useNuovaRevisione } from '@/servizi/memoriaRevisioni';
@@ -27,6 +27,22 @@ export default function LayoutAbbonato() {
       if (percorso !== pathname) router.replace(percorso as never);
     },
     [pathname, router],
+  );
+  // "Indietro" di sistema su Android (tasto o gesto dal bordo; correzione del 30/10/2026): le schede non hanno uno
+  // stack sotto, quindi senza questo l'app si chiudeva. Da Piano, Revisioni e Account si torna a Oggi; da Oggi vale
+  // il comportamento standard (l'app va in secondo piano). Registrato solo mentre il gruppo è a fuoco: con una pagina
+  // aperta sopra (menu, ricetta, Indicazioni…) resta la navigazione normale. Tutorial e pannelli dal basso hanno il
+  // loro gestore, registrato dopo questo e quindi chiamato prima: chiudono se stessi. Su iOS non fa nulla.
+  useFocusEffect(
+    useCallback(() => {
+      if (Platform.OS !== 'android') return undefined;
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        if (voce === null || voce === 'oggi') return false;
+        router.replace(percorsoDiVoce('oggi', pathname) as never);
+        return true;
+      });
+      return () => sub.remove();
+    }, [voce, pathname, router]),
   );
   return (
     <BarraPersistenteContesto.Provider value={conBarra ? 'conBarra' : 'senzaBarra'}>

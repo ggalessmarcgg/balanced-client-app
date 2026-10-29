@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { BackHandler, Pressable, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { riquadroNellaFinestra, stessoRiquadro, type Riquadro } from '@/core/tutorial/riquadro';
 import { LARGHEZZA_SUGGERIMENTO, Suggerimento } from '@/ui/Suggerimento';
@@ -103,11 +103,22 @@ const DISTANZA_SOTTO_DESTRA = spazio[2];
 /**
  * Tutorial a schermo (sezione Figma 1.1, schema delle schermate Tutorial): velo testo/primario al 40 %, l'elemento
  * evidenziato sopra il velo nella sua posizione e il Suggerimento con la punta verso di lui; si chiude con "Ho capito"
- * e, per sicurezza, con un tocco sul velo (così non può mai bloccare la schermata).
+ * e, per sicurezza, con un tocco sul velo (così non può mai bloccare la schermata). Su Android lo chiude anche
+ * "indietro" di sistema (tasto o gesto), come "Ho capito": senza, l'indietro passava alla schermata sotto il velo
+ * (correzione del 30/10/2026).
  */
 export function Tutorial({ riquadro, elemento, testo, onHoCapito, disposizione = 'sopraCentrato', passo, azione }: TutorialProps) {
   const { width: larghezzaFinestra } = useWindowDimensions();
   const [altezzaSuggerimento, setAltezzaSuggerimento] = useState(0);
+  const visibile = riquadro !== null;
+  useEffect(() => {
+    if (!visibile) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onHoCapito();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visibile, onHoCapito]);
   if (!riquadro) return null;
   const sotto = disposizione !== 'sopraCentrato';
   const sinistra = disposizione === 'sottoASinistra' ? margine.pagina : disposizione === 'sottoADestra' ? larghezzaFinestra - margine.pagina - LARGHEZZA_SUGGERIMENTO : Math.round((larghezzaFinestra - LARGHEZZA_SUGGERIMENTO) / 2);
