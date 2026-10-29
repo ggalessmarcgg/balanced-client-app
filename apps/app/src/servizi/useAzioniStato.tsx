@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
 
 import { esci } from '@/servizi/accesso';
 import { inviaModificheInAttesa } from '@/servizi/attesa';
@@ -7,6 +8,12 @@ import { copiaContattoSupporto, TESTO_COPIATO, type ContattoCopiato } from '@/se
 import { Dialogo } from '@/ui/Dialogo';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
+
+/**
+ * Notifica breve dopo la copia di un contatto: non su Android 13+ (API 33), dove il sistema mostra già la sua
+ * anteprima degli appunti e la conferma sarebbe doppia (correzione del 30/10/2026).
+ */
+const CONFERMA_COPIA = !(Platform.OS === 'android' && Number(Platform.Version) >= 33);
 
 export const TESTI_USCITA = {
   titolo: 'Hai modifiche non ancora salvate',
@@ -58,7 +65,7 @@ export function useAzioniStato({ sopraLaBarra = false }: { sopraLaBarra?: boolea
   const onNotifiche = useCallback(() => router.push('/notifiche'), [router]);
   const copia = useCallback(async (contatto: ContattoCopiato) => {
     setCopiato(null);
-    if (await copiaContattoSupporto(contatto)) setCopiato(contatto);
+    if ((await copiaContattoSupporto(contatto)) && CONFERMA_COPIA) setCopiato(contatto);
   }, []);
   const onEmailSupporto = useCallback(() => void copia('email'), [copia]);
   const onTelefonoSupporto = useCallback(() => void copia('telefono'), [copia]);

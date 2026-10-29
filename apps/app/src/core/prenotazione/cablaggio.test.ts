@@ -34,8 +34,9 @@ describe('cablaggio del pannello degli orari nell\'app', () => {
     assert.match(hook, /const onChiudiPannello = useCallback\(\(\) => setStato\(chiudiPannello\)/);
   });
 
-  it('la copia del supporto mostra la Notifica breve di conferma', () => {
-    assert.match(azioni, /if \(await copiaContattoSupporto\(contatto\)\) setCopiato\(contatto\)/);
+  it('la copia del supporto mostra la Notifica breve di conferma (non su Android 13+, che ha la sua anteprima)', () => {
+    assert.match(azioni, /if \(\(await copiaContattoSupporto\(contatto\)\) && CONFERMA_COPIA\) setCopiato\(contatto\)/);
+    assert.match(azioni, /const CONFERMA_COPIA = !\(Platform\.OS === 'android' && Number\(Platform\.Version\) >= 33\)/);
     assert.match(azioni, /\{copiato \? <NotificaInBasso key=\{copiato\} tipo="conferma" testo=\{TESTO_COPIATO\[copiato\]\}/);
   });
 
