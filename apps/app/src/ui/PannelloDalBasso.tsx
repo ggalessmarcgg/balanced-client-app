@@ -12,6 +12,7 @@ import {
 import Reanimated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { paddingInferioreSicuro } from "@/ui/areaSicura";
 import { colori, margine, opacita, raggio, spazio } from "@/ui/theme";
 import {
   ChiudiCampiAlTocco,
@@ -153,7 +154,7 @@ export function PannelloDalBasso({
     }).start();
   }, [pieno, estensione]);
 
-  const paddingInferiore = Math.max(insets.bottom, spazio[20]);
+  const paddingInferiore = paddingInferioreSicuro(insets.bottom);
   // Il foglio è alto quanto il contenuto (più maniglia e piede, che include la sua area sicura) e mai oltre il massimo.
   const altezzaFoglio = Math.min(
     altezzaMax,
@@ -349,7 +350,7 @@ export function Foglio({
     <View
       style={[
         stili.foglio,
-        { paddingBottom: Math.max(insets.bottom, spazio[20]) },
+        { paddingBottom: paddingInferioreSicuro(insets.bottom) },
       ]}
     >
       <View style={stili.areaManiglia} {...maniglia} accessible={false}>
