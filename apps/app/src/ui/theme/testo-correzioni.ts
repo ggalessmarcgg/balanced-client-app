@@ -30,3 +30,31 @@ export const correzioneVerticale: Partial<Record<NomeStileTesto, number>> = {
   // derivato in proporzione da accentoSerif (13,7 px a 32 → 15,4 px a 36): nessun nodo Figma con il solo stile
   accentoSerifAccesso: 15 / 3,
 };
+
+/**
+ * Android (correzione del 30/10/2026): qui i glifi stanno già quasi centrati nel riquadro di riga, quindi le correzioni
+ * di iOS li spingevano 5–6 dp troppo in basso nei titoli grandi. Valori misurati su /sviluppo/titoli: distanza dal bordo
+ * della cella al primo pixel del titolo, emulatore Pixel 9a a 2,625× contro il simulatore iPhone a 3× (già allineato a
+ * Figma), script ~/Desktop/censimenti-app/strumenti/misura-titoli2.mjs; stile per stile, correzione Android = valore
+ * precedente − scarto misurato, tolleranza 0,5 dp. Per h1 e h1Accesso vale la misura della riga mista di TitoloAccento
+ * (titolo sans + accento serif, cioè i saluti e il titolo dell'accesso), dove la riga la governa il font più alto.
+ * Gli stili non elencati prendono il valore di iOS.
+ */
+export const correzioneVerticaleAndroid: Partial<Record<NomeStileTesto, number>> = {
+  ...correzioneVerticale,
+  display: 1 / 2,
+  h1: -2,
+  h2: 1,
+  heading: 1,
+  bodyLarge: 1,
+  body: -2 / 3,
+  bodyDetails: 1 / 3,
+  accentoSerif: -5 / 3,
+  citazione: 1 / 2,
+  h1Accesso: -1,
+  link: 0,
+  captionSemiBold: 0,
+  bodyDetails130: 1,
+  etichettaPiccola130: 1 / 2,
+  accentoSerifAccesso: -4 / 3,
+};

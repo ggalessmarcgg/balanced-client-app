@@ -1,7 +1,10 @@
-import { Text, type TextProps } from 'react-native';
+import { Platform, Text, type TextProps } from 'react-native';
 
 import { colori, testi, type NomeStileTesto } from '@/ui/theme';
-import { correzioneVerticale } from '@/ui/theme/testo-correzioni';
+import { correzioneVerticale, correzioneVerticaleAndroid } from '@/ui/theme/testo-correzioni';
+
+// Correzioni per piattaforma: su Android i glifi stanno già quasi centrati nel riquadro (vedi testo-correzioni.ts).
+const CORREZIONI = Platform.OS === 'android' ? correzioneVerticaleAndroid : correzioneVerticale;
 
 export type TestoProps = TextProps & {
   /** Stile di testo del design system (App/… in Figma), ad es. "body", "h1", "display". */
@@ -29,7 +32,7 @@ function spazioExtra(stile: NomeStileTesto): number {
  * posizione dei glifi coincida con Figma. Tutte le altre proprietà passano a Text (numberOfLines, ecc.).
  */
 export function Testo({ stile, colore = colori.testo.primario, style, children, ...resto }: TestoProps) {
-  const delta = correzioneVerticale[stile] ?? 0;
+  const delta = CORREZIONI[stile] ?? 0;
   const extra = spazioExtra(stile);
   return (
     <Text
