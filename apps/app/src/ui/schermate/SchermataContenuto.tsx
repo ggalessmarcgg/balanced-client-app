@@ -6,6 +6,7 @@ import { Intestazione } from '@/ui/Intestazione';
 import { Pagina } from '@/ui/schermate/Pagina';
 import { Testo } from '@/ui/Testo';
 import { margine, spazio } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 
 export type SchermataContenutoProps = {
   contenuto: Contenuto;
@@ -25,7 +26,7 @@ export function SchermataContenuto({ contenuto, corpo, onIndietro, sovrapposti }
       <View style={stili.intestazione}>
         <Intestazione mostraTitolo={false} onIndietro={onIndietro} />
       </View>
-      <ScrollView style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
+      <ScrollView {...PROPRIETA_SCORRIMENTO} style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
         <View style={stili.titolo}>
           <Testo stile="heading" accessibilityRole="header">
             {contenuto.titolo}

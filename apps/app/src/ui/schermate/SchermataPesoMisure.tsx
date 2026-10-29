@@ -11,6 +11,7 @@ import { Segnaposto } from '@/ui/Segnaposto';
 import { Separatore } from '@/ui/Separatore';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, raggio, spazio } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 
 export type SchermataPesoMisureProps = {
   fase: { tipo: 'caricamento' } | { tipo: 'rete' | 'errore'; onRiprova: () => void } | { tipo: 'pronto'; dati: DatiMisure };
@@ -31,7 +32,7 @@ export function SchermataPesoMisure({ fase, onIndietro, vistaIniziale = 'grafico
       <View style={stili.intestazione}>
         <Intestazione titolo="Peso e misure" onIndietro={onIndietro} />
       </View>
-      <ScrollView style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
+      <ScrollView {...PROPRIETA_SCORRIMENTO} style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
         {fase.tipo === 'pronto' ? (
           <Contenuto dati={fase.dati} vistaPeso={vistaPeso} vistaCirconferenze={vistaCirconferenze} onVistaPeso={setVistaPeso} onVistaCirconferenze={setVistaCirconferenze} />
         ) : fase.tipo === 'caricamento' ? (

@@ -12,6 +12,7 @@ import { Pagina } from '@/ui/schermate/Pagina';
 import { Segnaposto } from '@/ui/Segnaposto';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 
 export type SchermataLetturaRevisioneProps = {
   /** null finché la revisione non è nota (rotta diretta a freddo): intestazione senza titolo. */
@@ -74,7 +75,7 @@ export function SchermataLetturaRevisione({ numero, fase, onIndietro, onFondoRag
       <View style={stili.intestazione}>
         <Intestazione titolo={numero === null ? undefined : titoloRevisione(numero)} onIndietro={onIndietro} />
       </View>
-      <ScrollView style={stili.scorrimento} contentContainerStyle={stili.contenuto} onScroll={onScroll} scrollEventThrottle={64} onContentSizeChange={onContentSizeChange} onLayout={onLayout} showsVerticalScrollIndicator={false}>
+      <ScrollView {...PROPRIETA_SCORRIMENTO} style={stili.scorrimento} contentContainerStyle={stili.contenuto} onScroll={onScroll} scrollEventThrottle={64} onContentSizeChange={onContentSizeChange} onLayout={onLayout} showsVerticalScrollIndicator={false}>
         {fase.tipo === 'pronto' ? (
           <>
             <View style={stili.autore} accessible accessibilityLabel={[fase.autore?.nome, fase.data ? etichettaData(fase.data) : null].filter(Boolean).join(', ')}>

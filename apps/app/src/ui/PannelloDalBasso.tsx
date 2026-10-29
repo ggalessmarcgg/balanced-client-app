@@ -13,6 +13,7 @@ import Reanimated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { paddingInferioreSicuro } from "@/ui/areaSicura";
+import { PROPRIETA_SCORRIMENTO } from "@/ui/scorrimento";
 import { colori, margine, opacita, raggio, spazio } from "@/ui/theme";
 import {
   ChiudiCampiAlTocco,
@@ -290,6 +291,7 @@ export function PannelloDalBasso({
             style={riempie ? stili.scorrimentoPieno : stili.scorrimento}
           >
             <Reanimated.ScrollView
+              {...PROPRIETA_SCORRIMENTO}
               ref={scorrimentoInterno}
               onScroll={segnaPosizione}
               scrollEventThrottle={16}

@@ -13,6 +13,7 @@ import { Segnaposto } from '@/ui/Segnaposto';
 import { Separatore } from '@/ui/Separatore';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 
 export type { NutrizionistaAppuntamento } from '@/ui/appuntamenti/CardAppuntamento';
 
@@ -36,7 +37,7 @@ export function SchermataAppuntamenti({ fase, nutrizionista, onIndietro, onEntra
       <View style={stili.intestazione}>
         <Intestazione titolo="Appuntamenti" onIndietro={onIndietro} />
       </View>
-      <ScrollView style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
+      <ScrollView {...PROPRIETA_SCORRIMENTO} style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
         {fase.tipo === 'pronto' ? (
           <>
             <CardSezione titolo="Prossimo appuntamento">

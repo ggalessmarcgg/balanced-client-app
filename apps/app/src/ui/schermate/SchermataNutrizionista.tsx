@@ -15,6 +15,7 @@ import { Segnaposto } from '@/ui/Segnaposto';
 import { Separatore } from '@/ui/Separatore';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, opacita, raggio, spazio } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 
 export type SchermataNutrizionistaProps = {
   fase: { tipo: 'caricamento' } | { tipo: 'rete' | 'errore'; onRiprova: () => void } | { tipo: 'pronto'; profilo: ProfiloNutrizionista | null; ferie: Ferie | null };
@@ -41,7 +42,7 @@ export function SchermataNutrizionista({ fase, contatto, onIndietro, onScrivi, s
       <View style={stili.intestazione}>
         <Intestazione titolo="La tua nutrizionista" onIndietro={onIndietro} />
       </View>
-      <ScrollView style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
+      <ScrollView {...PROPRIETA_SCORRIMENTO} style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
         {fase.tipo === 'pronto' ? (
           fase.profilo ? (
             <Contenuto profilo={fase.profilo} ferie={fase.ferie} contatto={contatto} onScrivi={onScrivi} />

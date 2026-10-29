@@ -8,6 +8,7 @@ import { Intestazione } from '@/ui/Intestazione';
 import { MeseStorico } from '@/ui/diario/MeseStorico';
 import { Pagina } from '@/ui/schermate/Pagina';
 import { margine, spazio } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 
 export type SchermataStoricoProps = {
   /** Dal mese corrente all'indietro. */
@@ -40,6 +41,7 @@ export function SchermataStorico({ mesi, calendarioDi, onMeseVisibile, onApriGio
         <Intestazione titolo="Le tue condivisioni" onIndietro={onIndietro} />
       </View>
       <FlatList
+        {...PROPRIETA_SCORRIMENTO}
         data={mesi}
         keyExtractor={(mese) => mese}
         renderItem={renderMese}

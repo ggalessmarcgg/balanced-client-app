@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { riquadroDalContenuto } from '@/core/tutorial/riquadro';
 import { useSovrappostiNelPortale } from '@/ui/schermate/Sovrapposti';
 import { colori } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 import { ChiudiCampiAlTocco, FornitoreCampi, useScorrimentoConTastiera } from '@/ui/tastiera';
 import type { CollegaMisura, MisuraNellaFinestra } from '@/ui/Tutorial';
 
@@ -89,6 +90,7 @@ export function Pagina({ children, piede, sfondo = colori.sfondo.pagina, scorrev
       <View style={[stili.pagina, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
         {scorrevole ? (
           <Reanimated.ScrollView
+            {...PROPRIETA_SCORRIMENTO}
             ref={scorrimento}
             onScroll={segnaPosizione}
             scrollEventThrottle={16}

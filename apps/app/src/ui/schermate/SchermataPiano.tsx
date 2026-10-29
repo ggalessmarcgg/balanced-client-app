@@ -43,6 +43,7 @@ import {
   SchermataErroreCaricamento,
   SchermataSenzaConnessione,
 } from "@/ui/schermate/SchermateTrasversali";
+import { PROPRIETA_SCORRIMENTO } from "@/ui/scorrimento";
 import { Segnaposto } from "@/ui/Segnaposto";
 import { Testo } from "@/ui/Testo";
 import { colori, margine, raggio, spazio } from "@/ui/theme";
@@ -554,6 +555,7 @@ function PianoPronto({
         />
       </View>
       <Reanimated.ScrollView
+        {...PROPRIETA_SCORRIMENTO}
         ref={riferimento}
         horizontal
         pagingEnabled
@@ -566,6 +568,7 @@ function PianoPronto({
       >
         {pagine.map((pagina) => (
           <ScrollView
+            {...PROPRIETA_SCORRIMENTO}
             key={pagina.chiave}
             style={{ width: larghezza }}
             contentContainerStyle={stili.contenutoPagina}

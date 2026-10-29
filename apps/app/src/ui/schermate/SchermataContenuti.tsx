@@ -9,6 +9,7 @@ import { Pagina } from '@/ui/schermate/Pagina';
 import { Segnaposto } from '@/ui/Segnaposto';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, opacita, raggio, spazio, type IconaPerMisura } from '@/ui/theme';
+import { PROPRIETA_SCORRIMENTO } from '@/ui/scorrimento';
 
 export type SchermataContenutiProps = {
   fase: { tipo: 'caricamento' } | { tipo: 'rete' | 'errore'; onRiprova: () => void } | { tipo: 'pronto'; contenuti: Contenuto[] };
@@ -35,7 +36,7 @@ export function SchermataContenuti({ fase, onIndietro, onApri, sovrapposti }: Sc
       <View style={stili.intestazione}>
         <Intestazione titolo="Contenuti" onIndietro={onIndietro} />
       </View>
-      <ScrollView style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
+      <ScrollView {...PROPRIETA_SCORRIMENTO} style={stili.scorrimento} contentContainerStyle={stili.contenuto} showsVerticalScrollIndicator={false}>
         {fase.tipo === 'pronto' ? (
           grigliaContenuti(fase.contenuti).map((g) => (
             <View key={g.larga.id} style={stili.gruppo}>
