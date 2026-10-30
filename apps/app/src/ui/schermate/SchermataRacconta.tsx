@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import type { PuntoTutorial } from '@/servizi/racconta';
-import { PulsanteRegistrazione } from '@/ui/racconta/PulsanteRegistrazione';
 import { Tutorial, useRiquadroTutorial } from '@/ui/Tutorial';
 
 import type { StatoRacconta } from '@/core/racconta/flusso';
@@ -15,7 +14,7 @@ import { Messaggio } from '@/ui/Messaggio';
 import { Pulsante } from '@/ui/Pulsante';
 import { Argomenti } from '@/ui/racconta/Argomenti';
 import { CardRacconto } from '@/ui/racconta/CardRacconto';
-import { ComandiRegistrazione } from '@/ui/racconta/ComandiRegistrazione';
+import { ComandiRegistrazione, TimerEPulsanteTutorial } from '@/ui/racconta/ComandiRegistrazione';
 import { Pagina } from '@/ui/schermate/Pagina';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, opacita, raggio, spazio } from '@/ui/theme';
@@ -83,8 +82,15 @@ export const TESTI_TUTORIAL: Record<PuntoTutorial, string> = {
 export function SchermataRacconta({ stato, azioni, tutorial = null, onIndietro, onScrivi, onCreaDiario, raccontoAFuoco = false, livelloVoceFermo = false, sovrapposti }: SchermataRaccontaProps) {
   const misura = useRiquadroTutorial(tutorial !== null);
   const { corpo, piede } = contenuto(stato, azioni, onScrivi, onCreaDiario, raccontoAFuoco, livelloVoceFermo, tutorial ? misura : undefined);
+  // Tutorial · 3 e · 4: l'evidenza comprende il timer, così il fumetto sta sopra e il timer resta leggibile (31/10/2026).
   const elementoTutorial =
-    tutorial === 'pronto' ? <PulsanteRegistrazione stato="pronto" /> : tutorial === 'terminata' ? <PulsanteRegistrazione stato="daInviare" /> : tutorial === 'racconto' ? <Pulsante etichetta="Crea il mio diario" /> : null;
+    tutorial === 'pronto' ? (
+      <TimerEPulsanteTutorial stato="pronto" durataMs={0} />
+    ) : tutorial === 'terminata' && stato.tipo === 'terminata' ? (
+      <TimerEPulsanteTutorial stato="daInviare" durataMs={stato.audio.durataMs} />
+    ) : tutorial === 'racconto' ? (
+      <Pulsante etichetta="Crea il mio diario" />
+    ) : null;
   return (
     <Pagina
       piede={piede}
