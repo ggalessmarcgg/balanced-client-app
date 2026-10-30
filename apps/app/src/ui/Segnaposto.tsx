@@ -3,9 +3,12 @@ import { AccessibilityInfo, Animated, Easing, StyleSheet, View, type StyleProp, 
 
 import { colori, raggio, spazio } from '@/ui/theme';
 
+/** Riga a pillola: larghezza (altezza 14) oppure larghezza e altezza (ricerca delle alternative e delle idee: 160 × 16 e 240 × 12). */
+export type RigaSegnaposto = number | { larghezza: number; altezza: number };
+
 export type SegnapostoProps = {
-  /** Larghezze delle righe a pillola (Figma: 180, 280, 120). */
-  righe?: number[];
+  /** Righe a pillola (Figma: 180, 280, 120). */
+  righe?: RigaSegnaposto[];
   /** Altezza del blocco; se assente segue le righe (Figma: liberamente ridimensionabile). */
   altezza?: number;
   style?: StyleProp<ViewStyle>;
@@ -78,8 +81,8 @@ export function Segnaposto({ righe = RIGHE_FIGMA, altezza, style }: SegnapostoPr
       accessibilityRole="progressbar"
       accessibilityLabel="Caricamento"
     >
-      {righe.map((larghezza, i) => (
-        <View key={i} style={[stili.riga, { width: larghezza }]} />
+      {righe.map((riga, i) => (
+        <View key={i} style={[stili.riga, typeof riga === 'number' ? { width: riga } : { width: riga.larghezza, height: riga.altezza }]} />
       ))}
     </Animated.View>
   );

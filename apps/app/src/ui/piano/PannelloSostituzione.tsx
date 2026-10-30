@@ -28,7 +28,10 @@ export const TESTI_SOSTITUZIONE = {
 } as const;
 
 /** Segnaposto delle alternative in ricerca (Figma 531:3232: due barre 160 × 16 e 240 × 12). */
-const BARRE_SEGNAPOSTO = [160, 240];
+const BARRE_SEGNAPOSTO = [
+  { larghezza: 160, altezza: 16 },
+  { larghezza: 240, altezza: 12 },
+];
 const SEGNAPOSTI = 3;
 
 export type PannelloSostituzioneProps = {

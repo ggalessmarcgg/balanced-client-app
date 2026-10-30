@@ -57,7 +57,7 @@ export function SchermataRicetta({ ricetta, pasto, azione, onIndietro, notifica,
       scorriInFondoAllAvvio={scorriInFondoAllAvvio}
       sovrapposti={
         <>
-          {notifica && <NotificaInBasso key={notifica.chiave} testo={notifica.testo} tipo={notifica.tipo} onScomparsa={onNotificaScomparsa} onRiprova={notifica.tipo === 'errore' ? onRiprovaNotifica : undefined} />}
+          {notifica && <NotificaInBasso key={notifica.chiave} testo={notifica.testo} tipo={notifica.tipo} onScomparsa={onNotificaScomparsa} onRiprova={notifica.tipo === 'errore' ? onRiprovaNotifica : undefined} sopra={SOPRA_IL_PULSANTE} />}
           {sovrapposti}
         </>
       }
@@ -124,6 +124,10 @@ export function SchermataRicetta({ ricetta, pasto, azione, onIndietro, notifica,
     </Pagina>
   );
 }
+
+/** Notifica breve sopra il pulsante in fondo (Figma 5.6 818:7907: 16 sopra il pulsante, alto 56, che sta a 40 dal fondo). */
+const ALTEZZA_PULSANTE = 56;
+const SOPRA_IL_PULSANTE = ALTEZZA_PULSANTE + spazio[40];
 
 const stili = StyleSheet.create({
   intestazione: { paddingTop: spazio[12], paddingHorizontal: margine.pagina },

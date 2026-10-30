@@ -31,7 +31,10 @@ export const TESTI_RICETTA = {
 } as const;
 
 /** Segnaposto delle idee in ricerca (Figma 537:4384: due barre 160 × 16 e 240 × 12, come la sostituzione). */
-const BARRE_SEGNAPOSTO = [160, 240];
+const BARRE_SEGNAPOSTO = [
+  { larghezza: 160, altezza: 16 },
+  { larghezza: 240, altezza: 12 },
+];
 const SEGNAPOSTI = 3;
 /** Spazio tra gli elementi del pannello (Figma 536:3577: gap 24). */
 const SPAZIATURA = spazio[24];
