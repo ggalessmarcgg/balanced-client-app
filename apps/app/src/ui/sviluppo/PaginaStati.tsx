@@ -13,9 +13,10 @@ import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
+import { PrimoAccessoSviluppo } from '@/ui/sviluppo/NotificheSviluppo';
 import { Lotto2Sviluppo, MenuSviluppo } from '@/ui/sviluppo/MenuSviluppo';
 import { OggiSviluppo } from '@/ui/sviluppo/OggiSviluppo';
-import { PianoRealeSviluppo, PianoSchermataSviluppo, RicetteSchermataSviluppo, SostituzioneSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
+import { PianoRealeSviluppo, PianoSchermataSviluppo, RicettaConsensoSviluppo, RicetteSchermataSviluppo, SostituzioneConsensoSviluppo, SostituzioneSchermataSviluppo } from '@/ui/sviluppo/PianoSchermateSviluppo';
 import { PaginaRicettaSviluppo, RicetteSalvateSviluppo } from '@/ui/sviluppo/RicetteSviluppo';
 import { PianoSviluppo } from '@/ui/sviluppo/PianoSviluppo';
 import { RaccontaSviluppo } from '@/ui/sviluppo/RaccontaSviluppo';
@@ -86,7 +87,13 @@ export const STATI_SVILUPPO = [
   ['giornate-6-storico-caricamento', 'Giornate · 6 · Storico con un mese in caricamento'],
   ['giornate-caricamento', 'Giornate · pannello in caricamento (segnaposti)'],
   ['giornate-errore', 'Giornate · pannello senza connessione (Riprova)'],
+  ['primo-accesso-1', 'Primo accesso · 1 · Benvenuto (586:4905)'],
+  ['primo-accesso-2', 'Primo accesso · 2 · Diario (586:4941)'],
+  ['primo-accesso-3', 'Primo accesso · 3 · Commenti e revisioni (586:4995)'],
+  ['primo-accesso-4', 'Primo accesso · 4 · AI e consenso (586:5043)'],
+  ['primo-accesso-5', 'Primo accesso · 5 · Notifiche (586:5154)'],
   ['racconta-2-permesso', 'Racconta · 2 · Permesso microfono (459:643)'],
+  ['racconta-consenso', 'Racconta con il pannello del consenso AI al primo uso (testo adattato, disegno 831:8486)'],
   ['racconta-2-permesso-in-richiesta', 'Racconta · 2 · "Consenti" in caricamento (richiesta di sistema in corso)'],
   ['racconta-3-microfono-disattivato', 'Racconta · 3 · Microfono disattivato (459:681)'],
   ['racconta-4-pronto', 'Racconta · 4 · Pronto (459:719); il tocco avvia una registrazione finta'],
@@ -168,7 +175,9 @@ export const STATI_SVILUPPO = [
   ['menu-5-contenuti', 'Menu · 5 · Contenuti (520:2883)'],
   ['menu-5.1-contenuto', 'Menu · 5.1 · Contenuto (520:3086)'],
   ['menu-5-caricamento', 'Contenuti in caricamento'],
-  ['account-1', 'Account · 1 · Profilo (499:2145)'],
+  ['account-1', 'Account · 1 · Profilo (499:2145), con l\'interruttore delle funzioni AI (831:8330)'],
+  ['account-2-notifiche-disattivate', 'Account · 2 · Notifiche disattivate (492:3408)'],
+  ['account-3-notifiche-negate', 'Account · 3 · Notifiche negate dal sistema (831:8335)'],
   ['account-interruttori', 'Account: i promemoria cambiano da soli ogni 2 s (pomello che scorre, fondo in dissolvenza; diario → weekend in cascata)'],
   ['account-1-senza-abbonamento', 'Account senza abbonamento Stripe leggibile (solo "Stato · Attivo" e il testo di riserva)'],
   ['account-1-caricamento', 'Account con l\'abbonamento in caricamento'],
@@ -178,7 +187,7 @@ export const STATI_SVILUPPO = [
   ['account-3-avviso', 'Account · 3 · Elimina account · avviso (499:2568)'],
   ['account-4-conferma', 'Account · 4 · Elimina account · conferma (499:2709)'],
   ['account-elimina-notifica', 'Account dopo "Elimina definitivamente": Notifica breve "disponibile a breve"'],
-  ['menu-2-notifiche', 'Menu · 2 · Notifiche (508:2699)'],
+  ['menu-2-notifiche', 'Menu · 2 · Notifiche (508:2699), con la riga del piano pronto (831:8481)'],
   ['notifiche-vuote', 'Notifiche senza righe negli ultimi 7 giorni'],
   ['notifiche-caricamento', 'Notifiche in caricamento'],
   ['notifiche-errore', 'Notifiche senza connessione (Riprova)'],
@@ -206,6 +215,8 @@ export const STATI_SVILUPPO = [
   ['piano-4.5-sostituzione-errore', 'Piano · 4.5 · Sostituzione · errore con "Riprova" (789:7865)'],
   ['piano-4.5-sostituzione-sessione', 'Piano · 4.5 senza "Riprova": sessione scaduta (come il diario vocale)'],
   ['piano-tutorial-1-sostituzione', 'Tutorial · 1 · Piano · sostituzione (586:5457) sul fisso: "1 di 2", "Avanti" porta al 2'],
+  ['piano-4.6-sostituzione-consenso', 'Piano · 4.6 · Sostituzione · consenso AI al primo uso (831:8486)'],
+  ['piano-5.9-ricetta-consenso', 'Pannello Ricetta con il consenso AI al primo uso (stesso disegno di 831:8486)'],
   ['piano-tutorial-2-ricette', 'Tutorial · 2 · Piano · ricette (586:5598) sul fisso: "2 di 2", "Ho capito"'],
   ['piano-5-ricetta-fisso', 'Piano · 5 · Ricetta · pannello sul fisso (536:3448): pasti del giorno, nessuno scelto, "Trova idee" disattivo'],
   ['piano-5-ricetta-fisso-scelto', 'Piano · 5 · pannello sul fisso con "Pranzo" scelto (come nel disegno)'],
@@ -396,6 +407,18 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <OggiSviluppo scenario="pannelloCaricamento" />;
     case 'giornate-errore':
       return <OggiSviluppo scenario="pannelloErrore" />;
+    case 'primo-accesso-1':
+      return <PrimoAccessoSviluppo pagina={0} />;
+    case 'primo-accesso-2':
+      return <PrimoAccessoSviluppo pagina={1} />;
+    case 'primo-accesso-3':
+      return <PrimoAccessoSviluppo pagina={2} />;
+    case 'primo-accesso-4':
+      return <PrimoAccessoSviluppo pagina={3} />;
+    case 'primo-accesso-5':
+      return <PrimoAccessoSviluppo pagina={4} />;
+    case 'racconta-consenso':
+      return <RaccontaSviluppo scenario="pronto" consensoAI />;
     case 'racconta-2-permesso':
       return <RaccontaSviluppo scenario="permesso" />;
     case 'racconta-2-permesso-in-richiesta':
@@ -560,6 +583,10 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <Lotto2Sviluppo scenario="contenutiCaricamento" />;
     case 'account-1':
       return <AccountSviluppo scenario="account" />;
+    case 'account-2-notifiche-disattivate':
+      return <AccountSviluppo scenario="accountNotificheDisattivate" />;
+    case 'account-3-notifiche-negate':
+      return <AccountSviluppo scenario="accountNotificheNegate" />;
     case 'account-interruttori':
       return <AccountSviluppo scenario="accountInterruttori" />;
     case 'account-1-senza-abbonamento':
@@ -639,6 +666,10 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <SostituzioneSchermataSviluppo variante="errore-sessione" />;
     case 'piano-tutorial-1-sostituzione':
       return <PianoSchermataSviluppo variante="tutorial" />;
+    case 'piano-4.6-sostituzione-consenso':
+      return <SostituzioneConsensoSviluppo />;
+    case 'piano-5.9-ricetta-consenso':
+      return <RicettaConsensoSviluppo />;
     case 'piano-tutorial-2-ricette':
       return <PianoSchermataSviluppo variante="tutorial-2" />;
     case 'piano-5-ricetta-fisso':

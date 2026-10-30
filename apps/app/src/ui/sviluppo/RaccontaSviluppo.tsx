@@ -5,6 +5,7 @@ import type { StatoRacconta } from '@/core/racconta/flusso';
 import type { ErroreTrascrizione } from '@/core/racconta/server';
 import type { PuntoTutorial } from '@/servizi/racconta';
 import type { AzioniRacconta } from '@/servizi/useRacconta';
+import { PannelloConsensoAI } from '@/ui/consenso/ConsensoAI';
 import { SchermataRacconta } from '@/ui/schermate/SchermataRacconta';
 
 // "Racconta" con dati finti per i confronti con Figma (sezione 3.1 · Diario vocale: 459:643, 459:681, 459:719, 459:779,
@@ -106,7 +107,8 @@ const PASSO_MS = INTERVALLO_LETTURA_MS;
 
 const TUTORIAL_PER_SCENARIO: Partial<Record<ScenarioRacconta, PuntoTutorial>> = { tutorialPronto: 'pronto', tutorialTerminata: 'terminata', tutorialRacconto: 'racconto' };
 
-export function RaccontaSviluppo({ scenario }: { scenario: ScenarioRacconta }) {
+/** `consensoAI`: il pannello del consenso alle funzioni AI al primo uso sopra la schermata (step 6), senza scritture. */
+export function RaccontaSviluppo({ scenario, consensoAI = false }: { scenario: ScenarioRacconta; consensoAI?: boolean }) {
   const [stato, setStato] = useState<StatoRacconta>(() => statoIniziale(scenario));
   const [tutorial, setTutorial] = useState<PuntoTutorial | null>(TUTORIAL_PER_SCENARIO[scenario] ?? null);
 
@@ -153,6 +155,7 @@ export function RaccontaSviluppo({ scenario }: { scenario: ScenarioRacconta }) {
       onCreaDiario={azioni.creaDiario}
       raccontoAFuoco={scenario === 'raccontoTastiera'}
       livelloVoceFermo={scenario === 'registrazione' || scenario === 'registrazionePausa'}
+      sovrapposti={consensoAI ? <PannelloConsensoAI aperto funzione="racconta" titolo="Racconta la tua giornata" onAccetto={nulla} onNonOra={nulla} onInformativa={nulla} /> : undefined}
     />
   );
 }

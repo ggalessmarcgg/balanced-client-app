@@ -162,6 +162,25 @@ export function RicetteSchermataSviluppo({ variante }: { variante: VarianteRicet
   return <SchermataPiano fase={{ tipo: 'pronto', piano, daCache: false }} indiceIniziale={INDICE_FIGMA[tipo]} sostituzione={sostituzione} ricette={ricette} onIndicazioni={nulla} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
 }
 
+/** Consenso alle funzioni AI al primo uso dentro i pannelli (step 6): card al posto del contenuto, nessuna scrittura. */
+const CONSENSO_RICHIESTO = { richiesto: true, inCorso: false, accetta: nulla, nonOra: nulla, informativa: nulla };
+
+/** Piano · 4.6 (831:8486): pannello "Sostituisci" con il consenso al primo uso. */
+export function SostituzioneConsensoSviluppo() {
+  const piano = useMemo(() => componiPiano(fisso(() => pastiFigma())), []);
+  const sostituzione = useSostituzioneSviluppo('avvio');
+  const ricette = useRicetteSviluppo();
+  return <SchermataPiano fase={{ tipo: 'pronto', piano, daCache: false }} indiceIniziale={INDICE_FIGMA.fisso} sostituzione={{ ...sostituzione, consenso: CONSENSO_RICHIESTO }} ricette={ricette} onIndicazioni={nulla} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
+}
+
+/** Pannello "Ricetta" con il consenso al primo uso (stesso disegno di 831:8486). */
+export function RicettaConsensoSviluppo() {
+  const piano = useMemo(() => componiPiano(fisso(() => pastiFigma())), []);
+  const sostituzione = useSostituzioneSviluppo();
+  const ricette = useRicetteSviluppo('avvio-fisso');
+  return <SchermataPiano fase={{ tipo: 'pronto', piano, daCache: false }} indiceIniziale={INDICE_FIGMA.fisso} sostituzione={sostituzione} ricette={{ ...ricette, consenso: CONSENSO_RICHIESTO }} onIndicazioni={nulla} onNavigazione={nulla} onMenu={nulla} onNotifiche={nulla} />;
+}
+
 /** La scheda Piano vera (o le sue Indicazioni) per l'account in sessione: stesso hook della rotta, senza il gruppo dell'abbonato. */
 export function PianoRealeSviluppo({ cosa }: { cosa: 'piano' | 'indicazioni' }) {
   const clientId = useClientIdSviluppo();
@@ -201,8 +220,8 @@ function PianoReale({ clientId, cosa, onIndicazioni, onIndietro }: { clientId: s
   return (
     <SchermataPiano
       fase={faseSchermata}
-      sostituzione={{ stato: sostituzione.stato, azioni: sostituzione.azioni, onNutrizionista }}
-      ricette={{ stato: ricette.stato, azioni: ricette.azioni, onNutrizionista: onNutrizionistaRicette }}
+      sostituzione={{ stato: sostituzione.stato, azioni: sostituzione.azioni, onNutrizionista, consenso: sostituzione.consenso }}
+      ricette={{ stato: ricette.stato, azioni: ricette.azioni, onNutrizionista: onNutrizionistaRicette, consenso: ricette.consenso }}
       tutorial={{ passo: tutorial.passo, onAvanti: tutorial.avanti, onHoCapito: tutorial.hoCapito }}
       notifica={ricette.notifica ?? sostituzione.notifica}
       onNotificaScomparsa={chiudiNotifica}

@@ -24,6 +24,8 @@ const ACCOUNT: SchermataAccountProps = {
   promemoria: { diario: true, weekend: true },
   abbonamento: { tipo: 'pronto', abbonamento: { piano: '6 mesi', stato: 'Attivo', rinnovo: '15 marzo 2027' } },
   versione: '1.0.0',
+  // Step 6 (Figma 831:8330): interruttore delle funzioni AI acceso in Privacy e dati.
+  consensoAI: { acceso: true, onChange: nulla },
   onPromemoria: nulla,
   onEsci: nulla,
 };
@@ -32,6 +34,8 @@ function riga(id: string, tipo: string, createdAt: string, extra: Partial<RigaNo
   return { id, notification_type: tipo, reference_id: id, reference_table: 'daily_submissions', title: '', body: null, viewed_at: null, clicked_at: null, created_at: createdAt, ...extra };
 }
 const RIGHE: RigaNotifica[] = [
+  // Piano pronto (step 6, Figma 831:8481): "Oggi, 08:30".
+  riga('p0', 'plan_sent', '2026-10-15T06:30:00.000Z', { reference_table: 'nutrition_plans' }),
   riga('g1', 'nutritionist_comment', '2026-10-15T07:12:00.000Z'),
   riga('r13', 'review_sent', '2026-10-14T16:40:00.000Z', { reference_table: 'client_reviews' }),
   riga('r14', 'review_unlocked', '2026-10-14T19:15:00.000Z', { reference_table: 'client_reviews' }),
@@ -49,12 +53,18 @@ const CONTESTO = {
 };
 const ELENCO = elencoNotifiche(RIGHE, CONTESTO, ADESSO);
 
-export type ScenarioAccount = 'account' | 'accountInterruttori' | 'accountSenzaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaNotifica' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
+export type ScenarioAccount = 'account' | 'accountNotificheDisattivate' | 'accountNotificheNegate' | 'accountInterruttori' | 'accountSenzaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaNotifica' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
 
 export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
   switch (scenario) {
     case 'account':
       return <SchermataAccount {...ACCOUNT} />;
+    case 'accountNotificheDisattivate':
+      // Account · 2 (492:3408): "Attiva le notifiche", interruttori spenti.
+      return <SchermataAccount {...ACCOUNT} promemoria={{ diario: false, weekend: false }} notifichePush={{ azione: 'attiva', onPress: nulla }} />;
+    case 'accountNotificheNegate':
+      // Account · 3 (831:8335): "Apri le impostazioni", interruttori spenti.
+      return <SchermataAccount {...ACCOUNT} promemoria={{ diario: false, weekend: false }} notifichePush={{ azione: 'impostazioni', onPress: nulla }} />;
     case 'accountInterruttori':
       return <AccountInterruttori />;
     case 'accountSenzaAbbonamento':
