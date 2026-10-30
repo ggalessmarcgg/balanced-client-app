@@ -4,18 +4,42 @@
 import { router } from 'expo-router';
 
 import { PERCORSO_PER_VOCE } from '@/core/navigazione/voci';
+import { contaMontaggio, gruppoMontato } from '@/core/notifiche/montaggio';
 import { destinazioneDaDati, leggiDatiPush, rottaDestinazione, type DestinazionePush } from '@/core/notifiche/push';
 import { leggiGiornata } from '@/servizi/diario';
 import { memoriaDiario } from '@/servizi/memoriaDiario';
-import { aggiornaNotifiche } from '@/servizi/notifiche';
+import { aggiornaNotifiche, memoriaNotifiche, segnaVisteContenuto } from '@/servizi/notifiche';
 import { ascoltaRicevute, ascoltaRisposte, datiNotifica, dimenticaUltimaRisposta, ultimaRisposta, type RispostaNotifica } from '@/servizi/notifichePush';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { statoCorrente } from '@/servizi/statoCliente';
 
-let inAttesa: DestinazionePush | null = null;
-let abbonatoMontato = false;
+type Apertura = { destinazione: DestinazionePush; notificaId: string | null };
+let inAttesa: Apertura | null = null;
+/**
+ * Istanze montate del layout del gruppo dell'abbonato, non un booleano (difetto del 31/10/2026): un `router.replace`
+ * sulla stessa scheda rimonta il gruppo, e con un booleano il montaggio del nuovo layout metteva vero e lo smontaggio
+ * del vecchio, subito dopo, rimetteva falso; da lì ogni notifica toccata restava parcheggiata e il cliente arrivava su
+ * Oggi senza il pannello della giornata.
+ */
+let layoutMontati = 0;
+const abbonatoMontato = () => gruppoMontato(layoutMontati);
 let ascoltoAvviato = false;
 const gestite = new Set<string>();
+
+/**
+ * Registro di sviluppo dell'apertura delle notifiche (31/10/2026, per ritrovare un'apertura finita su Oggi senza il
+ * pannello): ultime 40 righe con l'ora, lette dalla pagina /sviluppo/notifiche-prova. Solo in __DEV__.
+ */
+const REGISTRO_MASSIMO = 40;
+const registro: string[] = [];
+function annota(testo: string): void {
+  if (!__DEV__) return;
+  registro.push(`${new Date().toISOString().slice(11, 23)} ${testo}`);
+  if (registro.length > REGISTRO_MASSIMO) registro.shift();
+}
+export function registroApertura(): readonly string[] {
+  return registro;
+}
 
 /** Data di una giornata per id, dalle righe del diario già in memoria; altrimenti una lettura. */
 async function dataGiornata(submissionId: string): Promise<string | null> {
@@ -32,23 +56,38 @@ async function dataGiornata(submissionId: string): Promise<string | null> {
  * Apre la destinazione: le pagine sopra le schede si chiudono, si va alla scheda di partenza e, se serve, sopra di lei
  * si apre la pagina (così "indietro" torna alla scheda). `apri` cambia a ogni apertura: la stessa giornata si riapre.
  */
-export async function apriDestinazione(d: DestinazionePush): Promise<void> {
+export async function apriDestinazione(d: DestinazionePush, notificaId: string | null = null): Promise<void> {
   const data = d.tipo === 'giornata' ? await dataGiornata(d.submissionId) : null;
+  if (d.tipo === 'giornata') annota(`giornata ${d.submissionId} → data ${data ?? 'NON TROVATA'} (settimana in memoria: ${memoriaDiario().settimana.length} righe)`);
+  // Notifiche con questo contenuto come riferimento: viste (step 6). Ad app chiusa, con l'elenco non ancora caricato,
+  // vale l'identificativo arrivato con la push.
+  const riferimento = d.tipo === 'giornata' ? d.submissionId : d.tipo === 'revisione' ? d.id : null;
+  if (riferimento) {
+    const segnate = await segnaVisteContenuto(riferimento, notificaId);
+    annota(`viste ${segnate.length} notifiche per ${riferimento} (elenco in memoria: ${memoriaNotifiche().righe ? 'sì' : 'no'})`);
+  }
   const rotta = rottaDestinazione(d, data);
-  if (router.canDismiss()) router.dismissAll();
+  const dismiss = router.canDismiss();
+  if (dismiss) router.dismissAll();
   const params = rotta.parametriScheda ? { ...rotta.parametriScheda, apri: String(Date.now()) } : undefined;
+  annota(`rotta: dismiss ${dismiss ? 'sì' : 'no'}, replace ${PERCORSO_PER_VOCE[rotta.scheda]} ${params ? JSON.stringify(params) : ''}${rotta.pagina ? `, push ${rotta.pagina.pathname}` : ''}`);
   router.replace({ pathname: PERCORSO_PER_VOCE[rotta.scheda], params } as never);
   if (rotta.pagina) router.push(rotta.pagina as never);
 }
 
 function gestisciRisposta(r: RispostaNotifica): void {
   const { id, data } = datiNotifica(r.notification);
-  if (gestite.has(id)) return;
+  if (gestite.has(id)) {
+    annota(`risposta ${id} già gestita, ignorata`);
+    return;
+  }
   gestite.add(id);
-  const d = destinazioneDaDati(leggiDatiPush(data));
+  const dati = leggiDatiPush(data);
+  const d = destinazioneDaDati(dati);
+  annota(`risposta ${id}: tipo ${dati.tipo ?? '-'}, destinazione ${dati.destinazione ?? '-'}, riferimento ${dati.riferimento ?? '-'} → ${d ? d.tipo : 'nessuna destinazione'}; layout dell'abbonato montati ${layoutMontati}, stato ${statoCorrente()?.codice ?? '-'}`);
   if (!d) return;
-  if (abbonatoMontato && statoCorrente()?.codice === 'J') void apriDestinazione(d);
-  else inAttesa = d;
+  if (abbonatoMontato() && statoCorrente()?.codice === 'J') void apriDestinazione(d, dati.notificaId);
+  else inAttesa = { destinazione: d, notificaId: dati.notificaId };
 }
 
 /**
@@ -71,13 +110,18 @@ export function avviaAscoltoNotifiche(): void {
   });
 }
 
-/** Il layout del gruppo dell'abbonato segnala quando è montato: la destinazione conservata si apre allora. */
+/**
+ * Il layout del gruppo dell'abbonato segnala quando si monta e si smonta: la destinazione conservata si apre al
+ * montaggio. Conta le istanze, perché al rimontaggio il nuovo layout si monta prima che il vecchio si smonti.
+ */
 export function segnalaAbbonatoMontato(montato: boolean): void {
-  abbonatoMontato = montato;
+  layoutMontati = contaMontaggio(layoutMontati, montato);
+  annota(`layout dell'abbonato ${montato ? 'montato' : 'smontato'}: istanze ${layoutMontati}${inAttesa ? `, in attesa ${inAttesa.destinazione.tipo}` : ''}`);
   if (!montato || !inAttesa || statoCorrente()?.codice !== 'J') return;
-  const d = inAttesa;
+  const a = inAttesa;
   inAttesa = null;
-  void apriDestinazione(d);
+  annota(`abbonato montato: apro la destinazione in attesa (${a.destinazione.tipo})`);
+  void apriDestinazione(a.destinazione, a.notificaId);
 }
 
 /** All'uscita dall'account. */
@@ -85,7 +129,12 @@ export function svuotaDestinazioneInAttesa(): void {
   inAttesa = null;
 }
 
+/** Pagina di sviluppo e test: quante istanze del layout dell'abbonato risultano montate. */
+export function layoutAbbonatoMontati(): number {
+  return layoutMontati;
+}
+
 /** Pagina di sviluppo. */
 export function destinazioneInAttesa(): DestinazionePush | null {
-  return inAttesa;
+  return inAttesa?.destinazione ?? null;
 }

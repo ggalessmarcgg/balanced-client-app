@@ -4,7 +4,7 @@ import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { canalePerTipo } from '@/core/notifiche/push';
-import { destinazioneInAttesa } from '@/servizi/aperturaNotifiche';
+import { destinazioneInAttesa, registroApertura } from '@/servizi/aperturaNotifiche';
 import { memoriaConsenso } from '@/servizi/consenso';
 import { dispositivoCorrente } from '@/servizi/dispositivo';
 import { memoriaDiario } from '@/servizi/memoriaDiario';
@@ -40,6 +40,9 @@ export default function NotificheProva() {
         `riga telefono: ${d ? `${d.id} · ${d.permesso}` : 'non registrata'}`,
         `consenso AI: ${c.letto ? (c.ultima ? `${c.ultima.action} (${c.ultima.text_version})` : 'nessuna riga') : 'non letto'}`,
           `destinazione in attesa: ${JSON.stringify(destinazioneInAttesa())}`,
+          '',
+          'registro delle aperture:',
+          ...registroApertura(),
         ].join('\n'),
       );
     });
