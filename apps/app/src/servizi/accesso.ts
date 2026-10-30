@@ -3,6 +3,9 @@
 import { ATTESA_REINVIO_SECONDI, URL_CONFERMA_EMAIL, URL_RECUPERO_PASSWORD } from '@/core/accesso/costanti';
 import { classificaErrore, normalizzaEmail, type TipoErroreAccesso } from '@/core/accesso/errori';
 import { svuotaAccountInMemoria } from '@/servizi/account';
+import { svuotaDestinazioneInAttesa } from '@/servizi/aperturaNotifiche';
+import { svuotaConsenso } from '@/servizi/consenso';
+import { disattivaDispositivo } from '@/servizi/dispositivo';
 import { svuotaPrenotazioneInMemoria } from '@/servizi/prenotazione';
 import { svuotaRacconta } from '@/servizi/racconta';
 import { svuotaAutoriInMemoria } from '@/servizi/diario';
@@ -59,6 +62,8 @@ export async function richiediRecupero(email: string): Promise<Esito> {
  * locali (memoria, portachiavi dello stato, file delle copie locali di diario e revisioni). Se la revoca globale non riesce (es. offline), la sessione locale viene comunque chiusa.
  */
 export async function esci(): Promise<{ revocaGlobale: boolean }> {
+  // Step 6: la riga di questo telefono si disattiva (motivo logout) finché la sessione può ancora scrivere.
+  await disattivaDispositivo('logout');
   let revocaGlobale = true;
   try {
     const { error } = await supabase.auth.signOut({ scope: 'global' });
@@ -75,6 +80,8 @@ export async function esci(): Promise<{ revocaGlobale: boolean }> {
   svuotaAccountInMemoria();
   svuotaPrenotazioneInMemoria();
   svuotaRacconta();
+  svuotaConsenso();
+  svuotaDestinazioneInAttesa();
   await svuotaNotifiche();
   await svuotaPiano();
   svuotaRicette();
