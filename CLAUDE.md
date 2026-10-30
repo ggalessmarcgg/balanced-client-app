@@ -686,7 +686,15 @@ npx expo install --fix                   # riallinea versioni alla SDK
   per telefono; "Salta" (pagine 1–3) → pagina 4; pagina 4 "Accetto" scrive `granted` e passa alla 5 (senza rete resta con la
   Notifica breve), "Non ora" prosegue senza scrivere, "Informativa" apre l'informativa privacy; pagina 5 "Attiva le notifiche"
   chiede il permesso di sistema (dopo le categorie) e aggiorna la riga del telefono, "Più tardi" prosegue. Le anteprime delle
-  pagine 2 e 4 sono le schermate vere ridotte all'84 % dentro una card di 380 (`Anteprime.tsx`), la 3 è la Card revisione Nuova.
+  pagine 2 e 4 sono le schermate vere ridotte all'84 % dentro una card di 380 (`Anteprime.tsx`), la 3 è la Card revisione Nuova
+  con foto e nome della nutrizionista del cliente (iniziali senza foto, `autoreRevisione`). **Correzioni del 31/10/2026**: le
+  tacche sono l'`IndicatoreAvanzamento` del diario con `larghezzaAttivo="doppia"` (attiva lunga il doppio, Figma 586:4923) e la
+  stessa animazione di 300 ms ease-out; nelle pagine 4 e 5 "Salta" non c'è e le tacche occupano tutta la larghezza: lo spazio
+  del pulsante (misurato una volta, poi a larghezza fissa così il testo non va a capo) si anima a zero insieme alla dissolvenza,
+  niente animazione con "Riduci movimento". L'illustrazione non ha più `overflow: hidden`: con poco spazio (schermi bassi, testo
+  di sistema ingrandito) il titolo centrato della pagina 1 veniva tagliato sopra e sotto; lo spazio extra di `Testo` ora segue la
+  scala dei font del sistema (`PixelRatio.getFontScale`). Verifica dei titoli: `/sviluppo/titoli` ha anche i cinque titoli del
+  carosello; strisce dell'allungamento delle tacche in `step6-confronti/tacche-*.png`.
 - Consenso al primo uso: `src/ui/consenso/ConsensoAI.tsx` (`CardConsensoAI` dentro i pannelli Sostituisci e Ricetta al posto del
   contenuto — stato `consenso` degli hook `useSostituzione` / `useRicette`: "Trova" senza consenso valido o risposta 403
   `consenso_mancante` → card; "Accetto" scrive e fa partire o ripetere la chiamata; `PannelloConsensoAI` sopra Racconta, "Non ora"

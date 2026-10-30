@@ -1,4 +1,4 @@
-import { Platform, Text, type TextProps } from 'react-native';
+import { PixelRatio, Platform, Text, type TextProps } from 'react-native';
 
 import { colori, testi, type NomeStileTesto } from '@/ui/theme';
 import { correzioneVerticale, correzioneVerticaleAndroid } from '@/ui/theme/testo-correzioni';
@@ -20,10 +20,14 @@ export type TestoProps = TextProps & {
 // compensato da margini negativi uguali: il layout non cambia, i glifi restano visibili.
 const ALTEZZA_NATURALE_EM = 1.35;
 
+/**
+ * Spazio in più sopra e sotto, in punti già scalati: con il testo ingrandito dal sistema (Dimensione testo, scala dei
+ * font) corpo e interlinea crescono ma il padding no, e i glifi tornavano a essere tagliati (step 6, 31/10/2026).
+ */
 function spazioExtra(stile: NomeStileTesto): number {
   const { fontSize, lineHeight } = testi[stile] as { fontSize: number; lineHeight?: number };
   if (lineHeight === undefined) return 0;
-  return Math.max(0, Math.ceil(fontSize * ALTEZZA_NATURALE_EM - lineHeight));
+  return Math.max(0, Math.ceil((fontSize * ALTEZZA_NATURALE_EM - lineHeight) * PixelRatio.getFontScale()));
 }
 
 /**

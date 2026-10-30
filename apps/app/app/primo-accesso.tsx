@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react';
 
 import { URL_PRIVACY } from '@/core/account/account';
 import { PAGINA, riduci, type EventoCarosello } from '@/core/primoAccesso/carosello';
+import { autoreRevisione, type AutoreRevisione } from '@/core/revisioni/autore';
 import { apriPaginaWeb } from '@/servizi/account';
 import { registraConsensoAI } from '@/servizi/consenso';
 import { aggiornaPermessoDispositivo } from '@/servizi/dispositivo';
@@ -23,10 +24,10 @@ const TESTO_ERRORE_CONSENSO = 'Non siamo riusciti a salvare il consenso. Riprova
 export default function RottaPrimoAccesso() {
   const stato = statoCorrente();
   if (!stato || !('profilo' in stato)) return <Redirect href="/" />;
-  return <PrimoAccesso clientId={stato.profilo.clientId} rottaFinale={rottaPerStato(stato.codice)} />;
+  return <PrimoAccesso clientId={stato.profilo.clientId} nutrizionista={autoreRevisione(null, stato.profilo.nutrizionista)} rottaFinale={rottaPerStato(stato.codice)} />;
 }
 
-function PrimoAccesso({ clientId, rottaFinale }: { clientId: string; rottaFinale: string }) {
+function PrimoAccesso({ clientId, nutrizionista, rottaFinale }: { clientId: string; nutrizionista: AutoreRevisione | null; rottaFinale: string }) {
   const router = useRouter();
   const [pagina, setPagina] = useState<number>(PAGINA.benvenuto);
   const [accettoInCorso, setAccettoInCorso] = useState(false);
@@ -73,6 +74,7 @@ function PrimoAccesso({ clientId, rottaFinale }: { clientId: string; rottaFinale
   return (
     <SchermataPrimoAccesso
       pagina={pagina}
+      nutrizionista={nutrizionista}
       onAvanti={() => applica('avanti')}
       onSalta={() => applica('salta')}
       onAccetto={() => applica('accetto')}

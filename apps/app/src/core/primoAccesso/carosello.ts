@@ -47,9 +47,9 @@ export const TESTI_CAROSELLO = {
   avanti: 'Avanti',
   attiva: 'Attiva le notifiche',
   piuTardi: 'Più tardi',
-  /** Notifiche di esempio della pagina 5 (Figma 586:5190 e seguenti). */
+  /** Notifiche di esempio della pagina 5 (Figma 586:5190 e seguenti, testi del 31/10/2026 = titoli delle push). */
   mittente: 'Balanced · ora',
-  notificheEsempio: ['Nuovo commento della nutrizionista', 'Leggi la tua revisione', 'Il tuo piano alimentare è pronto!'],
+  notificheEsempio: ['Nuovo commento sul tuo diario', 'La tua revisione è pronta', 'Il tuo piano è pronto'],
 } as const;
 
 /** Chiave nel portachiavi (per telefono, resta dopo "Esci" come i tutorial) e versione del carosello. */
