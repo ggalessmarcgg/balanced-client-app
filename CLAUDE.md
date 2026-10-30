@@ -659,6 +659,55 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (dati sintetici, nessun server; `piano-reale` usa le ricette vere); esiti dei confronti in
   `~/Desktop/censimenti-app/step9-confronti-ricette/` (`strumenti/confronto-step9-ricette.sh`).
 
+## Notifiche push, carosello del primo accesso e consenso AI (step 6, lotto dell'app)
+
+- Riferimenti: contratto `~/Desktop/balanced-client-agents/docs/contratti/contratto-notifiche-v0_2.md`, server
+  `~/Desktop/balanced-client-agents/docs/server-notifiche.md` (tipi, testi, `data` della push, id delle categorie Android),
+  censimento `~/Desktop/censimenti-app/step6-censimento-notifiche.md`. Tabelle `client_devices` e `client_consents` (migrazioni
+  `20261029224322` e `20261029224353` del repo degli agenti, RLS per il cliente): **l'app scrive solo le proprie righe** con la
+  sessione del cliente (telefoni: lettura, inserimento, aggiornamento, mai cancellazioni; consensi: lettura e inserimento).
+- Logica pura in `src/core/notifiche/push.ts` (categorie Android `nutrizionista` / `promemoria` con gli id del server,
+  lettura dei `data` della push, tipo → destinazione del contratto §2, scheda di partenza e rotta), `src/core/notifiche/dispositivo.ts`
+  (righe di `client_devices`, azione in Account per permesso), `src/core/consenso/consenso.ts` (`ai_features`, `text_version`
+  `v1`, valido se l'ultima riga è `granted`, testi del pannello per funzione), `src/core/primoAccesso/carosello.ts` (macchina a
+  stati delle 5 pagine, testi di Figma 586:4905 … 586:5154).
+- Servizi: `src/servizi/notifichePush.ts` (**unico import di expo-notifications**: banner anche con l'app aperta, categorie create
+  prima della richiesta del permesso, permesso, codice FCM con `getDevicePushTokenAsync` — mai il codice push di Expo —, ascolto,
+  notifiche locali di prova solo in `__DEV__`), `dispositivo.ts` (riga del telefono creata o aggiornata all'avvio da
+  `app/index.tsx` con permesso, versioni, modello, ultimo accesso; ritrovata per `installation_id` nel portachiavi
+  `balanced.installazione` o per codice; "Esci" la disattiva con motivo `logout` **prima** del signOut; il permesso cambiato si
+  riscrive da solo; senza codice — iPhone senza credenziali Apple, simulatore — nessuna scrittura), `consenso.ts` (ultima riga
+  in memoria, letta all'avvio; `registraConsensoAI(clientId, 'granted' | 'revoked')`), `primoAccesso.ts` ("visto" nel portachiavi
+  `balanced.primo-accesso`, per telefono, resta dopo "Esci"), `aperturaNotifiche.ts` (ascolto avviato dal layout radice; la
+  destinazione di una notifica toccata ad app chiusa si conserva finché il layout `(abbonato)` non è montato; apertura = chiusura
+  delle pagine sopra le schede, `replace` della scheda di partenza e `push` della pagina, così "indietro" torna alla scheda; con
+  l'app aperta all'arrivo si aggiornano campanella e pallino di Revisioni), hook `useConsensoAI.ts` e `usePermessoNotifiche.ts`.
+- Carosello (`app/primo-accesso.tsx`, `src/ui/primoAccesso/`): dopo la lettura dello stato, per ogni cliente con profilo, una volta
+  per telefono; "Salta" (pagine 1–3) → pagina 4; pagina 4 "Accetto" scrive `granted` e passa alla 5 (senza rete resta con la
+  Notifica breve), "Non ora" prosegue senza scrivere, "Informativa" apre l'informativa privacy; pagina 5 "Attiva le notifiche"
+  chiede il permesso di sistema (dopo le categorie) e aggiorna la riga del telefono, "Più tardi" prosegue. Le anteprime delle
+  pagine 2 e 4 sono le schermate vere ridotte all'84 % dentro una card di 380 (`Anteprime.tsx`), la 3 è la Card revisione Nuova.
+- Consenso al primo uso: `src/ui/consenso/ConsensoAI.tsx` (`CardConsensoAI` dentro i pannelli Sostituisci e Ricetta al posto del
+  contenuto — stato `consenso` degli hook `useSostituzione` / `useRicette`: "Trova" senza consenso valido o risposta 403
+  `consenso_mancante` → card; "Accetto" scrive e fa partire o ripetere la chiamata; `PannelloConsensoAI` sopra Racconta, "Non ora"
+  torna a Oggi). I codici `consenso_mancante` → esito `consensoMancante` e `consenso_non_verificabile` → `riprovabile` stanno nei
+  `server.ts` di sostituzione, ricette e racconta (e in `compila.ts`); in Racconta l'audio resta per il "riprova".
+  Il consenso del diario vocale salvato solo sul telefono è stato tolto (la chiave vecchia si cancella all'apertura) e Racconta · 2
+  è solo la richiesta del permesso del microfono (testo di Figma 459:676).
+- Account: card Notifiche con Messaggio + "Attiva le notifiche" (permesso da chiedere) o "Apri le impostazioni" (negato senza
+  poter richiedere), interruttore "Funzioni con intelligenza artificiale" in Privacy e dati (prima riga; `revoked` / `granted`).
+  Campanella: tipo `plan_sent` → "Il tuo piano è pronto" / "<Nome> ha preparato il tuo piano alimentare." → Piano.
+- Configurazione nativa: plugin `expo-notifications` in `app.json` (icona `assets/notifica-android.png` dal componente Figma
+  831:8741, sagoma bianca 96 × 96 generata da `render.swift` sul Mac; colore `#347F75` = `azione/primaria`, unico valore scritto a
+  mano perché `app.json` non legge i token; categoria predefinita `nutrizionista`), `android.googleServicesFile` =
+  `google-services.json` (in `apps/app/`, **ignorato da git**), `expo-device` per modello e versione del sistema. Su iOS il plugin
+  aggiunge l'entitlement `aps-environment = development` senza credenziali: predisposizione, nessuna push finché non c'è
+  l'account Apple. Dopo le modifiche: `npx expo prebuild -p android` / `-p ios` e nuova build di sviluppo.
+- Prove: `/sviluppo/notifiche-prova` (solo `__DEV__`) programma notifiche locali con gli stessi `data` del server per ogni tipo,
+  mostra permesso, codice, riga del telefono, consenso e destinazione in attesa, azzera il carosello. Pagina degli stati:
+  `/sviluppo/stati?stato=primo-accesso-1|…|primo-accesso-5|racconta-consenso|piano-4.6-sostituzione-consenso|piano-5.9-ricetta-consenso|account-2-notifiche-disattivate|account-3-notifiche-negate|account-1|menu-2-notifiche`;
+  esiti dei confronti in `~/Desktop/censimenti-app/step6-confronti/` (`strumenti/confronto-step6.sh`).
+
 ## Android (verifica del 29/10/2026 e lotto 1 di correzioni del 30/10/2026)
 
 - Strumenti sul Mac: OpenJDK 17 (formula Homebrew `openjdk@17`, la cask Zulu chiede sudo) e SDK da riga di comando in

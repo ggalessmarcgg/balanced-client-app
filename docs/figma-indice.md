@@ -9,7 +9,7 @@ Link diretto a un nodo: `https://www.figma.com/design/gEx2IMz69sIuUnOYkLBjcf/Cli
 | Pagina | node-id | Contenuto |
 |---|---|---|
 | 🧱 Foundations · App nativa | `413:2` | frame `413:3` (foundations base, swatch collegati alle variabili), frame `414:2` (adattamenti nativi, con le sezioni aggiunte il 18/10/2026: Titoli di pagina `646:38`, Scala delle opacità `646:41`, Barra di navigazione e barra superiore `646:44`, Pulizia `646:47`), componenti Schermo iOS `414:29`, Schermo Android `414:34`, Barra di stato iOS `437:2`, Indicatore home iOS `437:18`, Barra di stato Android `437:20`, Indicatore gesti Android `437:28` |
-| 🧩 Componenti · App nativa | `418:2` | 104 componenti dopo la pulizia del 18/10/2026 (61 icone con schema `Icona / <misura> / <nome>`, 43 di interfaccia). Nuovi: Logo `625:254`, Barra superiore `625:382`, Separatore `625:383`, Card nutrizionista `638:435`, Icona / 20 / Link `657:397` e Carta `657:400`; Intestazione ora set `638:416` (variante App `419:105`), Avviso connessione set `638:410`; eliminati Riga pasto, Riga pasto/Compilato, Giorno prenotazione. Dettagli in `docs/figma-pulizia.md` |
+| 🧩 Componenti · App nativa | `418:2` | 104 componenti dopo la pulizia del 18/10/2026 (61 icone con schema `Icona / <misura> / <nome>`, 43 di interfaccia). Nuovi: Logo `625:254`, Barra superiore `625:382`, Separatore `625:383`, Card nutrizionista `638:435`, Icona / 20 / Link `657:397` e Carta `657:400`; Intestazione ora set `638:416` (variante App `419:105`), Avviso connessione set `638:410`; eliminati Riga pasto, Riga pasto/Compilato, Giorno prenotazione. Dettagli in `docs/figma-pulizia.md`. Aggiunti il 30/10/2026 (step 6): Icona notifica Android `831:8741` (sagoma del logo bianca su trasparente, 96 × 96), Riga elenco · consenso AI `831:8330` (in Account · 1 `499:2145`, Privacy e dati) |
 | 📱 App iOS Android | `414:39` | 13 sezioni, 105 schermate (frame 393 di larghezza) |
 | 🧱 Foundations (funnel web, vecchia) | `5:8` | non usata dall'app |
 
@@ -110,7 +110,8 @@ Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione sen
 | Schermata | node-id | Altezza |
 |---|---|---|
 | Account · 1 · Profilo | `499:2145` | 1818 |
-| Account · 2 · Notifiche disattivate | `492:3408` | 1908 |
+| Account · 2 · Notifiche disattivate (card Notifiche `492:3556`, Messaggio + "Attiva le notifiche") | `492:3408` | 1908 |
+| Account · 3 · Notifiche negate dal sistema ("Apri le impostazioni", aggiunta il 30/10/2026) | `831:8335` | 1908 |
 | Account · 3 · Elimina account · avviso | `499:2568` | 852 |
 | Account · 4 · Elimina account · conferma | `499:2709` | 852 |
 
@@ -139,6 +140,7 @@ Componenti usati: Pulsante registrazione `458:161` (Pronto, In registrazione sen
 | Piano · 2 · Piano variabile | `527:3070` | 1087 |
 | Piano · 3 · Piano in elaborazione | `527:3174` | 852 |
 | Piano · 4 · Sostituzione · avvio | `531:3086` | 852 |
+| Piano · 4.6 · Sostituzione · consenso AI al primo uso (aggiunta il 30/10/2026; pannello `831:8551`) | `831:8486` | 852 |
 | Piano · 4.1 · Sostituzione · ricerca in corso | `531:3232` | 852 |
 | Piano · 4.2 · Sostituzione · alternative | `531:3374` | 852 |
 | Piano · 4.3 · Sostituzione · nessuna alternativa | `531:3528` | 852 |
@@ -200,7 +202,7 @@ Tutorial · 4, 5 e 6 aggiunti il 23/10/2026 (step 10): schema comune delle scher
 | Primo accesso · 1 · Benvenuto | `586:4905` | 852 |
 | Primo accesso · 2 · Diario | `586:4941` | 852 |
 | Primo accesso · 3 · Commenti e revisioni | `586:4995` | 852 |
-| Primo accesso · 4 · Piano e AI | `586:5043` | 852 |
+| Primo accesso · 4 · AI e consenso (testo del 30/10/2026, consenso AI `830:8484`) | `586:5043` | 852 |
 | Primo accesso · 5 · Notifiche | `586:5154` | 852 |
 | Tutorial · 1 · Piano · sostituzione | `586:5457` | 852 |
 | Tutorial · 2 · Piano · ricette | `586:5598` | 852 |
