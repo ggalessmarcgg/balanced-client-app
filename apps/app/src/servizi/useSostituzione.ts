@@ -3,7 +3,11 @@
 // con la Notifica breve) e tutorial della prima visita (una volta per account, nel portachiavi).
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { URL_PRIVACY } from '@/core/account/account';
+import type { ConsensoPannello } from '@/core/consenso/consenso';
 import { NOTIFICA_PIANO_AGGIORNATO, riduci, STATO_CHIUSO, type EventoPannello, type RigaScelta, type StatoPannello } from '@/core/sostituzione/pannello';
+import { apriPaginaWeb } from '@/servizi/account';
+import { consensoAIValido, registraConsensoAI } from '@/servizi/consenso';
 import { leggiPiano } from '@/servizi/piano';
 import { segnaTutorialPianoVisto, trovaAlternative, tutorialPianoVisto, type PassoTutorialPiano, type TutorialPianoVisto } from '@/servizi/sostituzione';
 
@@ -17,9 +21,13 @@ export type AzioniSostituzione = {
 
 export type NotificaPiano = { chiave: number; testo: string; tipo: 'conferma' | 'errore' };
 
-export function useSostituzione(clientId: string, onPianoRiletto?: () => void): { stato: StatoPannello; azioni: AzioniSostituzione; notifica: NotificaPiano | null; chiudiNotifica: () => void } {
+export function useSostituzione(clientId: string, onPianoRiletto?: () => void): { stato: StatoPannello; azioni: AzioniSostituzione; notifica: NotificaPiano | null; chiudiNotifica: () => void; consenso: ConsensoPannello } {
   const [stato, setStato] = useState<StatoPannello>(STATO_CHIUSO);
   const [notifica, setNotifica] = useState<NotificaPiano | null>(null);
+  // Consenso alle funzioni AI (step 6): "Trova alternative" senza consenso valido mostra la card al posto del campo;
+  // lo stesso se il server risponde consenso_mancante. Dopo "Accetto" la chiamata parte (o si ripete) da sola.
+  const [consensoRichiesto, setConsensoRichiesto] = useState(false);
+  const [consensoInCorso, setConsensoInCorso] = useState(false);
   const statoCorrente = useRef<StatoPannello>(STATO_CHIUSO);
   const prossimaRichiesta = useRef(1);
   const montato = useRef(true);
@@ -42,6 +50,7 @@ export function useSostituzione(clientId: string, onPianoRiletto?: () => void): 
       const { stato: nuovo, effetti } = riduci(statoCorrente.current, evento, prossimaRichiesta.current);
       statoCorrente.current = nuovo;
       setStato(nuovo);
+      if (evento.tipo === 'risposta' && evento.esito.tipo === 'errore' && evento.esito.errore.esito === 'consensoMancante') setConsensoRichiesto(true);
       for (const effetto of effetti) {
         switch (effetto.tipo) {
           case 'chiama':
@@ -66,14 +75,42 @@ export function useSostituzione(clientId: string, onPianoRiletto?: () => void): 
   }, [invia]);
 
   const azioni: AzioniSostituzione = {
-    apri: useCallback((riga: RigaScelta) => invia({ tipo: 'apri', riga }), [invia]),
+    apri: useCallback(
+      (riga: RigaScelta) => {
+        setConsensoRichiesto(false);
+        invia({ tipo: 'apri', riga });
+      },
+      [invia],
+    ),
     chiudi: useCallback(() => invia({ tipo: 'chiudi' }), [invia]),
     scrivi: useCallback((testo: string) => invia({ tipo: 'scrivi', testo }), [invia]),
-    trova: useCallback(() => invia({ tipo: 'trova' }), [invia]),
+    trova: useCallback(() => {
+      if (consensoAIValido(clientId) === false) setConsensoRichiesto(true);
+      else invia({ tipo: 'trova' });
+    }, [clientId, invia]),
     riprova: useCallback(() => invia({ tipo: 'riprova' }), [invia]),
   };
+  const accetta = useCallback(() => {
+    setConsensoInCorso(true);
+    registraConsensoAI(clientId, 'granted')
+      .then((ok) => {
+        if (!montato.current || !ok) return;
+        setConsensoRichiesto(false);
+        const attuale = statoCorrente.current;
+        if (attuale.tipo === 'errore') invia({ tipo: 'riprova' });
+        else if (attuale.tipo === 'avvio') invia({ tipo: 'trova' });
+      })
+      .finally(() => {
+        if (montato.current) setConsensoInCorso(false);
+      });
+  }, [clientId, invia]);
+  const nonOra = useCallback(() => {
+    setConsensoRichiesto(false);
+    invia({ tipo: 'chiudi' });
+  }, [invia]);
+  const informativa = useCallback(() => void apriPaginaWeb(URL_PRIVACY), []);
   const chiudiNotifica = useCallback(() => setNotifica(null), []);
-  return { stato, azioni, notifica, chiudiNotifica };
+  return { stato, azioni, notifica, chiudiNotifica, consenso: { richiesto: consensoRichiesto, inCorso: consensoInCorso, accetta, nonOra, informativa } };
 }
 
 /**

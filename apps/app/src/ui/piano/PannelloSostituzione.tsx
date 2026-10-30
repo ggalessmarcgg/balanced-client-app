@@ -5,8 +5,10 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { testiEsito, type StatoPannello } from '@/core/sostituzione/pannello';
 import type { Alternativa, Spiegazione } from '@/core/sostituzione/server';
 import { CARATTERI_MASSIMI_IN_CASA } from '@/core/sostituzione/server';
+import type { ConsensoPannello } from '@/core/consenso/consenso';
 import type { AzioniSostituzione } from '@/servizi/useSostituzione';
 import { CampoTesto } from '@/ui/CampoTesto';
+import { CardConsensoAI } from '@/ui/consenso/ConsensoAI';
 import { Icona } from '@/ui/icone';
 import { PannelloDalBasso } from '@/ui/PannelloDalBasso';
 import { EtichettaAI } from '@/ui/piano/EtichettaAI';
@@ -34,6 +36,8 @@ export type PannelloSostituzioneProps = {
   azioni: AzioniSostituzione;
   /** "La tua nutrizionista" (4.3 e 4.4): chiude il pannello e apre la pagina del menu. */
   onNutrizionista: () => void;
+  /** Consenso alle funzioni AI al primo uso (4.6 831:8486, step 6): quando è richiesto, la card prende il posto del contenuto. */
+  consenso?: ConsensoPannello;
 };
 
 /**
@@ -42,7 +46,7 @@ export type PannelloSostituzioneProps = {
  * AI, l'alimento come scritto nel piano in Heading, il contenuto dello stato e in fondo la nota in Caption centrata.
  * Si chiude con la maniglia, il velo e il gesto; ogni riapertura riparte dall'avvio (contratto §1).
  */
-export function PannelloSostituzione({ stato, azioni, onNutrizionista }: PannelloSostituzioneProps) {
+export function PannelloSostituzione({ stato, azioni, onNutrizionista, consenso }: PannelloSostituzioneProps) {
   return (
     <PannelloDalBasso aperto={stato.tipo !== 'chiuso'} onChiudi={azioni.chiudi} etichetta="Sostituisci un alimento" spaziatura={spazio[24]}>
       {stato.tipo !== 'chiuso' && (
@@ -51,7 +55,11 @@ export function PannelloSostituzione({ stato, azioni, onNutrizionista }: Pannell
           <Testo stile="heading" accessibilityRole="header">
             {stato.riga.testo}
           </Testo>
-          <Contenuto stato={stato} azioni={azioni} onNutrizionista={onNutrizionista} />
+          {consenso?.richiesto ? (
+            <CardConsensoAI funzione="sostituzione" onAccetto={consenso.accetta} onNonOra={consenso.nonOra} onInformativa={consenso.informativa} inCorso={consenso.inCorso} />
+          ) : (
+            <Contenuto stato={stato} azioni={azioni} onNutrizionista={onNutrizionista} />
+          )}
         </>
       )}
     </PannelloDalBasso>

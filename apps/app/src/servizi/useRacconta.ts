@@ -15,7 +15,7 @@ import { dataOggiRoma } from '@/core/diario/data';
 import { nomeFileRegistrazione } from '@/core/racconta/attesa';
 import { INTERVALLO_LETTURA_MS, LIMITE_REGISTRAZIONE_MS, QUALITA_VOCE } from '@/core/racconta/audio';
 import { uscitaBloccata, uscitaDaConfermare, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
-import { avviaRacconta, cancellaAudio, collegaRegistratore, interrompiRacconta, invia, registraConsenso, segnaTutorialVisto, statoRacconta, useMemoriaRacconta, type PuntoTutorial } from '@/servizi/racconta';
+import { avviaRacconta, cancellaAudio, collegaRegistratore, interrompiRacconta, invia, segnaTutorialVisto, statoRacconta, useMemoriaRacconta, type PuntoTutorial } from '@/servizi/racconta';
 
 /** Ogni quanto si riprova la trascrizione mentre si è senza rete (oltre che al ritorno in primo piano). */
 const INTERVALLO_RIPROVA_OFFLINE_MS = 15_000;
@@ -142,7 +142,6 @@ export function useRacconta(clientId: string): { stato: StatoRacconta; tutorial:
     () =>
       collegaRegistratore({
         chiediPermesso: async () => {
-          await registraConsenso();
           const p = await AudioModule.requestRecordingPermissionsAsync();
           return p.granted;
         },

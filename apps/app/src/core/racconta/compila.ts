@@ -116,6 +116,8 @@ export type EsitoCompilazione = { tipo: 'diario'; diario: Diario } | { tipo: 'no
 const ESITO_PER_CODICE: Record<string, EsitoErrore> = {
   token_mancante: 'sessione',
   token_non_valido: 'sessione',
+  consenso_mancante: 'consensoMancante',
+  consenso_non_verificabile: 'riprovabile',
   cliente_non_trovato: 'nonDisponibile',
   abbonamento_non_attivo: 'nonDisponibile',
   identita_non_verificabile: 'riprovabile',
@@ -175,5 +177,8 @@ export function testiErroreCompilazione(errore: ErroreTrascrizione): { messaggio
     case 'definitivo':
       if (errore.codice === 'gia_condiviso') return { messaggio: 'La giornata di oggi è già stata condivisa.', corpo: 'Il diario condiviso non si può più cambiare da qui.', riprova: false, riferimento: null };
       return { messaggio: 'Non siamo riusciti a preparare il diario.', corpo: 'Puoi sempre scrivere il tuo diario. Se succede ancora, scrivi all’assistenza indicando il riferimento qui sotto.', riprova: false, riferimento };
+    case 'consensoMancante':
+      // Di norma non si vede: la schermata mostra il pannello del consenso e, dopo "Accetto", ripete la compilazione.
+      return { messaggio: 'Serve il tuo consenso alle funzioni con intelligenza artificiale.', corpo: 'Il tuo racconto è salvato. Accetta e riprova.', riprova: true, riferimento };
   }
 }

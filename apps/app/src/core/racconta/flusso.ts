@@ -202,7 +202,8 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
       const { audio } = stato;
       const { errore } = evento;
       if (errore.esito === 'rete') return resta({ tipo: 'senzaConnessione', audio, inRiprova: false });
-      if (errore.esito === 'riprovabile') return resta({ tipo: 'errore', audio, errore });
+      // Senza consenso alle funzioni AI (step 6) l'audio resta: dopo "Accetto" si ripete con "riprova".
+      if (errore.esito === 'riprovabile' || errore.esito === 'consensoMancante') return resta({ tipo: 'errore', audio, errore });
       // Esiti definitivi: l'audio non serve più.
       return { stato: { tipo: 'errore', audio: null, errore }, effetti: [{ tipo: 'cancellaAudio', uri: audio.uri }] };
     }
@@ -215,7 +216,7 @@ export function riduci(stato: StatoRacconta, evento: EventoRacconta): Transizion
         return trascrivi(stato.audio);
       }
       if (stato.tipo === 'errore' && stato.audio) return trascrivi(stato.audio);
-      if (stato.tipo === 'erroreCompilazione' && (stato.errore.esito === 'riprovabile' || stato.errore.esito === 'rete')) return compila(stato.racconto);
+      if (stato.tipo === 'erroreCompilazione' && (stato.errore.esito === 'riprovabile' || stato.errore.esito === 'rete' || stato.errore.esito === 'consensoMancante')) return compila(stato.racconto);
       return resta(stato);
     }
 

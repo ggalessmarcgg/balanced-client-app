@@ -41,7 +41,7 @@ export type RispostaAlternative =
  * - nonDisponibile: cliente non trovato o abbonamento non attivo (come il diario vocale);
  * - definitivo: richiesta che il server non può accettare (errori di sviluppo): pannello d'errore senza "Riprova".
  */
-export type EsitoErroreSostituzione = 'rete' | 'riprovabile' | 'rigaNonDisponibile' | 'inCasaTroppoLungo' | 'sessione' | 'nonDisponibile' | 'definitivo';
+export type EsitoErroreSostituzione = 'rete' | 'riprovabile' | 'rigaNonDisponibile' | 'inCasaTroppoLungo' | 'sessione' | 'nonDisponibile' | 'consensoMancante' | 'definitivo';
 
 export type ErroreSostituzione = {
   esito: EsitoErroreSostituzione;
@@ -57,6 +57,9 @@ export type EsitoSostituzione = { tipo: 'ok'; risposta: RispostaAlternative } | 
 const ESITO_PER_CODICE: Record<string, EsitoErroreSostituzione> = {
   token_mancante: 'sessione',
   token_non_valido: 'sessione',
+  // Consenso alle funzioni AI (step 6, server-notifiche.md §8): senza consenso il pannello del consenso, poi si ripete.
+  consenso_mancante: 'consensoMancante',
+  consenso_non_verificabile: 'riprovabile',
   cliente_non_trovato: 'nonDisponibile',
   abbonamento_non_attivo: 'nonDisponibile',
   identita_non_verificabile: 'riprovabile',

@@ -16,7 +16,7 @@ import { corpoCompilazione, erroreCompilazioneApp, interpretaRispostaCompilazion
 import { riduci, ripartiDallAvvio, STATO_INIZIALE, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
 import { erroreApp, interpretaRispostaTrascrizione, intestazioniTrascrizione, nuovoIdRichiesta, PERCORSO_TRASCRIVI, TEMPO_MASSIMO_TRASCRIZIONE_MS, type EsitoTrascrizione } from '@/core/racconta/server';
 import { tokenAccesso, URL_AGENTI } from '@/servizi/agenti';
-import { leggi, scrivi } from '@/servizi/archivio';
+import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 import { salvaBozzaInAttesa } from '@/servizi/giornate';
 import { aggiornaMemoria, memoriaDiario, persistiMemoria } from '@/servizi/memoriaDiario';
@@ -190,18 +190,13 @@ export async function avviaRacconta(clientId: string, permesso: () => Promise<Pe
     impostaStato(STATO_INIZIALE);
   }
   if (stato.tipo !== 'avvio') return;
-  const [audioInAttesa, testoInAttesa, statoPermesso, consenso, visti] = await Promise.all([
-    leggiAudioInAttesa(clientId, oggi),
-    leggiTestoInAttesa(clientId, oggi),
-    permesso(),
-    consensoDato(clientId),
-    leggiTutorialVisti(clientId),
-  ]);
+  const [audioInAttesa, testoInAttesa, statoPermesso, visti] = await Promise.all([leggiAudioInAttesa(clientId, oggi), leggiTestoInAttesa(clientId, oggi), permesso(), leggiTutorialVisti(clientId)]);
   if (stato.tipo !== 'avvio' || clienteCorrente !== clientId) return;
   tutorialVisti = visti;
-  // Senza consenso registrato per questo account la schermata del consenso compare anche se il sistema ha già concesso il permesso.
-  const effettivo: PermessoMicrofono = statoPermesso === 'concesso' && !consenso ? 'daChiedere' : statoPermesso;
-  invia({ tipo: 'avviato', permesso: effettivo, audioInAttesa, testoInAttesa });
+  // Dallo step 6 la schermata 2 è solo la richiesta del permesso del microfono: il consenso alle funzioni AI vive nel
+  // database (servizi/consenso.ts) e il vecchio consenso salvato sul telefono si cancella.
+  void rimuovi(`${PREFISSO_CONSENSO_VECCHIO}.${clientId}`).catch(() => {});
+  invia({ tipo: 'avviato', permesso: statoPermesso, audioInAttesa, testoInAttesa });
 }
 
 /**
@@ -223,24 +218,11 @@ export function svuotaRacconta(): void {
   notifica();
 }
 
-// ---- Consenso e tutorial (portachiavi, per account: restano anche dopo l'uscita, un altro account li rifà) -----------
+// ---- Tutorial (portachiavi, per account: resta anche dopo l'uscita, un altro account lo rifà) ------------------------
 
-const PREFISSO_CONSENSO = 'balanced.racconta.consenso';
+/** Chiave del consenso salvato solo sul telefono fino allo step 6: si cancella all'apertura (sostituita da client_consents). */
+const PREFISSO_CONSENSO_VECCHIO = 'balanced.racconta.consenso';
 const PREFISSO_TUTORIAL = 'balanced.racconta.tutorial';
-
-export async function consensoDato(clientId: string): Promise<boolean> {
-  try {
-    return (await leggi(`${PREFISSO_CONSENSO}.${clientId}`)) !== null;
-  } catch {
-    return false;
-  }
-}
-
-/** "Consenti" vale come consenso all'uso del servizio esterno di trascrizione e dell'intelligenza artificiale, per questo account. */
-export async function registraConsenso(adesso: Date = new Date()): Promise<void> {
-  if (!clienteCorrente) return;
-  await scrivi(`${PREFISSO_CONSENSO}.${clienteCorrente}`, adesso.toISOString()).catch(() => {});
-}
 
 async function leggiTutorialVisti(clientId: string): Promise<TutorialVisti> {
   try {

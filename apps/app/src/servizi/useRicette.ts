@@ -3,9 +3,13 @@
 // Notifica breve, l'apertura della pagina della ricetta) e hook di "Le tue ricette" sullo stampo dei contenuti.
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { URL_PRIVACY } from '@/core/account/account';
+import type { ConsensoPannello } from '@/core/consenso/consenso';
 import type { ContestoRicetta, PastoScelto } from '@/core/ricette/contesto';
 import { NOTIFICA_PIANO_AGGIORNATO, riduci, STATO_CHIUSO, type EventoPannello, type RicettaPronta, type StatoPannello } from '@/core/ricette/pannello';
 import type { RicettaSalvata } from '@/core/ricette/salvate';
+import { apriPaginaWeb } from '@/servizi/account';
+import { consensoAIValido, registraConsensoAI } from '@/servizi/consenso';
 import { leggiPiano } from '@/servizi/piano';
 import { ascoltaRicettaMostrata, impostaRicettaPronta, preparaRicetta, trovaIdee } from '@/servizi/ricette';
 import { leggiRicetteSalvate, useRicetteSalvateInMemoria } from '@/servizi/ricetteSalvate';
@@ -23,7 +27,7 @@ export type AzioniRicette = {
   riprova: () => void;
 };
 
-export type Ricette = { stato: StatoPannello; azioni: AzioniRicette; notifica: NotificaPiano | null; chiudiNotifica: () => void };
+export type Ricette = { stato: StatoPannello; azioni: AzioniRicette; notifica: NotificaPiano | null; chiudiNotifica: () => void; consenso: ConsensoPannello };
 
 /** Se la pagina della ricetta non segnala la fine della transizione (evento perso), il pannello si chiude comunque dopo questo tempo. */
 const RISERVA_RICETTA_MOSTRATA_MS = 1500;
@@ -35,6 +39,10 @@ const RISERVA_RICETTA_MOSTRATA_MS = 1500;
 export function useRicette(clientId: string, onRicettaPronta: (ricetta: RicettaPronta) => void, onPianoRiletto?: () => void): Ricette {
   const [stato, setStato] = useState<StatoPannello>(STATO_CHIUSO);
   const [notifica, setNotifica] = useState<NotificaPiano | null>(null);
+  // Consenso alle funzioni AI (step 6): "Trova idee" senza consenso valido mostra la card al posto del contenuto; lo
+  // stesso se il server risponde consenso_mancante. Dopo "Accetto" la chiamata parte (o si ripete) da sola.
+  const [consensoRichiesto, setConsensoRichiesto] = useState(false);
+  const [consensoInCorso, setConsensoInCorso] = useState(false);
   const statoCorrente = useRef<StatoPannello>(STATO_CHIUSO);
   const prossimaRichiesta = useRef(1);
   const montato = useRef(true);
@@ -59,6 +67,7 @@ export function useRicette(clientId: string, onRicettaPronta: (ricetta: RicettaP
       const { stato: nuovo, effetti } = riduci(statoCorrente.current, evento, prossimaRichiesta.current);
       statoCorrente.current = nuovo;
       setStato(nuovo);
+      if ((evento.tipo === 'rispostaIdee' || evento.tipo === 'rispostaRicetta') && evento.esito.tipo === 'errore' && evento.esito.errore.esito === 'consensoMancante') setConsensoRichiesto(true);
       for (const effetto of effetti) {
         switch (effetto.tipo) {
           case 'chiamaIdee':
@@ -98,17 +107,45 @@ export function useRicette(clientId: string, onRicettaPronta: (ricetta: RicettaP
   useEffect(() => ascoltaRicettaMostrata(() => inviaRef.current({ tipo: 'ricettaMostrata' })), []);
 
   const azioni: AzioniRicette = {
-    apri: useCallback((contesto: ContestoRicetta) => invia({ tipo: 'apri', contesto }), [invia]),
+    apri: useCallback(
+      (contesto: ContestoRicetta) => {
+        setConsensoRichiesto(false);
+        invia({ tipo: 'apri', contesto });
+      },
+      [invia],
+    ),
     chiudi: useCallback(() => invia({ tipo: 'chiudi' }), [invia]),
     scegliPasto: useCallback((pasto: PastoScelto) => invia({ tipo: 'scegliPasto', pasto }), [invia]),
     scrivi: useCallback((testo: string) => invia({ tipo: 'scrivi', testo }), [invia]),
-    trova: useCallback(() => invia({ tipo: 'trova' }), [invia]),
+    trova: useCallback(() => {
+      if (consensoAIValido(clientId) === false) setConsensoRichiesto(true);
+      else invia({ tipo: 'trova' });
+    }, [clientId, invia]),
     scegliIdea: useCallback((indice: number) => invia({ tipo: 'scegliIdea', indice }), [invia]),
     vediRicetta: useCallback(() => invia({ tipo: 'vediRicetta' }), [invia]),
     riprova: useCallback(() => invia({ tipo: 'riprova' }), [invia]),
   };
+  const accetta = useCallback(() => {
+    setConsensoInCorso(true);
+    registraConsensoAI(clientId, 'granted')
+      .then((ok) => {
+        if (!montato.current || !ok) return;
+        setConsensoRichiesto(false);
+        const attuale = statoCorrente.current;
+        if (attuale.tipo === 'errore') invia({ tipo: 'riprova' });
+        else if (attuale.tipo === 'avvio') invia({ tipo: 'trova' });
+      })
+      .finally(() => {
+        if (montato.current) setConsensoInCorso(false);
+      });
+  }, [clientId, invia]);
+  const nonOra = useCallback(() => {
+    setConsensoRichiesto(false);
+    invia({ tipo: 'chiudi' });
+  }, [invia]);
+  const informativa = useCallback(() => void apriPaginaWeb(URL_PRIVACY), []);
   const chiudiNotifica = useCallback(() => setNotifica(null), []);
-  return { stato, azioni, notifica, chiudiNotifica };
+  return { stato, azioni, notifica, chiudiNotifica, consenso: { richiesto: consensoRichiesto, inCorso: consensoInCorso, accetta, nonOra, informativa } };
 }
 
 /** "Le tue ricette": lettura all'apertura e al rientro; l'elenco viene dalla memoria, che salvataggi ed eliminazioni aggiornano da soli. */

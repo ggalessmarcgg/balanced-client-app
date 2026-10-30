@@ -39,7 +39,7 @@ export function nuovoIdRichiesta(adesso: Date = new Date(), casuale: number = Ma
  * - nonDisponibile: percorso non attivo o cliente non trovato: la funzione non è disponibile;
  * - definitivo: richiesta che il server non può accettare (audio troppo lungo, formato, errore di sviluppo): si ricomincia.
  */
-export type EsitoErrore = 'rete' | 'riprovabile' | 'sessione' | 'nonDisponibile' | 'definitivo';
+export type EsitoErrore = 'rete' | 'riprovabile' | 'sessione' | 'nonDisponibile' | 'consensoMancante' | 'definitivo';
 
 export type ErroreTrascrizione = {
   esito: EsitoErrore;
@@ -56,6 +56,9 @@ export type EsitoTrascrizione = { tipo: 'ok'; testo: string; durataMs: number } 
 const ESITO_PER_CODICE: Record<string, EsitoErrore> = {
   token_mancante: 'sessione',
   token_non_valido: 'sessione',
+  // Consenso alle funzioni AI (step 6, server-notifiche.md §8): l'app mostra il pannello del consenso e ripete.
+  consenso_mancante: 'consensoMancante',
+  consenso_non_verificabile: 'riprovabile',
   cliente_non_trovato: 'nonDisponibile',
   abbonamento_non_attivo: 'nonDisponibile',
   identita_non_verificabile: 'riprovabile',
@@ -117,5 +120,8 @@ export function testiErrore(errore: ErroreTrascrizione): { messaggio: string; co
       };
     case 'rete':
       return { messaggio: 'Sei offline: il tuo racconto è salvato e lo prepariamo appena torni online.', corpo: 'La registrazione è al sicuro sul telefono. Il testo comparirà appena torni online.', riferimento: null };
+    case 'consensoMancante':
+      // Di norma non si vede: la schermata mostra il pannello del consenso e, dopo "Accetto", ripete la trascrizione.
+      return { messaggio: 'Serve il tuo consenso alle funzioni con intelligenza artificiale.', corpo: 'La registrazione è al sicuro sul telefono. Accetta e riprova.', riferimento };
   }
 }

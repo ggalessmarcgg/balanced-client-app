@@ -14,6 +14,7 @@ import Reanimated, {
   withTiming,
 } from "react-native-reanimated";
 
+import type { ConsensoPannello } from "@/core/consenso/consenso";
 import type { PianoComposto, RigaPiano } from "@/core/piano/composizione";
 import {
   giornoPreselezionato,
@@ -59,6 +60,8 @@ export type SostituzionePiano = {
   stato: StatoPannello;
   azioni: AzioniSostituzione;
   onNutrizionista: () => void;
+  /** Consenso alle funzioni AI al primo uso (step 6). */
+  consenso?: ConsensoPannello;
 };
 
 /** Pannello "Ricetta" (step 9, lotto 3): stato e azioni dall'hook useRicette; "La tua nutrizionista" chiude e apre il menu. */
@@ -69,6 +72,8 @@ export type RicettePiano = {
   /** Pagina di sviluppo: la barra dell'attesa parte già a questo punto (ms) e, se `attesaFerma`, non avanza. */
   attesaTrascorsa?: number;
   attesaFerma?: boolean;
+  /** Consenso alle funzioni AI al primo uso (step 6). */
+  consenso?: ConsensoPannello;
 };
 
 /** Tutorial del Piano a due fumetti: "1 di 2" sulla prima riga (586:5457, "Avanti"), "2 di 2" su "Ricetta" (586:5598, "Ho capito"). */
@@ -487,6 +492,7 @@ function PianoPronto({
               stato={sostituzione.stato}
               azioni={sostituzione.azioni}
               onNutrizionista={sostituzione.onNutrizionista}
+              consenso={sostituzione.consenso}
             />
           )}
           {ricette && (
@@ -496,6 +502,7 @@ function PianoPronto({
               onNutrizionista={ricette.onNutrizionista}
               attesaTrascorsa={ricette.attesaTrascorsa}
               attesaFerma={ricette.attesaFerma}
+              consenso={ricette.consenso}
             />
           )}
           {notifica && (

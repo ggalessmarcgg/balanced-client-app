@@ -53,8 +53,8 @@ function Piano({ profilo }: { profilo: Profilo }) {
   return (
     <SchermataPiano
       fase={faseSchermata}
-      sostituzione={{ stato: sostituzione.stato, azioni: sostituzione.azioni, onNutrizionista }}
-      ricette={{ stato: ricette.stato, azioni: ricette.azioni, onNutrizionista: onNutrizionistaRicette }}
+      sostituzione={{ stato: sostituzione.stato, azioni: sostituzione.azioni, onNutrizionista, consenso: sostituzione.consenso }}
+      ricette={{ stato: ricette.stato, azioni: ricette.azioni, onNutrizionista: onNutrizionistaRicette, consenso: ricette.consenso }}
       tutorial={{ passo: tutorial.passo, onAvanti: tutorial.avanti, onHoCapito: tutorial.hoCapito }}
       notifica={notifica}
       onNotificaScomparsa={chiudiNotifica}

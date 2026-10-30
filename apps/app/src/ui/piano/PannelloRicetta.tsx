@@ -3,8 +3,10 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { CARATTERI_MASSIMI_CAMPO, type Idea } from '@/core/ricette/server';
 import { puoTrovare, testiEsito, type StatoPannello } from '@/core/ricette/pannello';
+import type { ConsensoPannello } from '@/core/consenso/consenso';
 import type { AzioniRicette } from '@/servizi/useRicette';
 import { CampoTesto } from '@/ui/CampoTesto';
+import { CardConsensoAI } from '@/ui/consenso/ConsensoAI';
 import { Opzione } from '@/ui/Opzione';
 import { PannelloDalBasso } from '@/ui/PannelloDalBasso';
 import { BarraAttesa } from '@/ui/piano/BarraAttesa';
@@ -42,6 +44,8 @@ export type PannelloRicettaProps = {
   /** Prove e pagina di sviluppo: la barra dell'attesa parte già a questo punto (ms) e, se `attesaFerma`, non avanza. */
   attesaTrascorsa?: number;
   attesaFerma?: boolean;
+  /** Consenso alle funzioni AI al primo uso (step 6, stesso disegno di 831:8486): quando è richiesto, la card prende il posto del contenuto. */
+  consenso?: ConsensoPannello;
 };
 
 /**
@@ -50,7 +54,7 @@ export type PannelloRicettaProps = {
  * nessuna idea 818:8055, 5.8 errore 818:8193, 5.8.1 errore nella preparazione 826:8443): Pannello dal basso con la testata Etichetta AI,
  * poi il contenuto dello stato, gap 24. Si chiude con la maniglia, il velo e il gesto; ogni riapertura riparte dall'avvio.
  */
-export function PannelloRicetta({ stato, azioni, onNutrizionista, attesaTrascorsa, attesaFerma }: PannelloRicettaProps) {
+export function PannelloRicetta({ stato, azioni, onNutrizionista, attesaTrascorsa, attesaFerma, consenso }: PannelloRicettaProps) {
   // Da "ricettaPronta" a chiuso il pannello sparisce sotto la pagina della ricetta, che lo ha già coperto: niente scorrimento.
   // L'ultimo stato aperto è stato derivato in render (come `apertoPrecedente` nel Pannello dal basso).
   const [ultimoAperto, setUltimoAperto] = useState<StatoPannello['tipo']>('chiuso');
@@ -61,7 +65,11 @@ export function PannelloRicetta({ stato, azioni, onNutrizionista, attesaTrascors
       {stato.tipo !== 'chiuso' && (
         <>
           <EtichettaAI etichetta={TESTI_RICETTA.testata} />
-          <Contenuto stato={stato} azioni={azioni} onNutrizionista={onNutrizionista} attesaTrascorsa={attesaTrascorsa} attesaFerma={attesaFerma} />
+          {consenso?.richiesto ? (
+            <CardConsensoAI funzione="ricette" onAccetto={consenso.accetta} onNonOra={consenso.nonOra} onInformativa={consenso.informativa} inCorso={consenso.inCorso} />
+          ) : (
+            <Contenuto stato={stato} azioni={azioni} onNutrizionista={onNutrizionista} attesaTrascorsa={attesaTrascorsa} attesaFerma={attesaFerma} />
+          )}
         </>
       )}
     </PannelloDalBasso>

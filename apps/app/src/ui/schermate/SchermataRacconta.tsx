@@ -41,7 +41,8 @@ const TITOLO = 'Racconta la tua giornata';
 const TESTI = {
   permesso: {
     titolo: 'Consenti il microfono',
-    testo: 'Per creare il diario, l’audio viene trascritto da un servizio esterno e il testo viene elaborato dall’intelligenza artificiale. L’audio non viene conservato.',
+    // Dallo step 6 è solo la richiesta del permesso (Figma 459:676): il consenso alle funzioni AI vive nel database.
+    testo: 'Per raccontare la giornata a voce, Balanced ha bisogno di usare il microfono del telefono.',
   },
   microfonoDisattivato: {
     titolo: 'Il microfono è disattivato',
