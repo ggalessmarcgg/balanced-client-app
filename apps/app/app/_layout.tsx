@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { Appearance } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
+import { avviaAscoltoNotifiche } from '@/servizi/aperturaNotifiche';
 import { colori, useFontTema } from '@/ui/theme';
 
 // La schermata di avvio resta visibile finché i font del tema non sono pronti.
@@ -25,6 +26,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (fontPronti || erroreFont) SplashScreen.hideAsync();
   }, [fontPronti, erroreFont]);
+  // Notifiche push (step 6): ascolto delle notifiche ricevute e toccate, compresa quella che ha avviato l'app da chiusa.
+  useEffect(() => {
+    avviaAscoltoNotifiche();
+  }, []);
 
   if (!fontPronti && !erroreFont) return null;
 
@@ -37,6 +42,8 @@ export default function RootLayout() {
         {/* Accesso (sfondo card): login con le sue varianti e recupero password. */}
         <Stack.Screen name="accesso/index" options={{ contentStyle: { backgroundColor: colori.sfondo.card } }} />
         <Stack.Screen name="accesso/recupero" options={{ contentStyle: { backgroundColor: colori.sfondo.card }, animation: 'default' }} />
+        {/* Carosello del primo accesso (step 6): una volta per telefono, prima della schermata dello stato. */}
+        <Stack.Screen name="primo-accesso" options={{ contentStyle: { backgroundColor: colori.sfondo.card }, gestureEnabled: false }} />
         {/* Stati del cliente e app dell'abbonato. */}
         <Stack.Screen name="stato/prenotazione" />
         <Stack.Screen name="stato/prenotato" />
@@ -72,6 +79,7 @@ export default function RootLayout() {
           <Stack.Screen name="sviluppo/stati" />
           <Stack.Screen name="sviluppo/prova-accesso" />
           <Stack.Screen name="sviluppo/titoli" />
+          <Stack.Screen name="sviluppo/notifiche-prova" />
         </Stack.Protected>
       </Stack>
       <StatusBar style="dark" />
