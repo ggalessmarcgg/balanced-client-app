@@ -715,6 +715,31 @@ npx expo install --fix                   # riallinea versioni alla SDK
   mostra permesso, codice, riga del telefono, consenso e destinazione in attesa, azzera il carosello. Pagina degli stati:
   `/sviluppo/stati?stato=primo-accesso-1|…|primo-accesso-5|racconta-consenso|piano-4.6-sostituzione-consenso|piano-5.9-ricetta-consenso|account-2-notifiche-disattivate|account-3-notifiche-negate|account-1|menu-2-notifiche`;
   esiti dei confronti in `~/Desktop/censimenti-app/step6-confronti/` (`strumenti/confronto-step6.sh`).
+- **Correzioni dopo le prove del 31/10/2026** (esiti in `~/Desktop/censimenti-app/correzioni-step6/`,
+  `strumenti/confronto-correzioni-step6.sh`):
+  1. Notifica toccata che portava a Oggi senza il pannello: il segnale "layout dell'abbonato montato" era un booleano e un
+     `router.replace` sulla stessa scheda (apertura di una notifica, riga della campanella) rimonta il gruppo: il nuovo layout
+     metteva vero, lo smontaggio del vecchio rimetteva falso e da lì ogni notifica restava parcheggiata. Ora si contano le istanze
+     (`src/core/notifiche/montaggio.ts`, test del rimontaggio). Registro di sviluppo delle aperture (`registroApertura`, solo
+     `__DEV__`, ultime 40 righe) nella pagina `/sviluppo/notifiche-prova`. Riprodotto e verificato con +test4 sull'emulatore:
+     da Oggi, dalla pagina delle notifiche dopo una riga della campanella, da Piano, due notifiche ravvicinate, processo ucciso.
+     Per le prove ad app chiusa: `am force-stop` cancella gli allarmi delle notifiche programmate; usare Home + `am kill`.
+  2. Android, "g" di "giornata!" nella Card diario: verificata intera a pixel (`/sviluppo/titoli`, scale dei font 1,0 e 1,3,
+     zoom in `correzioni-step6/punto2-g-android/`); il rendering a 2,625× appiattisce l'occhiello ma non lo taglia. Nessuna
+     modifica al codice.
+  3. Indicazioni: freccia e titolo fissi, scorre solo il testo (`Pagina scorrevole={false}` + ScrollView, Figma 775:7878).
+  4. Ricetta salvata: la Notifica breve sta sopra il pulsante "Salvata" (`NotificaInBasso sopra`, Figma 818:7907).
+  5. Tutorial · 3 e · 4 di Racconta: l'elemento evidenziato è "Tocca per iniziare" + timer + pulsante (`TimerEPulsanteTutorial`),
+     il fumetto sta sopra e il timer resta leggibile; il contenitore misurato è largo tutta la riga perché su Android la copia
+     sopra il velo, larga al pixel quanto il testo, andava a capo.
+  6. Segnaposti della ricerca (Sostituisci 4.1, Ricetta 5.2): barre 160 × 16 e 240 × 12 (`RigaSegnaposto` con altezza).
+  7. **Notifiche viste quando il contenuto è visto** (unico meccanismo): all'apertura del pannello di una giornata
+     (`usePannelloGiornata.apriGiornata`) o della lettura di una revisione (`useLetturaRevisione`), da qualunque percorso (push,
+     tendina, campanella, Card settimana, Revisioni), `segnaVisteContenuto(riferimento, notificaId?)` prende dall'elenco in
+     memoria gli id non visti con lo stesso `reference_id` (`idDaSegnareViste`) e scrive **una sola** modifica
+     `viewed_at` (`.in('id', ids).is('viewed_at', null).eq('user_id')`), memoria e copia su file aggiornate subito (pallino della
+     campanella spento senza riletture); nessun id → nessuna scrittura; ad app chiusa con l'elenco non caricato vale il
+     `notifica_id` della push. Verificato: una PATCH sola nei log di PostgREST, nessuna per una giornata senza notifiche.
 
 ## Android (verifica del 29/10/2026 e lotto 1 di correzioni del 30/10/2026)
 
