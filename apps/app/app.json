@@ -27,7 +27,8 @@
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -55,6 +56,15 @@
           "recordAudioAndroid": true,
           "enableBackgroundRecording": false,
           "enableBackgroundPlayback": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notifica-android.png",
+          "color": "#347F75",
+          "defaultChannel": "nutrizionista",
+          "enableBackgroundRemoteNotifications": false
         }
       ]
     ],

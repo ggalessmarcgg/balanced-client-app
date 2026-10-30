@@ -68,3 +68,7 @@ Pods/
 
 # TEMP-VERIFY: screenshot delle verifiche a schermo
 verify/
+
+# Configurazione Firebase/Google (chiavi del progetto): mai nel repo
+apps/*/google-services.json
+apps/*/GoogleService-Info.plist
