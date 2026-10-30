@@ -94,7 +94,9 @@ Compatibili sui dati, efficienti nel resto.
   riquadro di riga: per gli stili con interlinea sotto l'altezza naturale (H1, Display,
   Accento serif, H1 Accesso) `Testo` allarga il riquadro con un padding verticale
   compensato da margini negativi, altrimenti accenti e discendenti spariscono
-  (verifica: `/sviluppo/titoli`, esiti in `step3-confronti/titoli/`).
+  (verifica: `/sviluppo/titoli`, esiti in `step3-confronti/titoli/`). Su Android il padding da solo non basta: la TextView
+  ritaglia il disegno al riquadro delle righe, quindi per gli stessi stili `Testo` aggiunge `overflow: 'visible'` (31/10/2026,
+  vedi la sezione dello step 6).
 - **Icone**: tratto unico per misura (`misura/12`: 16 → 1,33, 20 → 1,67, 24 → 2,
   32 → 2,67, 36 → 3), lo stesso in Figma. I componenti icona in Figma seguono la
   versione Lucide installata (`lucide-react-native`): se un aggiornamento cambia un
@@ -724,9 +726,18 @@ npx expo install --fix                   # riallinea versioni alla SDK
      `__DEV__`, ultime 40 righe) nella pagina `/sviluppo/notifiche-prova`. Riprodotto e verificato con +test4 sull'emulatore:
      da Oggi, dalla pagina delle notifiche dopo una riga della campanella, da Piano, due notifiche ravvicinate, processo ucciso.
      Per le prove ad app chiusa: `am force-stop` cancella gli allarmi delle notifiche programmate; usare Home + `am kill`.
-  2. Android, "g" di "giornata!" nella Card diario: verificata intera a pixel (`/sviluppo/titoli`, scale dei font 1,0 e 1,3,
-     zoom in `correzioni-step6/punto2-g-android/`); il rendering a 2,625× appiattisce l'occhiello ma non lo taglia. Nessuna
-     modifica al codice.
+  2. Android, "g" di "giornata!" nella Card diario **tagliata in basso** (la prima verifica a occhio era sbagliata; con la
+     misura a pixel la "g" scendeva 5,3 dp sotto la base della "i" contro 6,7 su iPhone). Causa: con l'interlinea sotto
+     l'altezza naturale lo span dell'interlinea di React Native riduce la discesa dell'ultima riga e la TextView ritaglia il
+     disegno al riquadro delle righe, padding compreso. Correzione in `Testo`, solo Android: `overflow: 'visible'` sugli stili
+     con interlinea stretta (React Native disegna il layout senza il ritaglio della TextView e le discendenti escono nel padding
+     già previsto). Dopo: 6,9 dp su Android a scala 1,0 e 1,3 (serif del carosello da 4,6 a 7,2; Display uguale al riferimento
+     con interlinea larga); iPhone identico al pixel (0 pixel diversi a testo normale e molto grande). Verifica: blocco
+     "discendenti" di `/sviluppo/titoli` con `strumenti/discesa-g.mjs` (discesa della g rispetto alla i che la segue) e
+     `strumenti/profilo-g.mjs` (pixel delle ultime righe: un occhiello intero finisce con pochi pixel, uno tagliato con la riga
+     più larga); numeri in `correzioni-step6/punto2-g-android/misure.md`. Il cambio della scala dei caratteri a app aperta
+     lascia misure dei testi stantie (una riga serif andava a capo): per le prove riavviare l'app dopo `settings put system
+     font_scale`; un elemento in fondo allo schermo è tagliato dal bordo, non dal testo.
   3. Indicazioni: freccia e titolo fissi, scorre solo il testo (`Pagina scorrevole={false}` + ScrollView, Figma 775:7878).
   4. Ricetta salvata: la Notifica breve sta sopra il pulsante "Salvata" (`NotificaInBasso sopra`, Figma 818:7907).
   5. Tutorial · 3 e · 4 di Racconta: l'elemento evidenziato è "Tocca per iniziare" + timer + pulsante (`TimerEPulsanteTutorial`),
