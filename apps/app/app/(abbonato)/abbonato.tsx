@@ -31,7 +31,8 @@ const STRUTTURA = { barraSuperiore: 'completa', barraNavigazione: 'oggi' } as co
 
 function Oggi({ profilo }: { profilo: Profilo }) {
   const router = useRouter();
-  const { giornata: giornataRichiesta } = useLocalSearchParams<{ giornata?: string }>();
+  // `apri` cambia a ogni apertura da una notifica (step 6): la stessa giornata si riapre anche se era già stata aperta.
+  const { giornata: giornataRichiesta, apri } = useLocalSearchParams<{ giornata?: string; apri?: string }>();
   const diario = useDiario(profilo.clientId, profilo.nutrizionista);
   const pannello = usePannelloGiornata(profilo.clientId, profilo.nutrizionista, diario.mostraNotifica);
   // Pallino "Nuova revisione" sulla barra: una lettura leggera dello stato delle revisioni all'avvio dell'app
@@ -58,10 +59,11 @@ function Oggi({ profilo }: { profilo: Profilo }) {
   const giornataAperta = useRef<string | null>(null);
   const { apriGiornata } = pannello;
   useEffect(() => {
-    if (diario.fase.tipo !== 'pronto' || !giornataRichiesta || !dataValida(giornataRichiesta) || giornataAperta.current === giornataRichiesta) return;
-    giornataAperta.current = giornataRichiesta;
+    const chiave = giornataRichiesta ? `${giornataRichiesta}:${apri ?? ''}` : null;
+    if (diario.fase.tipo !== 'pronto' || !giornataRichiesta || !chiave || !dataValida(giornataRichiesta) || giornataAperta.current === chiave) return;
+    giornataAperta.current = chiave;
     apriGiornata(giornataRichiesta);
-  }, [diario.fase.tipo, giornataRichiesta, apriGiornata]);
+  }, [diario.fase.tipo, giornataRichiesta, apri, apriGiornata]);
 
   const onRacconta = useCallback(() => router.push('/racconta'), [router]);
   const onMenu = useCallback(() => router.push('/menu'), [router]);

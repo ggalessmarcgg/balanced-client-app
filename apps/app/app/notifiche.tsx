@@ -36,6 +36,9 @@ function Notifiche({ profilo }: { profilo: Profilo }) {
           case 'nutrizionista':
             router.push('/nutrizionista');
             break;
+          case 'piano':
+            router.navigate('/piano');
+            break;
         }
       });
     },

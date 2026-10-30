@@ -35,7 +35,8 @@ export type Destinazione =
   | { tipo: 'giornata'; submissionId: string }
   | { tipo: 'revisione'; id: string }
   | { tipo: 'revisioni' }
-  | { tipo: 'nutrizionista' };
+  | { tipo: 'nutrizionista' }
+  | { tipo: 'piano' };
 
 export type Notifica = {
   id: string;
@@ -131,6 +132,9 @@ export function composiNotifica(riga: RigaNotifica, contesto: ContestoNotifiche,
       const testo = f?.sostituta ? `Fino al ${giornoMese(f.al)} ti segue la ${f.sostituta}.` : f ? `Fino al ${giornoMese(f.al)} ti segue una collega.` : 'Durante le ferie della tua nutrizionista ti segue una collega.';
       return { ...base, titolo: 'Sostituzione per ferie', testo, destinazione: { tipo: 'nutrizionista' } };
     }
+    case 'plan_sent':
+      // Piano pronto (step 6, contratto notifiche v0.2 §2; Figma 831:8481): tipo nuovo scritto dal trigger su nutrition_plans.
+      return { ...base, titolo: 'Il tuo piano è pronto', testo: `${nome} ha preparato il tuo piano alimentare.`, destinazione: { tipo: 'piano' } };
     case 'food_suggestion_approved':
       return { ...base, titolo: 'Suggerimento approvato', testo: riserva || 'Il tuo suggerimento è stato aggiunto al piano.', destinazione: null };
     case 'goal_comment':

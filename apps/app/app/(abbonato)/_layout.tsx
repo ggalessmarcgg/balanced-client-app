@@ -1,8 +1,9 @@
 import { Slot, useFocusEffect, usePathname, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { BackHandler, Platform, StyleSheet, View } from 'react-native';
 
 import { percorsoDiSviluppo, percorsoDiVoce, voceDaPercorso, type VoceNavigazione } from '@/core/navigazione/voci';
+import { segnalaAbbonatoMontato } from '@/servizi/aperturaNotifiche';
 import { useNuovaRevisione } from '@/servizi/memoriaRevisioni';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { BarraNavigazioneFissa } from '@/ui/schermate/SchermateTrasversali';
@@ -21,6 +22,12 @@ export default function LayoutAbbonato() {
   const nuova = useNuovaRevisione();
   const voce = voceDaPercorso(pathname);
   const conBarra = (statoCorrente()?.codice === 'J' || (__DEV__ && percorsoDiSviluppo(pathname))) && voce !== null;
+  // Notifiche (step 6, contratto §6): la destinazione di una notifica toccata ad app chiusa si apre appena le schede
+  // dell'abbonato sono montate (lo stato del cliente è già caricato).
+  useEffect(() => {
+    segnalaAbbonatoMontato(true);
+    return () => segnalaAbbonatoMontato(false);
+  }, []);
   const onSeleziona = useCallback(
     (scelta: VoceNavigazione) => {
       const percorso = percorsoDiVoce(scelta, pathname);

@@ -181,6 +181,14 @@ export const TESTI_ACCOUNT = {
   esci: 'Esci',
 } as const;
 
+/** Card Notifiche senza il permesso (step 6, contratto notifiche §5; Figma Account · 2 492:3408 e · 3 831:8335). */
+export const TESTI_NOTIFICHE_ACCOUNT = {
+  disattivate: 'Senza notifiche non riceverai promemoria né avvisi per commenti e revisioni.',
+  negate: 'Le notifiche sono disattivate nelle impostazioni del telefono. Senza notifiche non riceverai promemoria né avvisi per commenti e revisioni.',
+  attiva: 'Attiva le notifiche',
+  impostazioni: 'Apri le impostazioni',
+} as const;
+
 /** Eliminazione dell'account (Figma 499:2568 e 499:2709): nessun sistema la esegue oggi (censimento §7). */
 export const TESTI_ELIMINAZIONE = {
   avvisoTitolo: 'Vuoi eliminare il tuo account?',

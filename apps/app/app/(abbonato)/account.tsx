@@ -10,6 +10,8 @@ import { useNotificheNuove } from '@/servizi/notifiche';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 import { aggiornaAccountInMemoria, statoCorrente } from '@/servizi/statoCliente';
 import { useAzioniStato } from '@/servizi/useAzioniStato';
+import { useConsensoAI } from '@/servizi/useConsensoAI';
+import { usePermessoNotifiche } from '@/servizi/usePermessoNotifiche';
 import { PannelloEliminaAccount, type PassoEliminazione } from '@/ui/account/PannelloEliminaAccount';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccount, type FaseAbbonamento } from '@/ui/schermate/SchermataAccount';
@@ -17,6 +19,7 @@ import { INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali'
 import { useBarraPersistente } from '@/ui/schermate/Sovrapposti';
 
 const TESTO_ERRORE_PROMEMORIA = 'Non siamo riusciti a salvare la preferenza. Riprova tra poco.';
+const TESTO_ERRORE_CONSENSO = 'Non siamo riusciti a salvare la scelta sulle funzioni AI. Riprova tra poco.';
 
 /**
  * Account · 1 (step 11): scheda della barra per l'abbonato, pulsante "Account" degli stati H e K (senza barra).
@@ -40,6 +43,21 @@ function Account({ profilo }: { profilo: Profilo }) {
   const [abbonamento, setAbbonamento] = useState<FaseAbbonamento>({ tipo: 'caricamento' });
   const [passo, setPasso] = useState<PassoEliminazione | null>(null);
   const [avviso, setAvviso] = useState<{ chiave: number; testo: string } | null>(null);
+  // Step 6: card "Notifiche disattivate" / "Apri le impostazioni" (contratto §5) e interruttore delle funzioni AI (§8).
+  const permesso = usePermessoNotifiche();
+  const consenso = useConsensoAI(profilo.clientId);
+  const [consensoInScrittura, setConsensoInScrittura] = useState(false);
+  const onConsensoAI = useCallback(
+    (acceso: boolean) => {
+      setConsensoInScrittura(true);
+      (acceso ? consenso.accetta() : consenso.revoca())
+        .then((ok) => {
+          if (!ok) setAvviso({ chiave: Date.now(), testo: TESTO_ERRORE_CONSENSO });
+        })
+        .finally(() => setConsensoInScrittura(false));
+    },
+    [consenso],
+  );
 
   // "Revisioni ricevute": una lettura leggera dello stato all'apertura (una per montaggio, mai innescata dal
   // proprio risultato: l'effetto dipende solo dal cliente). Il valore in memoria si mostra subito.
@@ -100,6 +118,8 @@ function Account({ profilo }: { profilo: Profilo }) {
       notificheNuove={notificheNuove}
       revisioneNuova={revisioneNuova}
       conBarra={conBarra}
+      notifichePush={permesso.azione === 'attiva' ? { azione: 'attiva', onPress: permesso.attiva, inCorso: permesso.inRichiesta } : permesso.azione === 'impostazioni' ? { azione: 'impostazioni', onPress: permesso.apriImpostazioni } : null}
+      consensoAI={consenso.valido === null ? null : { acceso: consenso.valido, onChange: onConsensoAI, disabilitato: consensoInScrittura }}
       onPromemoria={onPromemoria}
       onNutrizionista={onNutrizionista}
       onEmailSupporto={onEmailSupporto}

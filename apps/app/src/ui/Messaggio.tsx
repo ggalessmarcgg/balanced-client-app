@@ -8,10 +8,12 @@ export type MessaggioProps = {
   testo: string;
   /** Errore: terracotta, solo per validazione ed errori. Info: neutro su card. (Figma 419:104, "Tipo") */
   tipo: 'errore' | 'info';
+  /** Icona centrata in verticale rispetto al testo su più righe (card Notifiche di Account · 2 e · 3, Figma 492:3632). */
+  iconaCentrata?: boolean;
 };
 
 /** Messaggio a livello di schermata: icona a 20 e testo Body details, padding verticale 12. */
-export function Messaggio({ testo, tipo }: MessaggioProps) {
+export function Messaggio({ testo, tipo, iconaCentrata = false }: MessaggioProps) {
   if (tipo === 'errore') {
     return (
       <View style={[stili.base, stili.errore]} accessibilityRole="alert">
@@ -23,7 +25,7 @@ export function Messaggio({ testo, tipo }: MessaggioProps) {
     );
   }
   return (
-    <View style={[stili.base, stili.info]} accessibilityLiveRegion="polite">
+    <View style={[stili.base, stili.info, iconaCentrata && stili.centrato]} accessibilityLiveRegion="polite">
       <Icona misura={24} nome="Info" dimensione={20} />
       <Testo stile="bodyDetails" style={stili.testoInfo}>
         {testo}
@@ -44,4 +46,5 @@ const stili = StyleSheet.create({
     backgroundColor: colori.sfondo.card,
   },
   testoInfo: { flex: 1 },
+  centrato: { alignItems: 'center' },
 });

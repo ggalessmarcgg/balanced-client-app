@@ -2,10 +2,12 @@ import { Fragment, useState, type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
-import { TESTI_ACCOUNT, type Abbonamento, type Promemoria } from '@/core/account/account';
+import { TESTI_ACCOUNT, TESTI_NOTIFICHE_ACCOUNT, type Abbonamento, type Promemoria } from '@/core/account/account';
 import { SUPPORTO } from '@/core/accesso/costanti';
+import { TESTI_CONSENSO } from '@/core/consenso/consenso';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import { CardNutrizionista } from '@/ui/CardNutrizionista';
+import { Messaggio } from '@/ui/Messaggio';
 import { Pulsante } from '@/ui/Pulsante';
 import { RigaElenco } from '@/ui/RigaElenco';
 import { Pagina } from '@/ui/schermate/Pagina';
@@ -16,6 +18,14 @@ import { Testo } from '@/ui/Testo';
 import { colori, gradienti, margine, raggio, spazio } from '@/ui/theme';
 
 export type FaseAbbonamento = { tipo: 'caricamento' } | { tipo: 'pronto'; abbonamento: Abbonamento | null };
+
+/**
+ * Card Notifiche senza il permesso (step 6, contratto §5): "Attiva le notifiche" se si può chiedere (Account · 2,
+ * Figma 492:3408), "Apri le impostazioni" se il sistema non permette più di chiederlo (Account · 3, 831:8335).
+ */
+export type NotifichePushAccount = { azione: 'attiva' | 'impostazioni'; onPress: () => void; inCorso?: boolean };
+/** Interruttore "Funzioni con intelligenza artificiale" in Privacy e dati (step 6, Figma 831:8330). */
+export type ConsensoAIAccount = { acceso: boolean; onChange: (acceso: boolean) => void; disabilitato?: boolean };
 
 export type SchermataAccountProps = {
   nomeCompleto: string;
@@ -33,6 +43,10 @@ export type SchermataAccountProps = {
   revisioneNuova?: boolean;
   /** Barra di navigazione: solo per l'abbonato (stato J); dagli altri stati l'Account si apre senza barra. */
   conBarra?: boolean;
+  /** Senza il permesso delle notifiche: messaggio e pulsante sopra gli interruttori (null o assente con il permesso concesso). */
+  notifichePush?: NotifichePushAccount | null;
+  /** Consenso alle funzioni AI (prima riga di Privacy e dati); assente finché non è noto. */
+  consensoAI?: ConsensoAIAccount | null;
   onPromemoria: (campo: keyof Promemoria, valore: boolean) => void;
   onNutrizionista?: () => void;
   onEmailSupporto?: () => void;
@@ -96,6 +110,17 @@ export function SchermataAccount(props: SchermataAccountProps) {
           </View>
           {props.nutrizionista && <CardNutrizionista nome={props.nutrizionista.nome} foto={props.nutrizionista.foto} onPress={props.onNutrizionista} />}
           <Card titolo={TESTI_ACCOUNT.notifiche}>
+            {props.notifichePush ? (
+              <>
+                <Messaggio tipo="info" testo={props.notifichePush.azione === 'attiva' ? TESTI_NOTIFICHE_ACCOUNT.disattivate : TESTI_NOTIFICHE_ACCOUNT.negate} iconaCentrata />
+                <Pulsante
+                  etichetta={props.notifichePush.azione === 'attiva' ? TESTI_NOTIFICHE_ACCOUNT.attiva : TESTI_NOTIFICHE_ACCOUNT.impostazioni}
+                  onPress={props.notifichePush.onPress}
+                  stato={props.notifichePush.inCorso ? 'caricamento' : 'normale'}
+                  accessibilityHint={props.notifichePush.azione === 'attiva' ? 'Chiede il permesso delle notifiche al telefono' : 'Apre le impostazioni dell’app nel telefono'}
+                />
+              </>
+            ) : null}
             <Righe>
               <RigaElenco tipo="interruttore" etichetta={TESTI_ACCOUNT.promemoriaDiario} acceso={props.promemoria.diario} onChange={(v) => props.onPromemoria('diario', v)} />
               <RigaElenco tipo="interruttore" etichetta={TESTI_ACCOUNT.promemoriaWeekend} acceso={props.promemoria.weekend} disabilitato={!props.promemoria.diario} onChange={(v) => props.onPromemoria('weekend', v)} />
@@ -112,6 +137,7 @@ export function SchermataAccount(props: SchermataAccountProps) {
           </Card>
           <Card titolo={TESTI_ACCOUNT.privacy}>
             <Righe>
+              {props.consensoAI ? <RigaElenco tipo="interruttore" etichetta={TESTI_CONSENSO.interruttore} acceso={props.consensoAI.acceso} disabilitato={props.consensoAI.disabilitato} onChange={props.consensoAI.onChange} /> : null}
               <RigaElenco tipo="freccia" etichetta={TESTI_ACCOUNT.informativa} onPress={props.onPrivacy} />
               <RigaElenco tipo="freccia" etichetta={TESTI_ACCOUNT.termini} onPress={props.onTermini} />
               <RigaElenco tipo="freccia" etichetta={TESTI_ACCOUNT.elimina} onPress={props.onElimina} />
