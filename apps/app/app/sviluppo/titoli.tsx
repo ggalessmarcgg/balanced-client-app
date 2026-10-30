@@ -2,6 +2,7 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TESTI_PAGINE } from '@/core/primoAccesso/carosello';
+import { CardDiario, SalutoDiario } from '@/ui/diario/CardDiario';
 import { TitoloAccento } from '@/ui/schermate/TitoloAccento';
 import { Testo } from '@/ui/Testo';
 import { colori, margine, spazio, testi, type NomeStileTesto } from '@/ui/theme';
@@ -31,6 +32,11 @@ export default function Titoli() {
             <TitoloAccento prima="Accedi al tuo " accento="percorso" contesto="accesso" />
           </View>
         </View>
+        {/* Titoli a due righe: la conferma di Oggi nella Card diario (31/10/2026: su Android la "g" di "giornata!" segnalata come
+            tagliata; verificata intera a pixel con le scale dei font 1,0 e 1,3) e un H1 stretto con accento e discendenti. */}
+        <CardDiario>
+          <SalutoDiario prima="Hai " accento="condiviso " dopo="la giornata!" dataEtichetta="Venerdì 30 ottobre" />
+        </CardDiario>
         {/* Titoli del carosello del primo accesso (step 6): la pagina 1 centrata in H1 Accesso, le altre in H1, larghezza del carosello (padding 32). */}
         {TESTI_PAGINE.map((t, i) => (
           <View key={i} style={[s.cella, s.cellaCarosello]}>
@@ -56,6 +62,7 @@ const s = StyleSheet.create({
   pagina: { flex: 1, backgroundColor: colori.sfondo.pagina },
   contenuto: { padding: margine.pagina, gap: spazio[12] },
   cella: { backgroundColor: colori.sfondo.card, padding: spazio[8], gap: spazio[4], alignItems: 'flex-start' },
+  stretto: { width: 200 },
   cellaCarosello: { paddingHorizontal: spazio[32] - margine.pagina, alignItems: 'stretch' },
   riquadro: { backgroundColor: colori.sfondo.foto },
   nome: { ...testi.caption, color: colori.testo.secondario },
