@@ -171,6 +171,22 @@ export function segnaViste(righe: RigaNotifica[], adesso: Date): RigaNotifica[] 
   return righe.map((r) => (r.viewed_at === null ? { ...r, viewed_at: ora } : r));
 }
 
+/**
+ * Notifiche lette quando il contenuto è stato visto (step 6, correzione del 31/10/2026): all'apertura di una giornata
+ * o di una revisione, da qualunque percorso, gli id delle righe in memoria non ancora viste con lo stesso riferimento
+ * (reference_id). Vuoto → nessuna scrittura.
+ */
+export function idDaSegnareViste(righe: RigaNotifica[], riferimento: string): string[] {
+  return righe.filter((r) => r.reference_id === riferimento && r.viewed_at === null).map((r) => r.id);
+}
+
+/** Segna viste in memoria solo le righe con questi id. */
+export function segnaVistePerId(righe: RigaNotifica[], ids: readonly string[], adesso: Date): RigaNotifica[] {
+  if (ids.length === 0) return righe;
+  const ora = adesso.toISOString();
+  return righe.map((r) => (ids.includes(r.id) && r.viewed_at === null ? { ...r, viewed_at: ora } : r));
+}
+
 export function segnaCliccata(righe: RigaNotifica[], id: string, adesso: Date): RigaNotifica[] {
   const ora = adesso.toISOString();
   return righe.map((r) => (r.id === id && r.clicked_at === null ? { ...r, clicked_at: ora } : r));

@@ -11,6 +11,7 @@ import { BLOCCHI, bloccoSuccessivo, type Blocco, type Diario } from '@/core/diar
 import { leggiAutore, leggiGiornata, leggiGiornataPerData, type EsitoScrittura } from '@/servizi/diario';
 import { fotoInCache } from '@/servizi/foto';
 import { impostaGiornata, ricordaRigaFuoriSettimana, rigaNota, riprovaLetture, salvaGiornateInAttesa, segnaLetto } from '@/servizi/giornate';
+import { segnaVisteContenuto } from '@/servizi/notifiche';
 import { aggiornaMemoria, memoriaDiario, persistiMemoria, useMemoriaDiario } from '@/servizi/memoriaDiario';
 
 export type CommentoPannello = { testo: string; /** Era da leggere all'apertura: etichetta "Nuovo" nella Card commento. */ nuovo: boolean; autore: AutoreCommento | null };
@@ -110,6 +111,8 @@ export function usePannelloGiornata(clientId: string, nutrizionista: Nutrizionis
           ricordaRigaFuoriSettimana(riga);
           aggiornaMemoria({ giornate: { ...memoriaDiario().giornate, [data]: giornataDaRiga(completa) } });
         }
+        // Notifiche con questa giornata come riferimento: viste (step 6), da qualunque percorso si arrivi qui.
+        void segnaVisteContenuto(riga.id);
         // 2. La giornata completa: dalla cache se è ancora quella del server, altrimenti una lettura per id.
         let giornata = memoriaDiario().giornate[data];
         if (giornataDaRileggere(giornata, riga)) {

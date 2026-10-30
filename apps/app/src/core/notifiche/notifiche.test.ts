@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { composiNotifica, daQuando, elencoNotifiche, etichettaOra, FILTRO_TIPI_ESCLUSI, nomeDiBattesimo, nuoveDaLeggere, numeroDalCorpo, segnaCliccata, segnaViste, type RigaNotifica } from './notifiche.ts';
+import { composiNotifica, daQuando, elencoNotifiche, etichettaOra, FILTRO_TIPI_ESCLUSI, idDaSegnareViste, nomeDiBattesimo, nuoveDaLeggere, numeroDalCorpo, segnaCliccata, segnaViste, segnaVistePerId, type RigaNotifica } from './notifiche.ts';
 
 const ADESSO = new Date('2026-10-15T10:00:00.000Z'); // giovedì 15 ottobre 2026, 12:00 a Roma
 
@@ -116,5 +116,23 @@ describe('elencoNotifiche e pallino', () => {
   it('numero dal corpo salvato', () => {
     assert.equal(numeroDalCorpo('Revisione 13: clicca per vederla'), 13);
     assert.equal(numeroDalCorpo(''), null);
+  });
+});
+
+describe('notifiche lette quando il contenuto è stato visto (step 6)', () => {
+  const ADESSO = new Date('2026-10-31T10:00:00.000Z');
+  const riga = (id: string, reference_id: string, viewed_at: string | null): RigaNotifica => ({ id, notification_type: 'nutritionist_comment', reference_id, reference_table: 'daily_submissions', title: '', body: null, viewed_at, clicked_at: null, created_at: '2026-10-30T10:00:00.000Z' });
+
+  it('nessun id (quindi nessuna scrittura) senza notifiche non lette per quel riferimento', () => {
+    assert.deepEqual(idDaSegnareViste([riga('n1', 'g1', '2026-10-30T11:00:00.000Z'), riga('n2', 'g2', null)], 'g1'), []);
+    assert.deepEqual(idDaSegnareViste([], 'g1'), []);
+  });
+
+  it('più notifiche dello stesso contenuto: tutti gli id non letti in una volta', () => {
+    const righe = [riga('n1', 'g1', null), riga('n2', 'g1', null), riga('n3', 'g1', '2026-10-30T11:00:00.000Z'), riga('n4', 'g2', null)];
+    assert.deepEqual(idDaSegnareViste(righe, 'g1'), ['n1', 'n2']);
+    const dopo = segnaVistePerId(righe, ['n1', 'n2'], ADESSO);
+    assert.deepEqual(dopo.map((r) => r.viewed_at), [ADESSO.toISOString(), ADESSO.toISOString(), '2026-10-30T11:00:00.000Z', null]);
+    assert.equal(segnaVistePerId(righe, [], ADESSO), righe);
   });
 });

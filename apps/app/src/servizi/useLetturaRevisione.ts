@@ -10,6 +10,7 @@ import type { TestoRevisione } from '@/core/revisioni/testo';
 import { leggiAutore } from '@/servizi/diario';
 import { fotoInCache } from '@/servizi/foto';
 import { memoriaRevisioni, useMemoriaRevisioni } from '@/servizi/memoriaRevisioni';
+import { segnaVisteContenuto } from '@/servizi/notifiche';
 import { caricaRevisioni, caricaTestoRevisione, riprovaScritture, segnaAperta, segnaLetta } from '@/servizi/revisioni';
 import type { NutrizionistaCliente } from '@/servizi/usePannelloGiornata';
 
@@ -76,6 +77,8 @@ export function useLetturaRevisione(id: string, clientId: string, nutrizionista:
         if (!memoriaRevisioni().testi[id]) return setEsitoNegativo(esito.tipo === 'rete' ? 'rete' : 'errore');
       }
       segnaAperta(id);
+      // Notifiche con questa revisione come riferimento: viste (step 6), da qualunque percorso si arrivi qui.
+      void segnaVisteContenuto(id);
       prontaPerIlFondo.current = true;
       if (r.review_author_id) {
         const profilo = await leggiAutore(r.review_author_id);

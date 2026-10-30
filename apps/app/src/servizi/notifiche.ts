@@ -5,7 +5,7 @@
 import { useSyncExternalStore } from 'react';
 
 import { classificaErrore } from '@/core/accesso/errori';
-import { daQuando, FILTRO_TIPI_ESCLUSI, LIMITE_NOTIFICHE, nuoveDaLeggere, segnaCliccata, segnaViste, SELEZIONE_NOTIFICHE, TABELLA_NOTIFICHE, type RigaNotifica } from '@/core/notifiche/notifiche';
+import { daQuando, FILTRO_TIPI_ESCLUSI, idDaSegnareViste, LIMITE_NOTIFICHE, nuoveDaLeggere, segnaCliccata, segnaViste, segnaVistePerId, SELEZIONE_NOTIFICHE, TABELLA_NOTIFICHE, type RigaNotifica } from '@/core/notifiche/notifiche';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 import { supabase } from '@/servizi/supabase';
 
@@ -111,6 +111,31 @@ export async function segnaTutteViste(adesso: Date = new Date()): Promise<void> 
   } catch {
     // senza rete: la memoria resta vista, il server si allinea alla prossima apertura
   }
+}
+
+/**
+ * Notifiche lette quando il contenuto è stato visto (step 6, 31/10/2026): all'apertura di una giornata (pannello) o di
+ * una revisione, da qualunque percorso, le righe in memoria non ancora viste con lo stesso riferimento diventano viste
+ * subito (campanella aggiornata) e con una sola scrittura (viewed_at, lo stesso segno della web app, where id in …).
+ * Senza righe da segnare nessuna scrittura. Caso limite: aperta da una push ad app chiusa, con l'elenco non ancora
+ * caricato, si usa l'identificativo della notifica arrivato nei dati della push. Nessuna lettura in più.
+ */
+export async function segnaVisteContenuto(riferimento: string, notificaId: string | null = null, adesso: Date = new Date()): Promise<string[]> {
+  const { userId, righe } = memoria;
+  const ids = righe ? idDaSegnareViste(righe, riferimento) : notificaId ? [notificaId] : [];
+  if (ids.length === 0) return ids;
+  if (righe) {
+    aggiorna({ righe: segnaVistePerId(righe, ids, adesso) });
+    persisti();
+  }
+  try {
+    let q = supabase.from(TABELLA_NOTIFICHE).update({ viewed_at: adesso.toISOString() }).in('id', ids).is('viewed_at', null);
+    if (userId) q = q.eq('user_id', userId);
+    await q;
+  } catch {
+    // senza rete: la memoria resta vista, il server si allinea alla prossima apertura dell'elenco
+  }
+  return ids;
 }
 
 /** Al tocco di una riga: clicked_at su quella sola riga (where id), in memoria subito. */
