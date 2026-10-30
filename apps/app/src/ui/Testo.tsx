@@ -21,6 +21,15 @@ export type TestoProps = TextProps & {
 const ALTEZZA_NATURALE_EM = 1.35;
 
 /**
+ * Android (correzione del 31/10/2026): con l'interlinea sotto l'altezza naturale la discesa dell'ultima riga si riduce
+ * (span dell'interlinea di React Native) e il testo viene disegnato ritagliato al riquadro delle righe, anche con il
+ * padding: la "g" di "giornata!" nella Card diario finiva piatta. Con `overflow: 'visible'` React Native disegna il
+ * layout del testo senza il ritaglio della TextView e le discendenti escono nel padding già previsto (verifica a pixel
+ * in /sviluppo/titoli con strumenti/profilo-g.mjs). Su iOS non cambia nulla.
+ */
+const TRABOCCA_ANDROID = Platform.OS === 'android' ? ({ overflow: 'visible' } as const) : null;
+
+/**
  * Spazio in più sopra e sotto, in punti già scalati: con il testo ingrandito dal sistema (Dimensione testo, scala dei
  * font) corpo e interlinea crescono ma il padding no, e i glifi tornavano a essere tagliati (step 6, 31/10/2026).
  */
@@ -45,6 +54,7 @@ export function Testo({ stile, colore = colori.testo.primario, style, children, 
         testi[stile],
         { color: colore },
         extra > 0 && { paddingTop: extra, paddingBottom: extra, marginTop: -extra, marginBottom: -extra },
+        extra > 0 && TRABOCCA_ANDROID,
         delta !== 0 && { transform: [{ translateY: delta }] },
         style,
       ]}

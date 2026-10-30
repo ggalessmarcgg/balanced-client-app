@@ -11,6 +11,8 @@ import { correzioneVerticale } from '@/ui/theme/testo-correzioni';
 // Verifica del taglio dei testi (solo sviluppo): ogni stile con correzione verticale su un riquadro colorato
 // (sfondo/campo = riquadro del Text, sfondo/card = contenitore). Un glifo tagliato finisce netto sul bordo del riquadro.
 const FRASE = 'Ciao Giulia, Àgb?';
+/** Stili con interlinea sotto l'altezza naturale del font (quelli in cui Testo allarga il riquadro). */
+const STRETTI: NomeStileTesto[] = ['display', 'h1', 'accentoSerif', 'h1Accesso', 'accentoSerifAccesso'];
 
 export default function Titoli() {
   const stili_ = Object.keys(correzioneVerticale) as NomeStileTesto[];
@@ -32,11 +34,29 @@ export default function Titoli() {
             <TitoloAccento prima="Accedi al tuo " accento="percorso" contesto="accesso" />
           </View>
         </View>
-        {/* Titoli a due righe: la conferma di Oggi nella Card diario (31/10/2026: su Android la "g" di "giornata!" segnalata come
-            tagliata; verificata intera a pixel con le scale dei font 1,0 e 1,3) e un H1 stretto con accento e discendenti. */}
+        {/* Titolo a due righe: la conferma di Oggi nella Card diario (31/10/2026: su Android la "g" di "giornata!" era tagliata in
+            basso, vedi il blocco "discendenti" più sotto e la nota in Testo.tsx). */}
         <CardDiario>
           <SalutoDiario prima="Hai " accento="condiviso " dopo="la giornata!" dataEtichetta="Venerdì 30 ottobre" />
         </CardDiario>
+        {/* Discendenti sull'ultima riga negli stili con interlinea stretta (31/10/2026: su Android la "g" di "giornata!" era tagliata
+            in basso; verifica con strumenti/profilo-g.mjs: l'occhiello intero finisce con una riga di pochi pixel, tagliato con la riga
+            più larga; strumenti/discesa-g.mjs misura la discesa della prima "g" rispetto alla "i" che la segue). In fondo il
+            titolo a due righe con l'accento serif come nella Card diario. */}
+        {STRETTI.map((nome) => (
+          <View key={`d-${nome}`} style={s.cella}>
+            <Text style={s.nome}>{`discendenti · ${nome}`}</Text>
+            <Testo stile={nome} style={s.riquadro}>
+              {'giornata! gjpqy'}
+            </Testo>
+          </View>
+        ))}
+        <View style={s.cella}>
+          <Text style={s.nome}>discendenti · TitoloAccento due righe</Text>
+          <View style={[s.riquadro, s.stretto]}>
+            <TitoloAccento prima="Hai " accento="condiviso " dopo="la giornata!" />
+          </View>
+        </View>
         {/* Titoli del carosello del primo accesso (step 6): la pagina 1 centrata in H1 Accesso, le altre in H1, larghezza del carosello (padding 32). */}
         {TESTI_PAGINE.map((t, i) => (
           <View key={i} style={[s.cella, s.cellaCarosello]}>
