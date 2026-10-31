@@ -72,6 +72,12 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "6aa1a7dc-b09e-45d7-a1de-ea53acf93f73"
+      }
+    },
+    "owner": "joinbalanced"
   }
 }
