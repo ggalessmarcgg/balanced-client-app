@@ -2,7 +2,7 @@
   "expo": {
     "name": "Balanced",
     "slug": "balanced",
-    "version": "0.1.0",
+    "version": "1.0.0",
     "scheme": "balanced",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -22,13 +22,15 @@
       "package": "it.joinbalanced.app",
       "backgroundColor": "#FAF8F5",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#FAF8F5",
         "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false,
-      "googleServicesFile": "./google-services.json"
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ],
+      "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,10 +42,10 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
-          "imageWidth": 200,
+          "image": "./assets/avvio-logo.png",
+          "imageWidth": 161,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF"
+          "backgroundColor": "#FAF8F5"
         }
       ],
       "expo-secure-store",

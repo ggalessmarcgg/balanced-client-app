@@ -808,6 +808,35 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Restano come sono: avvisi di sistema in stile Android, tastiera che segue il tema del telefono, richiesta
   «dispositivi nelle vicinanze» (solo build di sviluppo, `ACCESS_LOCAL_NETWORK` del manifest debug di react-android).
 
+## Build Android firmata ed EAS (lotto 1, 31/10/2026)
+
+- Riferimento: `~/Desktop/censimenti-app/censimento-build-android.md`. Decisioni: pacchetto `it.joinbalanced.app` definitivo,
+  versione `1.0.0` con `versionCode` gestito da EAS (`cli.appVersionSource: remote`, `autoIncrement` in produzione: il
+  `versionCode 1` del prebuild locale non conta), progetto Expo dell'organizzazione Balanced, keystore generato da EAS e custodito
+  da Alessandro in Dashlane (`credentials.json` scaricato con `eas credentials`, mai nel repo: `.gitignore`), nessun profilo
+  `development` su EAS (lo sviluppo resta `expo run:android` / `run:ios` in locale), expo-updates rimandato.
+- `apps/app/eas.json`: profili `preview` (APK firmato, `distribution: internal`, ambiente `preview`) e `production` (AAB,
+  ambiente `production`, `autoIncrement`), Node fissato; `submit.production` sulla traccia `internal` in bozza, senza chiave del
+  service account. I comandi `eas` si lanciano da `apps/app`.
+- `apps/app/app.config.js` estende `app.json` e legge `google-services.json` dalla variabile di tipo file `GOOGLE_SERVICES_JSON`
+  di EAS (in locale il file accanto ad `app.json`, ignorato da git). Le tre `EXPO_PUBLIC_*` del `.env` stanno anche negli
+  ambienti `preview` e `production` di EAS (`eas env:list --environment production`): EAS carica il repo rispettando il
+  `.gitignore`, quindi senza di esse l'app di release si chiude all'avvio.
+- `app.json`: `android.allowBackup: false` (niente Auto Backup delle bozze), `android.blockedPermissions` con
+  `SYSTEM_ALERT_WINDOW` (permesso del template Expo, in Play comparirebbe come «Visualizza sopra altre app»).
+- **Icona e schermata di avvio da Figma** (sezione «Icona e schermata di avvio» `848:26` in Foundations): `assets/icon.png`
+  (frame `848:27`, 1024 RGB senza alfa), `assets/android-icon-foreground.png` (logo `849:35` del frame `848:31` su tela 1024
+  trasparente, nell'area sicura del 66 %), `assets/android-icon-monochrome.png` (logo bianco `850:31`), sfondo dell'icona
+  adattiva = colore `colore/cream` `#FAF8F5` (nessuna immagine), `assets/avvio-logo.png` (frame `848:40` a 2×, 1200 × 420,
+  trasparente) con `imageWidth` 161 così il logo largo 560/600 dell'immagine misura 150 dp come nell'anteprima `848:55` e
+  resta dentro il cerchio di 192 dp della splash di Android 12+. Le due «Anteprime» su fondo verde non si esportano. Le
+  esportazioni PNG del connettore Figma hanno il fondo bianco opaco: si esporta l'SVG del nodo, si toglie il fondo della
+  sezione e si rasterizza con Chrome headless (`--default-background-color=00000000`); anteprime cerchio/goccia/quadrato con
+  `~/Desktop/censimenti-app/strumenti/anteprime-adattiva.mjs`. I colori in `app.json` (`#FAF8F5`, `#347F75`) sono le variabili
+  Figma `colore/cream` e `azione/primaria`: `app.json` non legge i token.
+- Dopo ogni modifica ad `app.json`/`app.config.js`: `npx expo prebuild -p android --clean --no-install` e controllo del manifest
+  (`SYSTEM_ALERT_WINDOW` con `tools:node="remove"`, `allowBackup="false"`).
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

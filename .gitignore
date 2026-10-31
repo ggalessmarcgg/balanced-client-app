@@ -72,3 +72,8 @@ verify/
 # Configurazione Firebase/Google (chiavi del progetto): mai nel repo
 apps/*/google-services.json
 apps/*/GoogleService-Info.plist
+
+# EAS: credenziali di firma scaricate con `eas credentials` e chiave del service account di Google Play
+credentials.json
+google-service-account*.json
+*.keystore
