@@ -3,14 +3,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { presentaErrore, type EsitoEliminazione } from '@/core/account/eliminazione';
 import type { PassoEliminazione } from '@/ui/account/PannelloEliminaAccount';
 
-export type NotificaEliminazione = { chiave: number; testo: string; onRiprova: (() => void) | null };
+export type NotificaEliminazione = { chiave: number; testo: string; onRiprova: () => void };
 
 export type StatoEliminazione = {
   passo: PassoEliminazione | null;
   /** Messaggio sotto il campo password (password errata, troppi tentativi); null se non c'è. */
   erroreCampo: string | null;
   inCorso: boolean;
-  /** Notifica breve d'errore (rete, servizio: con "Riprova"; sessione o account non riconosciuto: senza). */
+  /** Notifica breve d'errore con "Riprova" (rete, servizio non disponibile): ripete con la stessa password. */
   notifica: NotificaEliminazione | null;
   apri: () => void;
   chiudi: () => void;
@@ -26,8 +26,8 @@ export type StatoEliminazione = {
  * Percorso "Elimina account" (contratto eliminazione account v0.1 §2): avviso → conferma con la password → richiesta al
  * server (`richiedi`, iniettato: il servizio vero dalla rotta, uno finto dalla pagina di sviluppo). Esito positivo, anche
  * "già registrata" → `dopoRegistrata` (la rotta esegue "Esci" e mostra la conferma); password errata o troppi tentativi →
- * messaggio sotto il campo, si resta sul pannello; rete o servizio → Notifica breve con "Riprova" (stessa password);
- * sessione scaduta o account non riconosciuto → Notifica breve senza "Riprova". Una sola richiesta in corso alla volta.
+ * messaggio sotto il campo, si resta sul pannello (così anche sessione scaduta e account non riconosciuto); rete o
+ * servizio → Notifica breve con "Riprova" (stessa password). Una sola richiesta in corso alla volta.
  */
 export function useEliminazioneAccount({ richiedi, dopoRegistrata }: { richiedi: (password: string) => Promise<EsitoEliminazione>; dopoRegistrata: () => void | Promise<void> }): StatoEliminazione {
   const [passo, setPasso] = useState<PassoEliminazione | null>(null);
@@ -60,7 +60,7 @@ export function useEliminazioneAccount({ richiedi, dopoRegistrata }: { richiedi:
           if (!montato.current) return;
           const presentazione = presentaErrore(esito.errore);
           if (presentazione.dove === 'campo') setErroreCampo(presentazione.testo);
-          else setNotifica({ chiave: Date.now(), testo: presentazione.testo, onRiprova: presentazione.riprova ? () => conferma(password) : null });
+          else setNotifica({ chiave: Date.now(), testo: presentazione.testo, onRiprova: () => conferma(password) });
         } finally {
           inCorsoRef.current = false;
           if (montato.current) setInCorso(false);

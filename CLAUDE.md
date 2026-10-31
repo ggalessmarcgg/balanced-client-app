@@ -402,8 +402,9 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (servizio iniettato: quello vero dalla rotta, uno finto dalla pagina di sviluppo). Esito positivo, anche `gia_registrata` →
   `esci()` e `/accesso?avviso=eliminazione`, che mostra per 10 s la Notifica breve di conferma (nessun disegno Figma dedicato:
   è la stessa Notifica breve del link di recupero). Password errata e troppi tentativi → messaggio sotto il campo (si resta sul
-  pannello); rete o servizio non disponibile → Notifica breve d'errore con "Riprova" (stessa password); sessione scaduta o
-  account non riconosciuto → Notifica breve senza "Riprova". L'app non scrive nulla sul database per questo percorso e non
+  pannello; così anche sessione scaduta e account non riconosciuto, perché la Notifica breve d'errore ha sempre "Riprova");
+  rete o servizio non disponibile → Notifica breve d'errore con "Riprova" (stessa password), in fondo sopra le azioni del
+  pannello per 6 s (`NotificaInBasso` ha zIndex 20, sopra il pannello). L'app non scrive nulla sul database per questo percorso e non
   cambia lo stato del cliente. Pagina di sviluppo: `/sviluppo/stati?stato=account-3-avviso|account-4-conferma|account-4-conferma-errore|account-4-conferma-troppi|account-4-conferma-in-corso|account-elimina-riprova|account-5-confermata|account-elimina-flusso`
   (l'ultima è il flusso completo con i tocchi e il server finto: la password decide l'esito).
 - **Interruttore** (`src/ui/Interruttore.tsx`): al cambio di stato, anche quando lo spegne un altro interruttore

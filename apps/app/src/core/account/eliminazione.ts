@@ -18,10 +18,10 @@ export function corpoEliminazione(password: string, versioneApp: string | null, 
  * Come l'app reagisce (contratto §2.5; tabella in docs/server-eliminazione-account.md §3):
  * - passwordErrata: si resta sul pannello con il messaggio sotto il campo;
  * - troppiTentativi: si resta sul pannello con il messaggio (5 password errate in 15 minuti, o limite di Supabase Auth);
- * - rete / riprovabile: nessuna risposta, servizio non disponibile, tempo scaduto → errore con "Riprova";
- * - sessione: accesso scaduto e non rinnovabile → "Esci e accedi di nuovo";
- * - nonDisponibile: cliente non trovato → errore senza "Riprova";
- * - definitivo: richiesta che il server non può accettare (errori di sviluppo) → errore senza "Riprova".
+ * - rete / riprovabile: nessuna risposta, servizio non disponibile, tempo scaduto → Notifica breve con "Riprova";
+ * - sessione: accesso scaduto e non rinnovabile → messaggio sotto il campo "Esci e accedi di nuovo";
+ * - nonDisponibile: cliente non trovato → messaggio sotto il campo (scrivere al supporto);
+ * - definitivo: richiesta che il server non può accettare (errori di sviluppo) → messaggio sotto il campo.
  * La richiesta già registrata NON è un errore: è un esito positivo (stessa conferma, nessuna seconda richiesta).
  */
 export type EsitoErroreEliminazione = 'passwordErrata' | 'troppiTentativi' | 'rete' | 'riprovabile' | 'sessione' | 'nonDisponibile' | 'definitivo';
@@ -103,20 +103,22 @@ export const MESSAGGI_ELIMINAZIONE = {
   definitivo: 'Non siamo riusciti a inviare la richiesta. Se succede ancora, scrivi a supporto@joinbalanced.it.',
 } as const;
 
-/** Dove mostrare l'errore: nel campo password (si resta sul pannello) oppure nella Notifica breve (con "Riprova" se ha senso). */
-export type PresentazioneErrore = { dove: 'campo'; testo: string } | { dove: 'notifica'; testo: string; riprova: boolean };
+/**
+ * Dove mostrare l'errore: sotto il campo password (si resta sul pannello) oppure nella Notifica breve d'errore, che nel
+ * design ha sempre "Riprova" (Trasversali): quindi solo rete e servizio non disponibile, dove ripetere ha senso.
+ */
+export type PresentazioneErrore = { dove: 'campo'; testo: string } | { dove: 'notifica'; testo: string };
 
 export function presentaErrore(errore: ErroreEliminazione): PresentazioneErrore {
   switch (errore.esito) {
-    case 'passwordErrata':
-    case 'troppiTentativi':
-      return { dove: 'campo', testo: MESSAGGI_ELIMINAZIONE[errore.esito] };
     case 'rete':
     case 'riprovabile':
-      return { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE[errore.esito], riprova: true };
+      return { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE[errore.esito] };
+    case 'passwordErrata':
+    case 'troppiTentativi':
     case 'sessione':
     case 'nonDisponibile':
     case 'definitivo':
-      return { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE[errore.esito], riprova: false };
+      return { dove: 'campo', testo: MESSAGGI_ELIMINAZIONE[errore.esito] };
   }
 }

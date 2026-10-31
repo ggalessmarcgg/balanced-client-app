@@ -23,6 +23,7 @@ import { useBarraPersistente } from '@/ui/schermate/Sovrapposti';
 
 const TESTO_ERRORE_PROMEMORIA = 'Non siamo riusciti a salvare la preferenza. Riprova tra poco.';
 const TESTO_ERRORE_CONSENSO = 'Non siamo riusciti a salvare la scelta sulle funzioni AI. Riprova tra poco.';
+const DURATA_NOTIFICA_ELIMINAZIONE_MS = 6000;
 
 /**
  * Account · 1 (step 11): scheda della barra per l'abbonato, pulsante "Account" degli stati H e K (senza barra).
@@ -147,13 +148,15 @@ function Account({ profilo }: { profilo: Profilo }) {
           />
           {avviso ? <NotificaInBasso key={avviso.chiave} tipo="conferma" testo={avviso.testo} onScomparsa={nascondiAvviso} sopra={conBarra ? INGOMBRO_BARRA_NAVIGAZIONE : 0} /> : null}
           {eliminazione.notifica ? (
+            // Con il pannello aperto la barra è coperta: la notifica sta in fondo, sopra le azioni del pannello, per 6 s.
             <NotificaInBasso
               key={eliminazione.notifica.chiave}
               tipo="errore"
               testo={eliminazione.notifica.testo}
-              onRiprova={eliminazione.notifica.onRiprova ?? undefined}
-              onScomparsa={eliminazione.notifica.onRiprova ? undefined : eliminazione.nascondiNotifica}
-              sopra={conBarra ? INGOMBRO_BARRA_NAVIGAZIONE : 0}
+              onRiprova={eliminazione.notifica.onRiprova}
+              onScomparsa={eliminazione.nascondiNotifica}
+              durataMs={DURATA_NOTIFICA_ELIMINAZIONE_MS}
+              sopra={conBarra && eliminazione.passo === null ? INGOMBRO_BARRA_NAVIGAZIONE : 0}
             />
           ) : null}
         </>

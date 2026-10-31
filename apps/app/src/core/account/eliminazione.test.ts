@@ -74,13 +74,11 @@ describe('erroreEliminazioneApp e presentaErrore', () => {
     assert.equal(erroreEliminazioneApp('tempo_scaduto', 'app-1').esito, 'riprovabile');
     assert.equal(erroreEliminazioneApp('sessione_assente', null).esito, 'sessione');
   });
-  it('password errata e troppi tentativi restano nel campo; rete e servizio in notifica con Riprova; il resto in notifica senza Riprova', () => {
-    assert.deepEqual(presentaErrore(errore('passwordErrata')), { dove: 'campo', testo: MESSAGGI_ELIMINAZIONE.passwordErrata });
-    assert.deepEqual(presentaErrore(errore('troppiTentativi')), { dove: 'campo', testo: MESSAGGI_ELIMINAZIONE.troppiTentativi });
-    assert.deepEqual(presentaErrore(errore('rete')), { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE.rete, riprova: true });
-    assert.deepEqual(presentaErrore(errore('riprovabile')), { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE.riprovabile, riprova: true });
-    assert.deepEqual(presentaErrore(errore('sessione')), { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE.sessione, riprova: false });
-    assert.deepEqual(presentaErrore(errore('nonDisponibile')), { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE.nonDisponibile, riprova: false });
-    assert.deepEqual(presentaErrore(errore('definitivo')), { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE.definitivo, riprova: false });
+  it('rete e servizio nella Notifica breve con Riprova; tutti gli altri sotto il campo (si resta sul pannello)', () => {
+    assert.deepEqual(presentaErrore(errore('rete')), { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE.rete });
+    assert.deepEqual(presentaErrore(errore('riprovabile')), { dove: 'notifica', testo: MESSAGGI_ELIMINAZIONE.riprovabile });
+    for (const esito of ['passwordErrata', 'troppiTentativi', 'sessione', 'nonDisponibile', 'definitivo'] as const) {
+      assert.deepEqual(presentaErrore(errore(esito)), { dove: 'campo', testo: MESSAGGI_ELIMINAZIONE[esito] }, esito);
+    }
   });
 });

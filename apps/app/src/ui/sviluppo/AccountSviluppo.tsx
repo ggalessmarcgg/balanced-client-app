@@ -99,7 +99,7 @@ export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
           sovrapposti={
             <>
               <PannelloEliminaAccount passo="conferma" onIndietro={nulla} onContinua={nulla} onElimina={nulla} passwordIniziale="••••••••••" />
-              <NotificaInBasso tipo="errore" testo={MESSAGGI_ELIMINAZIONE.riprovabile} onRiprova={nulla} sopra={INGOMBRO_BARRA_NAVIGAZIONE} />
+              <NotificaInBasso tipo="errore" testo={MESSAGGI_ELIMINAZIONE.riprovabile} onRiprova={nulla} />
             </>
           }
         />
@@ -175,7 +175,7 @@ function FlussoEliminazione() {
             inCorso={eliminazione.inCorso}
           />
           {eliminazione.notifica ? (
-            <NotificaInBasso key={eliminazione.notifica.chiave} tipo="errore" testo={eliminazione.notifica.testo} onRiprova={eliminazione.notifica.onRiprova ?? undefined} onScomparsa={eliminazione.notifica.onRiprova ? undefined : eliminazione.nascondiNotifica} sopra={INGOMBRO_BARRA_NAVIGAZIONE} />
+            <NotificaInBasso key={eliminazione.notifica.chiave} tipo="errore" testo={eliminazione.notifica.testo} onRiprova={eliminazione.notifica.onRiprova} onScomparsa={eliminazione.nascondiNotifica} durataMs={6000} sopra={eliminazione.passo === null ? INGOMBRO_BARRA_NAVIGAZIONE : 0} />
           ) : null}
         </>
       }
