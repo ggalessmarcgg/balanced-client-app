@@ -189,16 +189,21 @@ export const TESTI_NOTIFICHE_ACCOUNT = {
   impostazioni: 'Apri le impostazioni',
 } as const;
 
-/** Eliminazione dell'account (Figma 499:2568 e 499:2709): nessun sistema la esegue oggi (censimento §7). */
+/**
+ * Eliminazione dell'account (Figma 499:2568 e 499:2709; contratto eliminazione account v0.1 §2): l'avviso informa senza
+ * chiedere passi preliminari (cosa viene eliminato, entro quando, cosa resta per legge, abbonamento non disdetto); la
+ * conferma con la password manda la richiesta al server (src/core/account/eliminazione.ts); dopo l'esito positivo l'app
+ * esce e mostra `conferma` nella schermata di accesso.
+ */
 export const TESTI_ELIMINAZIONE = {
   avvisoTitolo: 'Vuoi eliminare il tuo account?',
-  avvisoInfo: "Eliminare il tuo account non interrompe l'abbonamento. Prima contatta il supporto per disdire.",
-  avvisoTesto: 'Una volta cancellato non potrai più recuperare il tuo account e tutti i dati ad esso collegati.',
+  avvisoInfo: "L'eliminazione dell'account non disdice l'abbonamento: per disdirlo scrivi a supporto@joinbalanced.it.",
+  avvisoTesto: 'Elimineremo il tuo account e tutti i dati collegati entro 30 giorni e ti scriveremo per confermarlo. Alcuni dati, come le fatture, restano conservati per legge. Una volta eliminato, l’account non si può recuperare.',
   indietro: 'Indietro',
   continua: 'Continua',
   confermaTitolo: 'Conferma con la tua password',
   confermaTesto: "Per sicurezza, inserisci la password del tuo account per confermare l'eliminazione.",
   password: 'Password',
   eliminaDefinitivamente: 'Elimina definitivamente',
-  nonDisponibile: "L'eliminazione dell'account sarà disponibile a breve. Nel frattempo puoi chiederla al supporto.",
+  conferma: 'Abbiamo ricevuto la tua richiesta: elimineremo il tuo account e i tuoi dati entro 30 giorni e ti scriveremo per confermarlo.',
 } as const;

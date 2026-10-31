@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { TipoErroreAccesso } from '@/core/accesso/errori';
+import { TESTI_ELIMINAZIONE } from '@/core/account/account';
 import { accedi, ATTESA_REINVIO_SECONDI, reinviaConferma } from '@/servizi/accesso';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
@@ -15,8 +16,10 @@ type Fase = { tipo: 'normale' } | { tipo: 'errore'; errore: TipoErroreAccesso } 
 /**
  * Login (Figma 425:224 / 425:252) con le varianti Email non confermata (562:4254) e link inviato (562:4319).
  * Credenziali errate → messaggio terracotta; email_not_confirmed → messaggio info e "Invia di nuovo il link"
- * con attesa di 60 s tra un invio e l'altro; ?avviso=recupero mostra la notifica breve del link di recupero.
+ * con attesa di 60 s tra un invio e l'altro; ?avviso=recupero mostra la notifica breve del link di recupero;
+ * ?avviso=eliminazione la conferma della richiesta di eliminazione dell'account (contratto v0.1 §2.4), dopo l'uscita.
  */
+const DURATA_CONFERMA_ELIMINAZIONE_MS = 10_000;
 export default function RottaAccesso() {
   const router = useRouter();
   const { avviso } = useLocalSearchParams<{ avviso?: string }>();
@@ -26,7 +29,7 @@ export default function RottaAccesso() {
   const [inCorso, setInCorso] = useState<'accesso' | 'reinvio' | false>(false);
   const [scadenzaReinvio, setScadenzaReinvio] = useState<number | null>(null);
   const [secondi, setSecondi] = useState(0);
-  const [notifica, setNotifica] = useState(avviso === 'recupero');
+  const [notifica, setNotifica] = useState<'recupero' | 'eliminazione' | null>(avviso === 'recupero' || avviso === 'eliminazione' ? avviso : null);
 
   // Conto alla rovescia del reinvio: aggiorna i secondi finché la scadenza non è passata.
   useEffect(() => {
@@ -99,7 +102,8 @@ export default function RottaAccesso() {
       inCorso={inCorso}
       sovrapposti={
         <>
-          {notifica && <NotificaInBasso tipo="conferma" testo="Ti abbiamo inviato il link per scegliere una nuova password." onScomparsa={() => setNotifica(false)} />}
+          {notifica === 'recupero' && <NotificaInBasso tipo="conferma" testo="Ti abbiamo inviato il link per scegliere una nuova password." onScomparsa={() => setNotifica(null)} />}
+          {notifica === 'eliminazione' && <NotificaInBasso tipo="conferma" testo={TESTI_ELIMINAZIONE.conferma} durataMs={DURATA_CONFERMA_ELIMINAZIONE_MS} onScomparsa={() => setNotifica(null)} />}
           {__DEV__ && <LinkSviluppo />}
         </>
       }

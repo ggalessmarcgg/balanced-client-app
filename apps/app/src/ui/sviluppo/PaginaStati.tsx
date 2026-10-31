@@ -184,9 +184,14 @@ export const STATI_SVILUPPO = [
   ['account-1-promemoria-spenti', 'Account con i promemoria spenti (weekend disabilitato)'],
   ['account-1-senza-barra', 'Account dagli stati H e K: senza barra, senza nutrizionista'],
   ['account-1-nuove', 'Account con i pallini: notifiche non viste e revisione Nuova'],
-  ['account-3-avviso', 'Account · 3 · Elimina account · avviso (499:2568)'],
+  ['account-3-avviso', 'Account · 3 · Elimina account · avviso (499:2568), testi del contratto eliminazione account v0.1 §2'],
   ['account-4-conferma', 'Account · 4 · Elimina account · conferma (499:2709)'],
-  ['account-elimina-notifica', 'Account dopo "Elimina definitivamente": Notifica breve "disponibile a breve"'],
+  ['account-4-conferma-errore', 'Elimina account · conferma con la password errata (campo in errore, si resta sul pannello)'],
+  ['account-4-conferma-troppi', 'Elimina account · conferma dopo troppi tentativi (campo in errore)'],
+  ['account-4-conferma-in-corso', 'Elimina account · richiesta in corso ("Elimina definitivamente" in caricamento, "Indietro" disabilitato)'],
+  ['account-elimina-riprova', 'Elimina account · rete o servizio non disponibile: Notifica breve d\'errore con "Riprova"'],
+  ['account-5-confermata', 'Dopo "Elimina definitivamente" con esito positivo: schermata di accesso con la conferma dei 30 giorni (contratto §2.4; nessun disegno Figma dedicato)'],
+  ['account-elimina-flusso', 'Elimina account · flusso completo con i tocchi e il server finto (password: errata, troppi, rete, servizio, sessione, sconosciuto, gia; altro = registrata)'],
   ['menu-2-notifiche', 'Menu · 2 · Notifiche (508:2699), con la riga del piano pronto (831:8481)'],
   ['notifiche-vuote', 'Notifiche senza righe negli ultimi 7 giorni'],
   ['notifiche-caricamento', 'Notifiche in caricamento'],
@@ -603,8 +608,18 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <AccountSviluppo scenario="eliminaAvviso" />;
     case 'account-4-conferma':
       return <AccountSviluppo scenario="eliminaConferma" />;
-    case 'account-elimina-notifica':
-      return <AccountSviluppo scenario="eliminaNotifica" />;
+    case 'account-4-conferma-errore':
+      return <AccountSviluppo scenario="eliminaConfermaErrore" />;
+    case 'account-4-conferma-troppi':
+      return <AccountSviluppo scenario="eliminaConfermaTroppi" />;
+    case 'account-4-conferma-in-corso':
+      return <AccountSviluppo scenario="eliminaConfermaInCorso" />;
+    case 'account-elimina-riprova':
+      return <AccountSviluppo scenario="eliminaRiprova" />;
+    case 'account-5-confermata':
+      return <AccountSviluppo scenario="eliminaConfermata" />;
+    case 'account-elimina-flusso':
+      return <AccountSviluppo scenario="eliminaFlusso" />;
     case 'menu-2-notifiche':
       return <AccountSviluppo scenario="notifiche" />;
     case 'notifiche-vuote':

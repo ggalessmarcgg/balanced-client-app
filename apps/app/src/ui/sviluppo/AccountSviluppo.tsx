@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { cambiaPromemoria, TESTI_ELIMINAZIONE, type Promemoria } from '@/core/account/account';
+import { MESSAGGI_ELIMINAZIONE, type EsitoEliminazione } from '@/core/account/eliminazione';
 import { elencoNotifiche, type RigaNotifica } from '@/core/notifiche/notifiche';
 import { PannelloEliminaAccount } from '@/ui/account/PannelloEliminaAccount';
+import { useEliminazioneAccount } from '@/ui/account/useEliminazioneAccount';
+import { SchermataAccesso } from '@/ui/schermate/SchermataAccesso';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccount, type SchermataAccountProps } from '@/ui/schermate/SchermataAccount';
 import { SchermataNotifiche } from '@/ui/schermate/SchermataNotifiche';
@@ -53,7 +56,7 @@ const CONTESTO = {
 };
 const ELENCO = elencoNotifiche(RIGHE, CONTESTO, ADESSO);
 
-export type ScenarioAccount = 'account' | 'accountNotificheDisattivate' | 'accountNotificheNegate' | 'accountInterruttori' | 'accountSenzaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaNotifica' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
+export type ScenarioAccount = 'account' | 'accountNotificheDisattivate' | 'accountNotificheNegate' | 'accountInterruttori' | 'accountSenzaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaConfermaErrore' | 'eliminaConfermaTroppi' | 'eliminaConfermaInCorso' | 'eliminaRiprova' | 'eliminaConfermata' | 'eliminaFlusso' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
 
 export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
   switch (scenario) {
@@ -81,8 +84,31 @@ export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
       return <SchermataAccount {...ACCOUNT} sovrapposti={<PannelloEliminaAccount passo="avviso" onIndietro={nulla} onContinua={nulla} onElimina={nulla} />} />;
     case 'eliminaConferma':
       return <SchermataAccount {...ACCOUNT} sovrapposti={<PannelloEliminaAccount passo="conferma" onIndietro={nulla} onContinua={nulla} onElimina={nulla} passwordIniziale="••••••••••" />} />;
-    case 'eliminaNotifica':
-      return <SchermataAccount {...ACCOUNT} sovrapposti={<NotificaInBasso tipo="conferma" testo={TESTI_ELIMINAZIONE.nonDisponibile} sopra={INGOMBRO_BARRA_NAVIGAZIONE} />} />;
+    case 'eliminaConfermaErrore':
+      // Password errata: si resta sul pannello, campo in errore con il messaggio (contratto §2.5).
+      return <SchermataAccount {...ACCOUNT} sovrapposti={<PannelloEliminaAccount passo="conferma" onIndietro={nulla} onContinua={nulla} onElimina={nulla} passwordIniziale="••••••••••" errore={MESSAGGI_ELIMINAZIONE.passwordErrata} />} />;
+    case 'eliminaConfermaTroppi':
+      return <SchermataAccount {...ACCOUNT} sovrapposti={<PannelloEliminaAccount passo="conferma" onIndietro={nulla} onContinua={nulla} onElimina={nulla} passwordIniziale="••••••••••" errore={MESSAGGI_ELIMINAZIONE.troppiTentativi} />} />;
+    case 'eliminaConfermaInCorso':
+      return <SchermataAccount {...ACCOUNT} sovrapposti={<PannelloEliminaAccount passo="conferma" onIndietro={nulla} onContinua={nulla} onElimina={nulla} passwordIniziale="••••••••••" inCorso />} />;
+    case 'eliminaRiprova':
+      // Rete o servizio non disponibile: Notifica breve d'errore con "Riprova", pannello ancora aperto.
+      return (
+        <SchermataAccount
+          {...ACCOUNT}
+          sovrapposti={
+            <>
+              <PannelloEliminaAccount passo="conferma" onIndietro={nulla} onContinua={nulla} onElimina={nulla} passwordIniziale="••••••••••" />
+              <NotificaInBasso tipo="errore" testo={MESSAGGI_ELIMINAZIONE.riprovabile} onRiprova={nulla} sopra={INGOMBRO_BARRA_NAVIGAZIONE} />
+            </>
+          }
+        />
+      );
+    case 'eliminaConfermata':
+      // Dopo l'esito positivo: uscita e conferma nella schermata di accesso (contratto §2.4).
+      return <AccessoConConferma />;
+    case 'eliminaFlusso':
+      return <FlussoEliminazione />;
     case 'notifiche':
       return <SchermataNotifiche fase={{ tipo: 'pronto', elenco: ELENCO }} onIndietro={nulla} onApri={nulla} />;
     case 'notificheVuote':
@@ -92,6 +118,69 @@ export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
     case 'notificheErrore':
       return <SchermataNotifiche fase={{ tipo: 'rete', onRiprova: nulla }} onIndietro={nulla} />;
   }
+}
+
+function AccessoConConferma() {
+  return <SchermataAccesso email="" password="" onEmail={nulla} onPassword={nulla} onAccedi={nulla} onPasswordDimenticata={nulla} onReinvia={nulla} variante={{ tipo: 'normale' }} sovrapposti={<NotificaInBasso tipo="conferma" testo={TESTI_ELIMINAZIONE.conferma} />} />;
+}
+
+const RITARDO_SERVER_FINTO_MS = 600;
+
+/** Server finto per il flusso completo senza rete né database: la password decide l'esito. */
+async function richiediFinta(password: string): Promise<EsitoEliminazione> {
+  await new Promise((r) => setTimeout(r, RITARDO_SERVER_FINTO_MS));
+  const errore = (esito: 'passwordErrata' | 'troppiTentativi' | 'rete' | 'riprovabile' | 'sessione' | 'nonDisponibile'): EsitoEliminazione => ({ tipo: 'errore', errore: { esito, codice: esito, messaggio: 'prova', richiestaId: 'app-prova', httpStatus: null } });
+  switch (password) {
+    case 'errata':
+      return errore('passwordErrata');
+    case 'troppi':
+      return errore('troppiTentativi');
+    case 'rete':
+      return errore('rete');
+    case 'servizio':
+      return errore('riprovabile');
+    case 'sessione':
+      return errore('sessione');
+    case 'sconosciuto':
+      return errore('nonDisponibile');
+    case 'gia':
+      return { tipo: 'registrata', richiestaId: null, scadenza: null, giaRegistrata: true };
+    default:
+      return { tipo: 'registrata', richiestaId: 'r-prova', scadenza: '2026-11-30T14:05:12.000Z', giaRegistrata: false };
+  }
+}
+
+/**
+ * Flusso completo con i tocchi veri e il server finto (password: "errata", "troppi", "rete", "servizio", "sessione",
+ * "sconosciuto", "gia", qualsiasi altra = registrata). All'esito positivo la schermata di accesso con la conferma, come dopo "Esci".
+ */
+function FlussoEliminazione() {
+  const [uscito, setUscito] = useState(false);
+  const dopoRegistrata = useCallback(() => setUscito(true), []);
+  const eliminazione = useEliminazioneAccount({ richiedi: richiediFinta, dopoRegistrata });
+  if (uscito) return <AccessoConConferma />;
+  return (
+    <SchermataAccount
+      {...ACCOUNT}
+      onElimina={eliminazione.apri}
+      sovrapposti={
+        <>
+          <PannelloEliminaAccount
+            passo={eliminazione.passo}
+            onIndietro={eliminazione.chiudi}
+            onContinua={eliminazione.continua}
+            onElimina={eliminazione.conferma}
+            onCambioPassword={eliminazione.onCambioPassword}
+            errore={eliminazione.erroreCampo}
+            inCorso={eliminazione.inCorso}
+          />
+          {eliminazione.notifica ? (
+            <NotificaInBasso key={eliminazione.notifica.chiave} tipo="errore" testo={eliminazione.notifica.testo} onRiprova={eliminazione.notifica.onRiprova ?? undefined} onScomparsa={eliminazione.notifica.onRiprova ? undefined : eliminazione.nascondiNotifica} sopra={INGOMBRO_BARRA_NAVIGAZIONE} />
+          ) : null}
+        </>
+      }
+    />
+  );
 }
 
 const PASSO_INTERRUTTORI_MS = 2000;

@@ -2,9 +2,11 @@ import Constants from 'expo-constants';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
-import { cambiaPromemoria, inizialiNome, revisioniRicevute, TESTI_ELIMINAZIONE, URL_PRIVACY, URL_TERMINI, type Promemoria } from '@/core/account/account';
+import { cambiaPromemoria, inizialiNome, revisioniRicevute, URL_PRIVACY, URL_TERMINI, type Promemoria } from '@/core/account/account';
 import type { Profilo } from '@/core/stato/stato';
+import { esci } from '@/servizi/accesso';
 import { apriPaginaWeb, leggiAbbonamento, scriviPromemoria } from '@/servizi/account';
+import { richiediEliminazione } from '@/servizi/eliminazioneAccount';
 import { useMemoriaRevisioni, useNuovaRevisione } from '@/servizi/memoriaRevisioni';
 import { useNotificheNuove } from '@/servizi/notifiche';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
@@ -12,7 +14,8 @@ import { aggiornaAccountInMemoria, statoCorrente } from '@/servizi/statoCliente'
 import { useAzioniStato } from '@/servizi/useAzioniStato';
 import { useConsensoAI } from '@/servizi/useConsensoAI';
 import { usePermessoNotifiche } from '@/servizi/usePermessoNotifiche';
-import { PannelloEliminaAccount, type PassoEliminazione } from '@/ui/account/PannelloEliminaAccount';
+import { PannelloEliminaAccount } from '@/ui/account/PannelloEliminaAccount';
+import { useEliminazioneAccount } from '@/ui/account/useEliminazioneAccount';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccount, type FaseAbbonamento } from '@/ui/schermate/SchermataAccount';
 import { INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
@@ -24,7 +27,8 @@ const TESTO_ERRORE_CONSENSO = 'Non siamo riusciti a salvare la scelta sulle funz
 /**
  * Account · 1 (step 11): scheda della barra per l'abbonato, pulsante "Account" degli stati H e K (senza barra).
  * Profilo e statistiche dallo stato già letto; abbonamento dalla function (una volta l'ora); promemoria scritti su
- * clients; eliminazione dell'account solo come percorso di interfaccia (nessun sistema la esegue oggi).
+ * clients; eliminazione dell'account con la richiesta al server degli agenti (contratto eliminazione account v0.1 §2):
+ * dopo l'esito positivo lo stesso percorso di "Esci" e la conferma nella schermata di accesso.
  */
 export default function RottaAccount() {
   const stato = statoCorrente();
@@ -41,8 +45,13 @@ function Account({ profilo }: { profilo: Profilo }) {
   const revisioni = useMemoriaRevisioni();
   const [promemoria, setPromemoria] = useState<Promemoria>(profilo.account.promemoria);
   const [abbonamento, setAbbonamento] = useState<FaseAbbonamento>({ tipo: 'caricamento' });
-  const [passo, setPasso] = useState<PassoEliminazione | null>(null);
   const [avviso, setAvviso] = useState<{ chiave: number; testo: string } | null>(null);
+  // Eliminazione (contratto §2.4): esito positivo, anche "già registrata" → Esci e conferma nella schermata di accesso.
+  const dopoRegistrata = useCallback(async () => {
+    await esci();
+    router.replace({ pathname: '/accesso', params: { avviso: 'eliminazione' } });
+  }, [router]);
+  const eliminazione = useEliminazioneAccount({ richiedi: richiediEliminazione, dopoRegistrata });
   // Step 6: card "Notifiche disattivate" / "Apri le impostazioni" (contratto §5) e interruttore delle funzioni AI (§8).
   const permesso = usePermessoNotifiche();
   const consenso = useConsensoAI(profilo.clientId);
@@ -93,13 +102,6 @@ function Account({ profilo }: { profilo: Profilo }) {
   );
   const onPrivacy = useCallback(() => void apriPaginaWeb(URL_PRIVACY), []);
   const onTermini = useCallback(() => void apriPaginaWeb(URL_TERMINI), []);
-  const onElimina = useCallback(() => setPasso('avviso'), []);
-  const chiudiEliminazione = useCallback(() => setPasso(null), []);
-  const continuaEliminazione = useCallback(() => setPasso('conferma'), []);
-  const confermaEliminazione = useCallback(() => {
-    setPasso(null);
-    setAvviso({ chiave: Date.now(), testo: TESTI_ELIMINAZIONE.nonDisponibile });
-  }, []);
   const nascondiAvviso = useCallback(() => setAvviso(null), []);
   const onMenu = useCallback(() => router.push('/menu'), [router]);
   const onIndietro = useCallback(() => (router.canGoBack() ? router.back() : router.replace('/')), [router]);
@@ -126,7 +128,7 @@ function Account({ profilo }: { profilo: Profilo }) {
       onTelefonoSupporto={onTelefonoSupporto}
       onPrivacy={onPrivacy}
       onTermini={onTermini}
-      onElimina={onElimina}
+      onElimina={eliminazione.apri}
       onEsci={onEsci}
       onNotifiche={onNotifiche}
       onMenu={onMenu}
@@ -134,8 +136,26 @@ function Account({ profilo }: { profilo: Profilo }) {
       sovrapposti={
         <>
           {sovrapposti}
-          <PannelloEliminaAccount passo={passo} onIndietro={chiudiEliminazione} onContinua={continuaEliminazione} onElimina={confermaEliminazione} />
+          <PannelloEliminaAccount
+            passo={eliminazione.passo}
+            onIndietro={eliminazione.chiudi}
+            onContinua={eliminazione.continua}
+            onElimina={eliminazione.conferma}
+            onCambioPassword={eliminazione.onCambioPassword}
+            errore={eliminazione.erroreCampo}
+            inCorso={eliminazione.inCorso}
+          />
           {avviso ? <NotificaInBasso key={avviso.chiave} tipo="conferma" testo={avviso.testo} onScomparsa={nascondiAvviso} sopra={conBarra ? INGOMBRO_BARRA_NAVIGAZIONE : 0} /> : null}
+          {eliminazione.notifica ? (
+            <NotificaInBasso
+              key={eliminazione.notifica.chiave}
+              tipo="errore"
+              testo={eliminazione.notifica.testo}
+              onRiprova={eliminazione.notifica.onRiprova ?? undefined}
+              onScomparsa={eliminazione.notifica.onRiprova ? undefined : eliminazione.nascondiNotifica}
+              sopra={conBarra ? INGOMBRO_BARRA_NAVIGAZIONE : 0}
+            />
+          ) : null}
         </>
       }
     />
