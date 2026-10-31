@@ -14,7 +14,7 @@ export type RigaElencoProps =
   | { tipo: 'copia'; etichetta: string; onPress?: () => void }
   | { tipo: 'frecciaConIcona'; etichetta: string; icona: IconaPerMisura[24]; onPress?: () => void }
   | { tipo: 'dueRighe'; titolo: string; sottotitolo: string; onPress?: () => void }
-  | { tipo: 'conAvatar'; etichetta: string; nome: string; avatar?: ImageSourcePropType; onPress?: () => void }
+  | { tipo: 'conAvatar'; etichetta: string; nome: string; avatar?: ImageSourcePropType; iniziali?: string; onPress?: () => void }
   | { tipo: 'notifica'; titolo: string; testo: string; ora: string; onPress?: () => void };
 
 /**
@@ -88,7 +88,16 @@ export function RigaElenco(props: RigaElencoProps) {
     case 'conAvatar':
       return (
         <Toccabile onPress={props.onPress} etichetta={`${props.etichetta}: ${props.nome}`} style={stili.rigaConAvatar}>
-          {props.avatar ? <Image source={props.avatar} style={stili.avatar} accessible={false} /> : <View style={stili.avatar} />}
+          {props.avatar ? (
+            <Image source={props.avatar} style={stili.avatar} accessible={false} />
+          ) : props.iniziali ? (
+            // Card "Il tuo account" (Figma 840:8607): iniziali H2 in un cerchio 44 su sfondo/campo, come il profilo dell'Account.
+            <View style={[stili.avatar, stili.iniziali]}>
+              <Testo stile="h2">{props.iniziali}</Testo>
+            </View>
+          ) : (
+            <View style={stili.avatar} />
+          )}
           <View style={stili.testi}>
             <Testo stile="bodyDetails" colore={colori.testo.secondario}>
               {props.etichetta}
@@ -173,6 +182,7 @@ const stili = StyleSheet.create({
   testi: { flex: 1, gap: spazio[2] },
   iconaAttenuata: { opacity: opacita.iconaRigaAttenuata },
   avatar: { width: tocco.minimoIos, height: tocco.minimoIos, borderRadius: raggio.pieno, backgroundColor: colori.sfondo.foto },
+  iniziali: { backgroundColor: colori.sfondo.campo, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   ora: { textAlign: 'right' },
   premuta: { opacity: opacita.pulsantePremuto },
 });

@@ -145,6 +145,12 @@ export function etichettaRinnovo(currentPeriodEnd: number | null | undefined, da
   return `${g} ${MESI[m - 1]} ${a}`;
 }
 
+/**
+ * Account per chi non è abbonato (Figma Account · 1.2 840:8691, stati C, D, F, H, I, K): card dell'abbonamento con
+ * Piano "—", Stato "Non attivo", Prossimo rinnovo "—", senza interrogare la function; statistiche a zero.
+ */
+export const ABBONAMENTO_NON_ATTIVO: Abbonamento = { piano: '—', stato: 'Non attivo', rinnovo: '—' };
+
 /** Card dalla risposta della function; null se il cliente non ha un abbonamento Stripe leggibile. */
 export function abbonamentoDa(risposta: RispostaAbbonamento | null | undefined, dataRoma: (istante: Date) => string): Abbonamento | null {
   const s = risposta?.subscription;
@@ -179,6 +185,9 @@ export const TESTI_ACCOUNT = {
   termini: 'Termini del servizio',
   elimina: 'Elimina account',
   esci: 'Esci',
+  /** Card "Il tuo account" negli stati prima dell'abbonamento (Figma 840:8607) e titolo dell'Account senza barra. */
+  tuoAccount: 'Il tuo account',
+  titolo: 'Account',
 } as const;
 
 /** Card Notifiche senza il permesso (step 6, contratto notifiche §5; Figma Account · 2 492:3408 e · 3 831:8335). */

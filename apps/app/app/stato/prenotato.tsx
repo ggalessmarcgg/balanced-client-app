@@ -49,7 +49,7 @@ export default function Rotta() {
 
 function Prenotato({ stato }: { stato: Extract<StatoPrenotato, { codice: 'F' }> }) {
   const router = useRouter();
-  const { onNutrizionista, onTelefonoSupporto, sovrapposti } = useAzioniStato();
+  const { onAccount, onNutrizionista, onTelefonoSupporto, sovrapposti } = useAzioniStato();
   const onMenu = useCallback(() => router.push('/menu'), [router]);
   const onEntra = useCallback((link: string) => {
     Linking.openURL(link).catch(() => {});
@@ -65,6 +65,7 @@ function Prenotato({ stato }: { stato: Extract<StatoPrenotato, { codice: 'F' }> 
       onGestisci={onTelefonoSupporto}
       onNutrizionista={onNutrizionista}
       onMenu={onMenu}
+      onAccount={onAccount}
       sovrapposti={sovrapposti}
     />
   );

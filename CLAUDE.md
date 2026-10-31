@@ -407,6 +407,17 @@ npx expo install --fix                   # riallinea versioni alla SDK
   pannello per 6 s (`NotificaInBasso` ha zIndex 20, sopra il pannello). L'app non scrive nulla sul database per questo percorso e non
   cambia lo stato del cliente. Pagina di sviluppo: `/sviluppo/stati?stato=account-3-avviso|account-4-conferma|account-4-conferma-errore|account-4-conferma-troppi|account-4-conferma-in-corso|account-elimina-riprova|account-5-confermata|account-elimina-flusso`
   (l'ultima è il flusso completo con i tocchi e il server finto: la password decide l'esito).
+- **Account raggiungibile prima dell'abbonamento (31/10/2026, richiesto da Apple e Google per l'eliminazione)**: card
+  "Il tuo account" (`src/ui/CardAccount.tsx`, Figma 840:8607…840:8677: stessa card della nutrizionista con le iniziali H2 su
+  sfondo/campo nella `RigaElenco` con avatar, prop `iniziali`) negli stati 1, 2, 3 (`SchermataPrenotazione` e
+  `SchermataPrenotato`, in fondo al gruppo delle card) e 6, 7, 12 (`SchermataStatoSupporto`, sotto la card della
+  nutrizionista; il pulsante "Account" resta); non negli stati 5 e 11. Il tocco apre `/account` (`useAzioniStato.onAccount`):
+  senza barra l'Account ha l'`Intestazione` con la freccia e il titolo "Account" (come le pagine del menu; Figma Account · 1.2
+  840:8691 disegna la barra, differenza voluta), "Indietro" torna allo stato. Per chi non è abbonato (stato diverso da J):
+  abbonamento `ABBONAMENTO_NON_ATTIVO` (Piano "—", Stato "Non attivo", Prossimo rinnovo "—") senza chiamare la function,
+  statistiche a zero, nessuna lettura delle revisioni; tutto il resto uguale, compreso "Elimina account" (stessa rotta del
+  server, che non richiede l'abbonamento). Pagina di sviluppo: `account-1.2-senza-abbonamento`, `account-flusso-prima-abbonamento`;
+  confronti in `~/Desktop/censimenti-app/account-prima-abbonamento/`.
 - **Interruttore** (`src/ui/Interruttore.tsx`): al cambio di stato, anche quando lo spegne un altro interruttore
   (diario → weekend), il pomello scorre e il fondo cambia in dissolvenza in 300 ms ease-out
   (`TRANSIZIONI.tacchetteMs`, come selettore grafico/tabella e barra); con "Riduci movimento" solo la dissolvenza

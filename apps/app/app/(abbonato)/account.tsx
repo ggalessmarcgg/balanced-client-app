@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
-import { cambiaPromemoria, inizialiNome, revisioniRicevute, URL_PRIVACY, URL_TERMINI, type Promemoria } from '@/core/account/account';
+import { ABBONAMENTO_NON_ATTIVO, cambiaPromemoria, inizialiNome, revisioniRicevute, URL_PRIVACY, URL_TERMINI, type Promemoria } from '@/core/account/account';
 import type { Profilo } from '@/core/stato/stato';
 import { esci } from '@/servizi/accesso';
 import { apriPaginaWeb, leggiAbbonamento, scriviPromemoria } from '@/servizi/account';
@@ -34,10 +34,15 @@ const DURATA_NOTIFICA_ELIMINAZIONE_MS = 6000;
 export default function RottaAccount() {
   const stato = statoCorrente();
   if (!stato || !('profilo' in stato)) return <Redirect href="/" />;
-  return <Account profilo={stato.profilo} />;
+  return <Account profilo={stato.profilo} abbonato={stato.codice === 'J'} />;
 }
 
-function Account({ profilo }: { profilo: Profilo }) {
+/**
+ * `abbonato` = stato J. Prima dell'abbonamento (Account · 1.2, 31/10/2026): stessa pagina dalla card "Il tuo account"
+ * degli stati, abbonamento "Non attivo" senza interrogare la function, statistiche a zero, tutto il resto uguale
+ * (notifiche, supporto, Privacy e dati con il consenso AI ed "Elimina account": stessa rotta e stessa uscita).
+ */
+function Account({ profilo, abbonato }: { profilo: Profilo; abbonato: boolean }) {
   const router = useRouter();
   const conBarra = useBarraPersistente();
   const { onEsci, onNutrizionista, onNotifiche, onEmailSupporto, onTelefonoSupporto, sovrapposti } = useAzioniStato({ sopraLaBarra: conBarra });
@@ -45,7 +50,7 @@ function Account({ profilo }: { profilo: Profilo }) {
   const notificheNuove = useNotificheNuove();
   const revisioni = useMemoriaRevisioni();
   const [promemoria, setPromemoria] = useState<Promemoria>(profilo.account.promemoria);
-  const [abbonamento, setAbbonamento] = useState<FaseAbbonamento>({ tipo: 'caricamento' });
+  const [abbonamento, setAbbonamento] = useState<FaseAbbonamento>(abbonato ? { tipo: 'caricamento' } : { tipo: 'pronto', abbonamento: ABBONAMENTO_NON_ATTIVO });
   const [avviso, setAvviso] = useState<{ chiave: number; testo: string } | null>(null);
   // Eliminazione (contratto §2.4): esito positivo, anche "già registrata" → Esci e conferma nella schermata di accesso.
   const dopoRegistrata = useCallback(async () => {
@@ -72,10 +77,11 @@ function Account({ profilo }: { profilo: Profilo }) {
   // "Revisioni ricevute": una lettura leggera dello stato all'apertura (una per montaggio, mai innescata dal
   // proprio risultato: l'effetto dipende solo dal cliente). Il valore in memoria si mostra subito.
   useEffect(() => {
-    aggiornaStatoRevisioni(profilo.clientId);
-  }, [profilo.clientId]);
+    if (abbonato) aggiornaStatoRevisioni(profilo.clientId);
+  }, [profilo.clientId, abbonato]);
 
   useEffect(() => {
+    if (!abbonato) return undefined;
     let attivo = true;
     leggiAbbonamento(profilo.account.conStripe).then((esito) => {
       if (attivo) setAbbonamento({ tipo: 'pronto', abbonamento: esito.tipo === 'ok' ? esito.abbonamento : null });
@@ -83,7 +89,7 @@ function Account({ profilo }: { profilo: Profilo }) {
     return () => {
       attivo = false;
     };
-  }, [profilo.account.conStripe]);
+  }, [profilo.account.conStripe, abbonato]);
 
   const onPromemoria = useCallback(
     (campo: keyof Promemoria, valore: boolean) => {
@@ -112,8 +118,8 @@ function Account({ profilo }: { profilo: Profilo }) {
       nomeCompleto={profilo.nomeCompleto}
       iniziali={inizialiNome(profilo.nomeCompleto)}
       email={profilo.account.email}
-      giornateCondivise={profilo.account.giornateCondivise}
-      revisioniRicevute={revisioniRicevute(revisioni.clientId === profilo.clientId ? (revisioni.righe ?? []) : [])}
+      giornateCondivise={abbonato ? profilo.account.giornateCondivise : 0}
+      revisioniRicevute={abbonato ? revisioniRicevute(revisioni.clientId === profilo.clientId ? (revisioni.righe ?? []) : []) : 0}
       nutrizionista={profilo.nutrizionista}
       promemoria={promemoria}
       abbonamento={abbonamento}

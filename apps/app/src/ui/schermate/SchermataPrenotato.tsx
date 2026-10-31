@@ -4,7 +4,9 @@ import { StyleSheet, View } from 'react-native';
 import type { Visita } from '@/core/appuntamenti/appuntamenti';
 import type { Profilo } from '@/core/stato/stato';
 import { CardAppuntamento, type NutrizionistaAppuntamento } from '@/ui/appuntamenti/CardAppuntamento';
+import { inizialiNome } from '@/core/account/account';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
+import { CardAccount } from '@/ui/CardAccount';
 import { CardNutrizionista } from '@/ui/CardNutrizionista';
 import { Pulsante } from '@/ui/Pulsante';
 import { Pagina } from '@/ui/schermate/Pagina';
@@ -22,6 +24,8 @@ export type SchermataPrenotatoProps = {
   onGestisci?: () => void;
   onNutrizionista?: () => void;
   onMenu?: () => void;
+  /** Card "Il tuo account" sotto quella della nutrizionista (Figma 840:8621): apre l'Account senza barra. */
+  onAccount?: () => void;
   sovrapposti?: ReactNode;
 };
 
@@ -30,7 +34,7 @@ export type SchermataPrenotatoProps = {
  * "Ciao Giulia, manca poco alla consulenza!", card dell'appuntamento (la stessa di Appuntamenti: Entra, oppure,
  * Gestisci appuntamento) e card della nutrizionista → /nutrizionista.
  */
-export function SchermataPrenotato({ profilo, visita, adesso, nutrizionista, onEntra, onGestisci, onNutrizionista, onMenu, sovrapposti }: SchermataPrenotatoProps) {
+export function SchermataPrenotato({ profilo, visita, adesso, nutrizionista, onEntra, onGestisci, onNutrizionista, onMenu, onAccount, sovrapposti }: SchermataPrenotatoProps) {
   return (
     <Pagina sovrapposti={sovrapposti}>
       <BarraSuperiore notifiche="nascosta" azione="menu" onAzione={onMenu} />
@@ -53,6 +57,7 @@ export function SchermataPrenotato({ profilo, visita, adesso, nutrizionista, onE
             </View>
           )}
           {profilo.nutrizionista && <CardNutrizionista nome={profilo.nutrizionista.nome} foto={profilo.nutrizionista.foto} onPress={onNutrizionista} />}
+          <CardAccount nomeCompleto={profilo.nomeCompleto} iniziali={inizialiNome(profilo.nomeCompleto)} onPress={onAccount} />
         </View>
       </View>
     </Pagina>

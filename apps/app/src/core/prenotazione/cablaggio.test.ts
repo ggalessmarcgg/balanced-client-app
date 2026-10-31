@@ -29,7 +29,9 @@ describe('cablaggio del pannello degli orari nell\'app', () => {
     assert.match(rotta, /onAnnulla=\{p\.onChiudiPannello\}/);
     assert.match(rotta, /onEmailSupporto=\{onEmailSupporto\}/);
     assert.match(rotta, /onTelefonoSupporto=\{onTelefonoSupporto\}/);
-    assert.match(rotta, /const \{ onEmailSupporto, onTelefonoSupporto, sovrapposti \} = useAzioniStato\(\)/);
+    assert.match(rotta, /const \{ onAccount, onEmailSupporto, onTelefonoSupporto, sovrapposti \} = useAzioniStato\(\)/);
+    // Card "Il tuo account" (31/10/2026): il tocco apre l'Account con l'azione di useAzioniStato.
+    assert.match(rotta, /onAccount=\{onAccount\}/);
     assert.match(rotta, /\{sovrapposti\}/, 'la Notifica breve della copia sta nei sovrapposti di useAzioniStato');
     assert.match(hook, /const onChiudiPannello = useCallback\(\(\) => setStato\(chiudiPannello\)/);
   });

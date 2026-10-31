@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { dataOraRoma } from '../stato/orarioRoma.ts';
-import { abbonamentoDa, cambiaPromemoria, datiAccount, etichettaPiano, etichettaRinnovo, inizialiNome, revisioniRicevute } from './account.ts';
+import { ABBONAMENTO_NON_ATTIVO, abbonamentoDa, cambiaPromemoria, datiAccount, etichettaPiano, etichettaRinnovo, inizialiNome, revisioniRicevute } from './account.ts';
 
 const dataRoma = (d: Date) => dataOraRoma(d).data;
 
@@ -70,6 +70,9 @@ describe('abbonamento', () => {
     // 31 dicembre 23:30 UTC è già il 1º gennaio a Roma.
     assert.equal(etichettaRinnovo(Date.UTC(2026, 11, 31, 23, 30) / 1000, dataRoma), '1 gennaio 2027');
     assert.equal(etichettaRinnovo(null, dataRoma), '');
+  });
+  it('senza abbonamento (stati prima dell\'abbonamento): Piano "—", Stato "Non attivo", Prossimo rinnovo "—"', () => {
+    assert.deepEqual(ABBONAMENTO_NON_ATTIVO, { piano: '—', stato: 'Non attivo', rinnovo: '—' });
   });
   it('card dalla risposta della function; null senza abbonamento', () => {
     assert.deepEqual(abbonamentoDa({ subscription: { interval: 'month', intervalCount: 6, status: 'active', currentPeriodEnd: Date.UTC(2027, 2, 15, 10) / 1000 } }, dataRoma), { piano: '6 mesi', stato: 'Attivo', rinnovo: '15 marzo 2027' });

@@ -7,6 +7,7 @@ import { SUPPORTO } from '@/core/accesso/costanti';
 import { TESTI_CONSENSO } from '@/core/consenso/consenso';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
 import { CardNutrizionista } from '@/ui/CardNutrizionista';
+import { Intestazione } from '@/ui/Intestazione';
 import { Messaggio } from '@/ui/Messaggio';
 import { Pulsante } from '@/ui/Pulsante';
 import { RigaElenco } from '@/ui/RigaElenco';
@@ -41,7 +42,11 @@ export type SchermataAccountProps = {
   notificheNuove?: boolean;
   /** Pallino sulla voce Revisioni della barra. */
   revisioneNuova?: boolean;
-  /** Barra di navigazione: solo per l'abbonato (stato J); dagli altri stati l'Account si apre senza barra. */
+  /**
+   * Barra di navigazione: solo per l'abbonato (stato J). Prima dell'abbonamento (Account · 1.2, Figma 840:8691,
+   * 31/10/2026) l'Account si apre a schermo intero dalla card "Il tuo account", con l'intestazione e la freccia
+   * indietro come le pagine del menu, senza barra.
+   */
   conBarra?: boolean;
   /** Senza il permesso delle notifiche: messaggio e pulsante sopra gli interruttori (null o assente con il permesso concesso). */
   notifichePush?: NotifichePushAccount | null;
@@ -83,13 +88,17 @@ export function SchermataAccount(props: SchermataAccountProps) {
       {conBarra ? (
         <BarraSuperiore notifiche={notificheNuove ? 'conNuove' : 'campanella'} onNotifiche={props.onNotifiche} onAzione={props.onMenu} />
       ) : (
-        // Dagli stati H e K (senza percorso attivo): niente campanella né menu, la X torna alla schermata dello stato.
-        <BarraSuperiore notifiche="nascosta" azione="chiudi" onAzione={props.onIndietro} />
+        // Prima dell'abbonamento (stati C, D, F, H, I, K): intestazione con la freccia indietro, che torna allo stato di partenza.
+        <View style={stili.intestazione}>
+          <Intestazione titolo={TESTI_ACCOUNT.titolo} onIndietro={props.onIndietro} />
+        </View>
       )}
       <View style={[stili.contenuto, conBarra && stili.sopraLaBarra]}>
-        <Testo stile="accentoSerif" accessibilityRole="header">
-          Account
-        </Testo>
+        {conBarra ? (
+          <Testo stile="accentoSerif" accessibilityRole="header">
+            {TESTI_ACCOUNT.titolo}
+          </Testo>
+        ) : null}
         <View style={stili.profilo} accessible accessibilityLabel={`${props.nomeCompleto}, ${props.email}`}>
           <View style={stili.cerchio}>
             <Testo stile="h2">{props.iniziali}</Testo>
@@ -252,6 +261,8 @@ function Statistica({ valore, etichetta }: { valore: number; etichetta: string }
 }
 
 const stili = StyleSheet.create({
+  // Intestazione come nelle pagine del menu (SchermataNutrizionista): 12 sopra, margini 20.
+  intestazione: { paddingTop: spazio[12], paddingHorizontal: margine.pagina },
   contenuto: { flex: 1, paddingTop: spazio[16], paddingHorizontal: margine.pagina, paddingBottom: spazio[16], gap: spazio[24] },
   sopraLaBarra: { paddingBottom: INGOMBRO_BARRA_NAVIGAZIONE + spazio[16] },
   profilo: { alignSelf: 'stretch', flexDirection: 'row', alignItems: 'center', gap: spazio[16] },

@@ -21,7 +21,7 @@ export default function Rotta() {
 
 function Prenotazione({ stato }: { stato: StatoPrenotazione }) {
   const router = useRouter();
-  const { onEmailSupporto, onTelefonoSupporto, sovrapposti } = useAzioniStato();
+  const { onAccount, onEmailSupporto, onTelefonoSupporto, sovrapposti } = useAzioniStato();
   const p = usePrenotazione(stato);
   const onMenu = useCallback(() => router.push('/menu'), [router]);
   // La card è barrata in D (orario passato o assente) finché non si sceglie un nuovo orario nel pannello; appena c'è un
@@ -36,6 +36,7 @@ function Prenotazione({ stato }: { stato: StatoPrenotazione }) {
       onModifica={p.onModifica}
       onScegliNuovo={p.onScegliNuovo}
       onMenu={onMenu}
+      onAccount={onAccount}
       sovrapposti={
         <>
           <PannelloSceltaOrario

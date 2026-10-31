@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import type { Nutrizionista } from '@/core/stato/stato';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
+import { CardAccount } from '@/ui/CardAccount';
 import { CardNutrizionista } from '@/ui/CardNutrizionista';
 import { Pulsante } from '@/ui/Pulsante';
 import { ElencoSupporto } from '@/ui/schermate/ElencoSupporto';
@@ -15,7 +16,9 @@ export type SchermataStatoSupportoProps = {
   titolo: ReactNode;
   testo: string;
   nutrizionista?: Nutrizionista | null;
-  /** Pulsante secondario "Account" (assente in Stati 11). */
+  /** Card "Il tuo account" (Figma 840:8649, 840:8663, 840:8677; assente in Stati 11): nome e iniziali del cliente. */
+  account?: { nomeCompleto: string; iniziali: string } | null;
+  /** Pulsante secondario "Account" e tocco della card (assenti in Stati 11). */
   onAccount?: () => void;
   onEsci: () => void;
   onEmailSupporto?: () => void;
@@ -27,9 +30,10 @@ export type SchermataStatoSupportoProps = {
 
 /**
  * Schermate di stato con il blocco Supporto (Figma Stati 6, 7, 11, 12): barra superiore con le icone nascoste,
- * saluto, Supporto (righe che copiano il contatto), card della nutrizionista; in fondo "Account" e "Esci".
+ * saluto, Supporto (righe che copiano il contatto), card della nutrizionista, card "Il tuo account" (dal 31/10/2026:
+ * l'Account è raggiungibile anche prima dell'abbonamento); in fondo "Account" e "Esci".
  */
-export function SchermataStatoSupporto({ titolo, testo, nutrizionista, onAccount, onEsci, onEmailSupporto, onTelefonoSupporto, onNutrizionista, sovrapposti }: SchermataStatoSupportoProps) {
+export function SchermataStatoSupporto({ titolo, testo, nutrizionista, account, onAccount, onEsci, onEmailSupporto, onTelefonoSupporto, onNutrizionista, sovrapposti }: SchermataStatoSupportoProps) {
   return (
     <Pagina
       sovrapposti={sovrapposti}
@@ -51,6 +55,7 @@ export function SchermataStatoSupporto({ titolo, testo, nutrizionista, onAccount
         <View style={stili.gruppo}>
           <ElencoSupporto onEmail={onEmailSupporto} onTelefono={onTelefonoSupporto} />
           {nutrizionista && <CardNutrizionista nome={nutrizionista.nome} foto={nutrizionista.foto} onPress={onNutrizionista} />}
+          {account && <CardAccount nomeCompleto={account.nomeCompleto} iniziali={account.iniziali} onPress={onAccount} />}
         </View>
       </View>
     </Pagina>

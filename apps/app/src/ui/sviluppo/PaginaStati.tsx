@@ -183,6 +183,8 @@ export const STATI_SVILUPPO = [
   ['account-1-caricamento', 'Account con l\'abbonamento in caricamento'],
   ['account-1-promemoria-spenti', 'Account con i promemoria spenti (weekend disabilitato)'],
   ['account-1-senza-barra', 'Account dagli stati H e K: senza barra, senza nutrizionista'],
+  ['account-1.2-senza-abbonamento', 'Account · 1.2 · Senza abbonamento attivo (840:8691): freccia indietro, abbonamento "Non attivo", statistiche a zero'],
+  ['account-flusso-prima-abbonamento', 'Prima dell\'abbonamento: stato H con la card "Il tuo account" → Account · 1.2 → Elimina account con il server finto → conferma'],
   ['account-1-nuove', 'Account con i pallini: notifiche non viste e revisione Nuova'],
   ['account-3-avviso', 'Account · 3 · Elimina account · avviso (499:2568), testi del contratto eliminazione account v0.1 §2'],
   ['account-4-conferma', 'Account · 4 · Elimina account · conferma (499:2709)'],
@@ -602,6 +604,10 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <AccountSviluppo scenario="accountPromemoriaSpenti" />;
     case 'account-1-senza-barra':
       return <AccountSviluppo scenario="accountSenzaBarra" />;
+    case 'account-1.2-senza-abbonamento':
+      return <AccountSviluppo scenario="accountNonAbbonato" />;
+    case 'account-flusso-prima-abbonamento':
+      return <AccountSviluppo scenario="flussoPrimaAbbonamento" />;
     case 'account-1-nuove':
       return <AccountSviluppo scenario="accountNuove" />;
     case 'account-3-avviso':

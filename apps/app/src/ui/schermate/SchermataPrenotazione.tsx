@@ -3,7 +3,9 @@ import { StyleSheet, View } from 'react-native';
 
 import { TESTI_CONFERMA } from '@/core/prenotazione/conferma';
 import type { Profilo, Slot } from '@/core/stato/stato';
+import { inizialiNome } from '@/core/account/account';
 import { BarraSuperiore } from '@/ui/BarraSuperiore';
+import { CardAccount } from '@/ui/CardAccount';
 import { CardConsulenza, CardProfiloNutrizionista, CardTuoiDati } from '@/ui/prenotazione/CardPrenotazione';
 import { Pulsante } from '@/ui/Pulsante';
 import { Pagina } from '@/ui/schermate/Pagina';
@@ -23,6 +25,8 @@ export type SchermataPrenotazioneProps = {
   /** "Scegli un nuovo orario" (D): apre il pannello con l'avviso dell'orario passato. */
   onScegliNuovo?: () => void;
   onMenu?: () => void;
+  /** Card "Il tuo account" in fondo (Figma 840:8607, 840:8635): apre l'Account senza barra. */
+  onAccount?: () => void;
   /** Pannello di scelta e Notifica breve. */
   sovrapposti?: ReactNode;
 };
@@ -33,7 +37,7 @@ export type SchermataPrenotazioneProps = {
  * "La tua Nutrizionista" e "La tua consulenza" (barrata in D); in fondo "Conferma la consulenza" + "Modifica" (C)
  * oppure "Scegli un nuovo orario" (D).
  */
-export function SchermataPrenotazione({ variante, profilo, slot, confermando = false, onConferma, onModifica, onScegliNuovo, onMenu, sovrapposti }: SchermataPrenotazioneProps) {
+export function SchermataPrenotazione({ variante, profilo, slot, confermando = false, onConferma, onModifica, onScegliNuovo, onMenu, onAccount, sovrapposti }: SchermataPrenotazioneProps) {
   return (
     <Pagina
       sovrapposti={sovrapposti}
@@ -59,6 +63,7 @@ export function SchermataPrenotazione({ variante, profilo, slot, confermando = f
           <CardTuoiDati nome={profilo.nomeCompleto} email={profilo.account.email} telefono={profilo.telefono} />
           {profilo.nutrizionista && <CardProfiloNutrizionista nutrizionista={profilo.nutrizionista} />}
           <CardConsulenza slot={slot} passato={variante === 'orarioPassato'} />
+          <CardAccount nomeCompleto={profilo.nomeCompleto} iniziali={inizialiNome(profilo.nomeCompleto)} onPress={onAccount} />
         </View>
       </View>
     </Pagina>

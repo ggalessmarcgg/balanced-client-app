@@ -1,14 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { cambiaPromemoria, TESTI_ELIMINAZIONE, type Promemoria } from '@/core/account/account';
+import { ABBONAMENTO_NON_ATTIVO, cambiaPromemoria, TESTI_ELIMINAZIONE, type Promemoria } from '@/core/account/account';
 import { MESSAGGI_ELIMINAZIONE, type EsitoEliminazione } from '@/core/account/eliminazione';
 import { elencoNotifiche, type RigaNotifica } from '@/core/notifiche/notifiche';
+import type { Profilo } from '@/core/stato/stato';
 import { PannelloEliminaAccount } from '@/ui/account/PannelloEliminaAccount';
 import { useEliminazioneAccount } from '@/ui/account/useEliminazioneAccount';
 import { SchermataAccesso } from '@/ui/schermate/SchermataAccesso';
 import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccount, type SchermataAccountProps } from '@/ui/schermate/SchermataAccount';
 import { SchermataNotifiche } from '@/ui/schermate/SchermataNotifiche';
+import { SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
 import { INGOMBRO_BARRA_NAVIGAZIONE } from '@/ui/schermate/SchermateTrasversali';
 
 // Account e Notifiche con dati finti per i confronti con Figma (499:2145, 499:2568, 499:2709, 508:2699) e per i
@@ -56,7 +58,21 @@ const CONTESTO = {
 };
 const ELENCO = elencoNotifiche(RIGHE, CONTESTO, ADESSO);
 
-export type ScenarioAccount = 'account' | 'accountNotificheDisattivate' | 'accountNotificheNegate' | 'accountInterruttori' | 'accountSenzaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaConfermaErrore' | 'eliminaConfermaTroppi' | 'eliminaConfermaInCorso' | 'eliminaRiprova' | 'eliminaConfermata' | 'eliminaFlusso' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
+/** Account · 1.2 · Senza abbonamento attivo (Figma 840:8691): senza barra, intestazione con la freccia, abbonamento "Non attivo", statistiche a zero. */
+const ACCOUNT_NON_ABBONATO: SchermataAccountProps = { ...ACCOUNT, conBarra: false, giornateCondivise: 0, revisioniRicevute: 0, abbonamento: { tipo: 'pronto', abbonamento: ABBONAMENTO_NON_ATTIVO }, onIndietro: nulla };
+
+/** Profilo finto per lo stato H del flusso prima dell'abbonamento. */
+const PROFILO_H: Profilo = {
+  clientId: 'finto',
+  nome: 'Giulia',
+  nomeCompleto: 'Giulia Rossi',
+  genere: 'female',
+  telefono: null,
+  nutrizionista: { id: 'n1', nome: 'Dott.ssa Margherita Chiadò', foto: null, specializzazione: null, numeroAlbo: null },
+  account: { email: 'giulia.rossi@email.it', giornateCondivise: 0, promemoria: { diario: true, weekend: true }, conStripe: false },
+};
+
+export type ScenarioAccount = 'account' | 'accountNotificheDisattivate' | 'accountNotificheNegate' | 'accountInterruttori' | 'accountSenzaAbbonamento' | 'accountNonAbbonato' | 'flussoPrimaAbbonamento' | 'accountCaricamento' | 'accountPromemoriaSpenti' | 'accountSenzaBarra' | 'accountNuove' | 'eliminaAvviso' | 'eliminaConferma' | 'eliminaConfermaErrore' | 'eliminaConfermaTroppi' | 'eliminaConfermaInCorso' | 'eliminaRiprova' | 'eliminaConfermata' | 'eliminaFlusso' | 'notifiche' | 'notificheVuote' | 'notificheCaricamento' | 'notificheErrore';
 
 export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
   switch (scenario) {
@@ -72,6 +88,10 @@ export function AccountSviluppo({ scenario }: { scenario: ScenarioAccount }) {
       return <AccountInterruttori />;
     case 'accountSenzaAbbonamento':
       return <SchermataAccount {...ACCOUNT} abbonamento={{ tipo: 'pronto', abbonamento: null }} />;
+    case 'accountNonAbbonato':
+      return <SchermataAccount {...ACCOUNT_NON_ABBONATO} />;
+    case 'flussoPrimaAbbonamento':
+      return <FlussoPrimaAbbonamento />;
     case 'accountCaricamento':
       return <SchermataAccount {...ACCOUNT} abbonamento={{ tipo: 'caricamento' }} revisioniRicevute={0} />;
     case 'accountPromemoriaSpenti':
@@ -148,6 +168,45 @@ async function richiediFinta(password: string): Promise<EsitoEliminazione> {
     default:
       return { tipo: 'registrata', richiestaId: 'r-prova', scadenza: '2026-11-30T14:05:12.000Z', giaRegistrata: false };
   }
+}
+
+/**
+ * Prima dell'abbonamento (31/10/2026): stato H con la card "Il tuo account" → Account · 1.2 senza barra (la freccia
+ * torna allo stato) → "Elimina account" con il server finto (password come nel flusso dell'abbonato) → esito positivo:
+ * schermata di accesso con la conferma, come dopo "Esci". Nessuna chiamata alla rotta vera.
+ */
+function FlussoPrimaAbbonamento() {
+  const [pagina, setPagina] = useState<'stato' | 'account'>('stato');
+  const [uscito, setUscito] = useState(false);
+  const dopoRegistrata = useCallback(() => setUscito(true), []);
+  const eliminazione = useEliminazioneAccount({ richiedi: richiediFinta, dopoRegistrata });
+  const apriAccount = useCallback(() => setPagina('account'), []);
+  const indietro = useCallback(() => setPagina('stato'), []);
+  if (uscito) return <AccessoConConferma />;
+  if (pagina === 'stato') return <SchermataPercorsoNonAttivo profilo={PROFILO_H} onAccount={apriAccount} onEsci={nulla} />;
+  return (
+    <SchermataAccount
+      {...ACCOUNT_NON_ABBONATO}
+      onIndietro={indietro}
+      onElimina={eliminazione.apri}
+      sovrapposti={
+        <>
+          <PannelloEliminaAccount
+            passo={eliminazione.passo}
+            onIndietro={eliminazione.chiudi}
+            onContinua={eliminazione.continua}
+            onElimina={eliminazione.conferma}
+            onCambioPassword={eliminazione.onCambioPassword}
+            errore={eliminazione.erroreCampo}
+            inCorso={eliminazione.inCorso}
+          />
+          {eliminazione.notifica ? (
+            <NotificaInBasso key={eliminazione.notifica.chiave} tipo="errore" testo={eliminazione.notifica.testo} onRiprova={eliminazione.notifica.onRiprova} onScomparsa={eliminazione.nascondiNotifica} durataMs={6000} />
+          ) : null}
+        </>
+      }
+    />
+  );
 }
 
 /**

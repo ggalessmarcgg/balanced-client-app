@@ -1,3 +1,4 @@
+import { inizialiNome } from '@/core/account/account';
 import type { Genere, Profilo } from '@/core/stato/stato';
 import { SchermataStatoSupporto, type SchermataStatoSupportoProps } from '@/ui/schermate/SchermataStatoSupporto';
 import { TitoloAccento } from '@/ui/schermate/TitoloAccento';
@@ -18,6 +19,11 @@ function nonPresentata(genere: Genere | null): string {
   return 'sembra che tu non abbia partecipato alla consulenza.';
 }
 
+/** Card "Il tuo account" dal profilo (nome completo e iniziali). */
+function account(profilo: Profilo): { nomeCompleto: string; iniziali: string } {
+  return { nomeCompleto: profilo.nomeCompleto, iniziali: inizialiNome(profilo.nomeCompleto) };
+}
+
 /** Stati · 6 · Percorso non ancora attivo (Figma 558:4206) — stato H. */
 export function SchermataPercorsoNonAttivo({ profilo, ...azioni }: SchermataStatoProps) {
   return (
@@ -25,6 +31,7 @@ export function SchermataPercorsoNonAttivo({ profilo, ...azioni }: SchermataStat
       titolo={<TitoloAccento prima="Ciao " accento={`${profilo.nome},`} />}
       testo="il tuo percorso non è ancora attivo. Ti abbiamo inviato via email le indicazioni per proseguire."
       nutrizionista={profilo.nutrizionista}
+      account={account(profilo)}
       {...azioni}
     />
   );
@@ -37,6 +44,7 @@ export function SchermataConsulenzaNonSvolta({ profilo, ...azioni }: SchermataSt
       titolo={<TitoloAccento prima="Ciao " accento={`${profilo.nome},`} />}
       testo={`${nonPresentata(profilo.genere)} Puoi prenotarne una nuova contattando il nostro supporto.`}
       nutrizionista={profilo.nutrizionista}
+      account={account(profilo)}
       {...azioni}
     />
   );
@@ -49,6 +57,7 @@ export function SchermataPercorsoConcluso({ profilo, ...azioni }: SchermataStato
       titolo={<TitoloAccento prima={bentornata(profilo.genere)} accento={`${profilo.nome},`} />}
       testo="il tuo percorso si è concluso. Quando vuoi, puoi riprenderlo contattando direttamente il nostro supporto."
       nutrizionista={profilo.nutrizionista}
+      account={account(profilo)}
       {...azioni}
     />
   );
