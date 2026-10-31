@@ -392,11 +392,20 @@ npx expo install --fix                   # riallinea versioni alla SDK
   copia su file, `aggiornaNotifiche` all'avvio e al rientro per il pallino, `segnaTutteViste` all'apertura
   dell'elenco, `segnaCliccataNotifica` al tocco), hook `useNotifiche.ts`; schermate `SchermataAccount`,
   `SchermataNotifiche`, pannello `src/ui/account/PannelloEliminaAccount.tsx`; rotte `app/(abbonato)/account.tsx`
-  (con la barra solo per l'abbonato; dagli stati H e K senza) e `app/notifiche.tsx`. L'eliminazione dell'account
-  ha già le schermate definitive (avviso e conferma, disegno Figma invariato): oggi l'azione finale mostra la
-  Notifica breve "disponibile a breve" perché nessun sistema la esegue (censimento §7); **prima della
-  pubblicazione** va implementata quella vera, con la verifica della password lato server (funzione con chiave di
-  servizio, opzioni nel §7), senza rifare le schermate.
+  (con la barra solo per l'abbonato; dagli stati H e K senza) e `app/notifiche.tsx`.
+- **Eliminazione dell'account (31/10/2026, contratto `balanced-client-agents/docs/contratti/contratto-eliminazione-account-v0_1.md` §2,
+  server `docs/server-eliminazione-account.md`)**: schermate di avviso e conferma invariate (Figma 499:2568, 499:2709) con i testi
+  del contratto (`TESTI_ELIMINAZIONE` in `src/core/account/account.ts`: l'avviso informa, non chiede di disdire prima; "L'eliminazione
+  dell'account non disdice l'abbonamento: per disdirlo scrivi a supporto@joinbalanced.it."). "Elimina definitivamente" chiama
+  `POST /v1/account/eliminazione` del server degli agenti con la password (`src/servizi/eliminazioneAccount.ts`, logica pura e
+  codici d'errore in `src/core/account/eliminazione.ts`); l'hook `src/ui/account/useEliminazioneAccount.ts` governa il percorso
+  (servizio iniettato: quello vero dalla rotta, uno finto dalla pagina di sviluppo). Esito positivo, anche `gia_registrata` →
+  `esci()` e `/accesso?avviso=eliminazione`, che mostra per 10 s la Notifica breve di conferma (nessun disegno Figma dedicato:
+  è la stessa Notifica breve del link di recupero). Password errata e troppi tentativi → messaggio sotto il campo (si resta sul
+  pannello); rete o servizio non disponibile → Notifica breve d'errore con "Riprova" (stessa password); sessione scaduta o
+  account non riconosciuto → Notifica breve senza "Riprova". L'app non scrive nulla sul database per questo percorso e non
+  cambia lo stato del cliente. Pagina di sviluppo: `/sviluppo/stati?stato=account-3-avviso|account-4-conferma|account-4-conferma-errore|account-4-conferma-troppi|account-4-conferma-in-corso|account-elimina-riprova|account-5-confermata|account-elimina-flusso`
+  (l'ultima è il flusso completo con i tocchi e il server finto: la password decide l'esito).
 - **Interruttore** (`src/ui/Interruttore.tsx`): al cambio di stato, anche quando lo spegne un altro interruttore
   (diario → weekend), il pomello scorre e il fondo cambia in dissolvenza in 300 ms ease-out
   (`TRANSIZIONI.tacchetteMs`, come selettore grafico/tabella e barra); con "Riduci movimento" solo la dissolvenza
