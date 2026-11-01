@@ -824,6 +824,10 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `.gitignore`, quindi senza di esse l'app di release si chiude all'avvio.
 - `app.json`: `android.allowBackup: false` (niente Auto Backup delle bozze), `android.blockedPermissions` con
   `SYSTEM_ALERT_WINDOW` (permesso del template Expo, in Play comparirebbe come «Visualizza sopra altre app»).
+- **Copie delle build** (dall'1/11/2026): i file prodotti da EAS si salvano in `~/Desktop/versioni-app/android/` (`.aab` e
+  `.apk`) e `~/Desktop/versioni-app/ios/` (iPhone), fuori dal repo e da `censimenti-app`, con versione e numero di build nel nome
+  (es. `balanced-1.0.0-2.aab`: versione `1.0.0`, `versionCode` 2). Screenshot e report delle verifiche restano in
+  `~/Desktop/censimenti-app/build-android/` (`lotto1/`).
 - **Icona e schermata di avvio da Figma** (sezione «Icona e schermata di avvio» `848:26` in Foundations): `assets/icon.png`
   (frame `848:27`, 1024 RGB senza alfa), `assets/android-icon-foreground.png` (logo `849:35` del frame `848:31` su tela 1024
   trasparente, nell'area sicura del 66 %), `assets/android-icon-monochrome.png` (logo bianco `850:31`), sfondo dell'icona
