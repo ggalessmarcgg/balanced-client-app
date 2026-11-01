@@ -17,14 +17,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { toccoChiudeCampo } from '@/core/tastiera/tocco';
 import { spostamentoPerCampo } from '@/core/tastiera/cursore';
+import { LIMITE_INGRANDIMENTO_TESTO } from '@/ui/Testo';
 import { colori, spazio } from '@/ui/theme';
 
 /** Distanza tra il bordo inferiore del campo (o della riga del cursore) e la tastiera. */
 export const MARGINE_SOPRA_TASTIERA = spazio[16];
 
-/** Proprietà comuni a tutti i campi di testo dell'app: tastiera chiara, cursore e selezione nel colore dell'azione. */
-export const PROPRIETA_CAMPO: Pick<TextInputProps, 'keyboardAppearance' | 'selectionColor' | 'cursorColor' | 'placeholderTextColor'> = {
+/**
+ * Proprietà comuni a tutti i campi di testo dell'app: tastiera chiara, cursore e selezione nel colore dell'azione, stesso
+ * limite all'ingrandimento del testo di sistema di `Testo`.
+ */
+export const PROPRIETA_CAMPO: Pick<TextInputProps, 'keyboardAppearance' | 'selectionColor' | 'cursorColor' | 'placeholderTextColor' | 'maxFontSizeMultiplier'> = {
   keyboardAppearance: 'light',
+  maxFontSizeMultiplier: LIMITE_INGRANDIMENTO_TESTO,
   selectionColor: colori.azione.primaria,
   cursorColor: colori.azione.primaria,
   placeholderTextColor: colori.testo.segnaposto,

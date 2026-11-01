@@ -11,7 +11,7 @@ import { PannelloDalBasso } from '@/ui/PannelloDalBasso';
 import { Pulsante } from '@/ui/Pulsante';
 import { RigaElenco } from '@/ui/RigaElenco';
 import { Segnaposto } from '@/ui/Segnaposto';
-import { Testo } from '@/ui/Testo';
+import { LIMITE_INGRANDIMENTO_TESTO, Testo } from '@/ui/Testo';
 import { colori, raggio, spazio, testi } from '@/ui/theme';
 
 export type PannelloSceltaOrarioProps = {
@@ -117,7 +117,9 @@ export function PannelloSceltaOrario({ aperto, motivo, orari, scheda, scelta, on
         </View>
       )}
       <Testo stile="bodyDetails130">
-        <Text style={stiliTesto.grassetto}>{NOTA_ANTICIPO.etichetta}</Text>
+        <Text style={stiliTesto.grassetto} maxFontSizeMultiplier={LIMITE_INGRANDIMENTO_TESTO}>
+          {NOTA_ANTICIPO.etichetta}
+        </Text>
         {NOTA_ANTICIPO.testo}
       </Testo>
     </PannelloDalBasso>

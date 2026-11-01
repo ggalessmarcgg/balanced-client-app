@@ -9,7 +9,7 @@ import { Messaggio } from '@/ui/Messaggio';
 import { Pulsante } from '@/ui/Pulsante';
 import { Pagina } from '@/ui/schermate/Pagina';
 import { TitoloAccento } from '@/ui/schermate/TitoloAccento';
-import { Testo } from '@/ui/Testo';
+import { LIMITE_INGRANDIMENTO_TESTO, Testo } from '@/ui/Testo';
 import { colori, spazio, testi } from '@/ui/theme';
 
 /**
@@ -64,7 +64,10 @@ export function SchermataAccesso({ email, password, onEmail, onPassword, onAcced
           <View style={stili.azioni}>
             <Pulsante etichetta="Accedi" stato={inCorso === 'accesso' ? 'caricamento' : puoAccedere ? 'normale' : 'disabilitato'} onPress={onAccedi} />
             <Testo stile="bodyDetails" colore={colori.testo.attenuato} style={stili.nota}>
-              Non hai ancora un account? <Text style={testi.etichettaPiccola130}>Viene creato quando prenoti la tua prima consulenza.</Text>
+              Non hai ancora un account?{' '}
+              <Text style={testi.etichettaPiccola130} maxFontSizeMultiplier={LIMITE_INGRANDIMENTO_TESTO}>
+                Viene creato quando prenoti la tua prima consulenza.
+              </Text>
             </Testo>
           </View>
         )

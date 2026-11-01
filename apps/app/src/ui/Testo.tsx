@@ -21,6 +21,14 @@ export type TestoProps = TextProps & {
 const ALTEZZA_NATURALE_EM = 1.35;
 
 /**
+ * Limite unico all'ingrandimento del testo di sistema (decisione del 1/11/2026, dopo il primo test interno): oltre
+ * 1,3 i testi restano come a 1,3, su Android (scala fino a 2,0) e iOS (fino ad AX5). Vale per `Testo`, per i campi
+ * (`PROPRIETA_CAMPO`) e per i rari `Text` annidati; a 1,0 e 1,3 non cambia nulla. Sopra 1,3 barra di navigazione, card delle
+ * statistiche e titoli andavano a capo o venivano troncati.
+ */
+export const LIMITE_INGRANDIMENTO_TESTO = 1.3;
+
+/**
  * Android (correzione del 31/10/2026): con l'interlinea sotto l'altezza naturale la discesa dell'ultima riga si riduce
  * (span dell'interlinea di React Native) e il testo viene disegnato ritagliato al riquadro delle righe, anche con il
  * padding: la "g" di "giornata!" nella Card diario finiva piatta. Con `overflow: 'visible'` React Native disegna il
@@ -36,7 +44,7 @@ const TRABOCCA_ANDROID = Platform.OS === 'android' ? ({ overflow: 'visible' } as
 function spazioExtra(stile: NomeStileTesto): number {
   const { fontSize, lineHeight } = testi[stile] as { fontSize: number; lineHeight?: number };
   if (lineHeight === undefined) return 0;
-  return Math.max(0, Math.ceil((fontSize * ALTEZZA_NATURALE_EM - lineHeight) * PixelRatio.getFontScale()));
+  return Math.max(0, Math.ceil((fontSize * ALTEZZA_NATURALE_EM - lineHeight) * Math.min(PixelRatio.getFontScale(), LIMITE_INGRANDIMENTO_TESTO)));
 }
 
 /**
@@ -50,6 +58,7 @@ export function Testo({ stile, colore = colori.testo.primario, style, children, 
   return (
     <Text
       {...resto}
+      maxFontSizeMultiplier={LIMITE_INGRANDIMENTO_TESTO}
       style={[
         testi[stile],
         { color: colore },

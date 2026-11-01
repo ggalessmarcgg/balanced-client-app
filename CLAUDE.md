@@ -86,6 +86,11 @@ Compatibili sui dati, efficienti nel resto.
   ufficiale con fontTools (procedura e licenza in `assets/font/README.md`). Il
   generatore sceglie l'istanza con `ISTANZE_OTTICHE`; uno stile nuovo sopra i 24 px
   richiede una nuova istanza.
+- **Limite unico all'ingrandimento del testo di sistema: 1,3** (`LIMITE_INGRANDIMENTO_TESTO` in `src/ui/Testo.tsx`, decisione del
+  1/11/2026): `Testo` passa `maxFontSizeMultiplier`, i campi lo prendono da `PROPRIETA_CAMPO`, i rari `Text` annidati
+  (`TitoloAccento`, nota del Login, nota del pannello orari) lo dichiarano; anche lo spazio extra di `Testo` usa la scala limitata.
+  Oltre 1,3 (Android fino a 2,0, iPhone fino ad AX5) i testi restano come a 1,3: barra di navigazione e card delle statistiche su una
+  riga. Un `Text` nuovo fuori da `Testo` deve dichiararlo.
 - **Testi sempre con il componente `Testo`** (`src/ui/Testo.tsx`, prop `stile`): applica
   lo stile e la correzione verticale per stile di `src/ui/theme/testo-correzioni.ts`,
   misurata con il confronto a pixel (su iOS, con interlinea ≤ altezza naturale del font,
@@ -861,7 +866,8 @@ npx expo install --fix                   # riallinea versioni alla SDK
   alta 56 e il testo non va mai a capo né esce; se il testo di sistema ingrandito non ci sta, il corpo si riduce fino al 75 %,
   oltre compaiono i puntini. Sul telefono di Alessandro "Attiva le notifiche" andava a capo e usciva dal pulsante; sull'emulatore
   Pixel 9a (scale 1,3 e 2,0, densità 420–600) la pillola cresceva correttamente: il difetto dipende dalla geometria del telefono,
-  la regola a una riga lo esclude in ogni caso. Verificato a scala 1,0, 1,3 e 2,0 e con la visualizzazione ingrandita.
+  la regola a una riga lo esclude in ogni caso. Verificato a scala 1,0, 1,3 e 2,0 e con la visualizzazione ingrandita. Subito dopo
+  è arrivato il limite unico 1,3 all'ingrandimento (sezione «Token del design system»): esiti in `correzioni-test-interno-1/dopo-limite-1.3/`.
 - **Tema sempre chiaro** (decisione di Alessandro): su iOS `UIUserInterfaceStyle` Light (già da `userInterfaceStyle`); su Android
   il plugin locale `apps/app/plugins/with-tema-chiaro.js` (in `app.json`): `MainApplication.onCreate` chiama
   `AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO)` prima di ogni attività (expo-system-ui lo fa solo nell'`onCreate`

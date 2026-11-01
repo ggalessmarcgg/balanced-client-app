@@ -1,6 +1,6 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
-import { Testo } from '@/ui/Testo';
+import { LIMITE_INGRANDIMENTO_TESTO, Testo } from '@/ui/Testo';
 import { testi } from '@/ui/theme';
 
 export type TitoloAccentoProps = {
@@ -21,7 +21,9 @@ export function TitoloAccento({ prima = '', accento, dopo = '', contesto = 'app'
   return (
     <Testo stile={accesso ? 'h1Accesso' : 'h1'} accessibilityRole={accessibilityRole} style={allineamento === 'centro' && stili.centrato}>
       {prima}
-      <Text style={accesso ? testi.accentoSerifAccesso : testi.accentoSerif}>{accento}</Text>
+      <Text style={accesso ? testi.accentoSerifAccesso : testi.accentoSerif} maxFontSizeMultiplier={LIMITE_INGRANDIMENTO_TESTO}>
+        {accento}
+      </Text>
       {dopo}
     </Testo>
   );
