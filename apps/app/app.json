@@ -68,7 +68,8 @@
           "defaultChannel": "nutrizionista",
           "enableBackgroundRemoteNotifications": false
         }
-      ]
+      ],
+      "./plugins/with-tema-chiaro.js"
     ],
     "experiments": {
       "typedRoutes": true

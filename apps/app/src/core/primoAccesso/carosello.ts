@@ -32,6 +32,17 @@ export function riduci(pagina: number, evento: EventoCarosello): Transizione {
   }
 }
 
+/**
+ * Spostamento diretto a una pagina (decisione del 1/11/2026, dopo il primo test interno): scorrimento con il dito,
+ * tocco su una tacchetta, "indietro" di Android. All'indietro sempre; in avanti mai oltre la pagina 4 del consenso
+ * finché non la si è raggiunta (come "Salta"); dalla 4 alla 5 equivale a "Non ora" (nessuna scrittura). Nessun effetto.
+ */
+export function vaiAPagina(pagina: number, destinazione: number): Transizione {
+  const d = Math.max(0, Math.min(NUMERO_PAGINE - 1, Math.round(destinazione)));
+  if (d <= pagina) return { pagina: d, effetti: [] };
+  return { pagina: pagina >= PAGINA.ai ? d : Math.min(d, PAGINA.ai), effetti: [] };
+}
+
 /** Testi delle cinque pagine (Figma 586:4905, 586:4941, 586:4995, 586:5043, 586:5154; pagina 4 nella versione del 30/10/2026). */
 export type TestoPagina = { titolo: { prima: string; accento: string; dopo: string }; testo: string };
 export const TESTI_PAGINE: readonly TestoPagina[] = [

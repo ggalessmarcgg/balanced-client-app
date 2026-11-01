@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
-import { Animated, Easing, ScrollView, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { Animated, BackHandler, Easing, ScrollView, StyleSheet, View, useWindowDimensions, type LayoutChangeEvent, type NativeScrollEvent, type NativeSyntheticEvent } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TESTI_CONSENSO } from '@/core/consenso/consenso';
@@ -27,6 +27,11 @@ export type SchermataPrimoAccessoProps = {
   onInformativa: () => void;
   onAttiva: () => void;
   onPiuTardi: () => void;
+  /**
+   * Spostamento diretto a una pagina: scorrimento con il dito, tocco su una tacchetta, "indietro" di Android (alla
+   * pagina precedente). La regola (indietro sempre, avanti mai oltre il consenso) sta in core, `vaiAPagina`.
+   */
+  onVai: (pagina: number) => void;
   /** Scritture in corso: "Accetto" o "Attiva le notifiche" con i pallini. */
   accettoInCorso?: boolean;
   attivaInCorso?: boolean;
@@ -47,8 +52,15 @@ const REVISIONE_ESEMPIO = {
  * niente scorrimento né allungamento). Ogni pagina: illustrazione a riempimento (senza ritaglio: il titolo centrato della
  * pagina 1 sta lì dentro e con poco spazio veniva tagliato sopra e sotto), testo (H1 con la parola in corsivo + Body
  * attenuato) e comandi; la pagina 4 ha il consenso AI (§8), la 5 le notifiche.
+ *
+ * Correzioni del 1/11/2026 (primo test interno su telefono): le pagine si scorrono anche con il dito, avanti e
+ * indietro, dal centro dello schermo (prima lo ScrollView era bloccato; dal bordo sinistro resta il gesto "indietro"
+ * di Android); il tasto o gesto "indietro" di Android porta alla pagina precedente (dalla prima lascia fare al sistema);
+ * le tacchette sono toccabili (area alta 44) e portano alla pagina corrispondente con la stessa animazione. Ogni pagina
+ * scorre in verticale quando è più alta dello schermo (testo di sistema ingrandito): prima le anteprime finivano sopra
+ * il titolo.
  */
-export function SchermataPrimoAccesso({ pagina, nutrizionista, onAvanti, onSalta, onAccetto, onNonOra, onInformativa, onAttiva, onPiuTardi, accettoInCorso = false, attivaInCorso = false, sovrapposti }: SchermataPrimoAccessoProps) {
+export function SchermataPrimoAccesso({ pagina, nutrizionista, onAvanti, onSalta, onAccetto, onNonOra, onInformativa, onAttiva, onPiuTardi, onVai, accettoInCorso = false, attivaInCorso = false, sovrapposti }: SchermataPrimoAccessoProps) {
   const insets = useSafeAreaInsets();
   const { width: larghezza } = useWindowDimensions();
   const riduciMovimento = useRiduciMovimento();
@@ -56,6 +68,23 @@ export function SchermataPrimoAccesso({ pagina, nutrizionista, onAvanti, onSalta
   useEffect(() => {
     scorrimento.current?.scrollTo({ x: pagina * larghezza, animated: !riduciMovimento });
   }, [pagina, larghezza, riduciMovimento]);
+  // Scorrimento con il dito: a fine corsa si legge la pagina su cui lo ScrollView si è fermato (scatto alla pagina) e
+  // si comunica; se la regola la rifiuta (oltre il consenso), la pagina cambia comunque e l'effetto sopra riporta lo
+  // scorrimento dove deve stare. Con una scrittura in corso ("Accetto", "Attiva le notifiche") non si scorre.
+  const onFineScorrimento = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const arrivo = Math.round(e.nativeEvent.contentOffset.x / larghezza);
+    if (arrivo !== pagina) onVai(arrivo);
+  };
+  const scrittureInCorso = accettoInCorso || attivaInCorso;
+  // "Indietro" di Android (tasto o gesto dal bordo): pagina precedente; dalla prima il sistema fa il suo (su iOS nulla).
+  useEffect(() => {
+    const ascolto = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (pagina === 0) return false;
+      onVai(pagina - 1);
+      return true;
+    });
+    return () => ascolto.remove();
+  }, [pagina, onVai]);
   // "Salta": 1 = presente (pagine 1–3), 0 = sparito (4 e 5). Larghezza del suo spazio (misurata, più il gap) e opacità
   // interpolate dallo stesso valore, così le tacchette si allungano in modo fluido insieme alla dissolvenza.
   const conSalta = mostraSalta(pagina);
@@ -116,7 +145,7 @@ export function SchermataPrimoAccesso({ pagina, nutrizionista, onAvanti, onSalta
     <View style={[stili.schermo, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <View style={stili.avanzamento}>
         <View style={stili.segmenti}>
-          <IndicatoreAvanzamento attivo={pagina} passi={NUMERO_PAGINE} larghezzaAttivo="doppia" nomePassaggio="Pagina" />
+          <IndicatoreAvanzamento attivo={pagina} passi={NUMERO_PAGINE} larghezzaAttivo="doppia" nomePassaggio="Pagina" onSeleziona={scrittureInCorso ? undefined : onVai} />
         </View>
         {/* Spazio di "Salta": si misura una volta sul pulsante vero e poi si anima a zero; il pulsante resta montato per la dissolvenza. */}
         <Animated.View style={[stili.spazioSalta, larghezzaSalta > 0 && { width: spazioSalta }]} pointerEvents={conSalta ? 'box-none' : 'none'}>
@@ -125,7 +154,17 @@ export function SchermataPrimoAccesso({ pagina, nutrizionista, onAvanti, onSalta
           </Animated.View>
         </Animated.View>
       </View>
-      <ScrollView ref={scorrimento} horizontal pagingEnabled scrollEnabled={false} showsHorizontalScrollIndicator={false} style={stili.pagine} contentContainerStyle={stili.contenitorePagine} {...PROPRIETA_SCORRIMENTO}>
+      <ScrollView
+        ref={scorrimento}
+        horizontal
+        pagingEnabled
+        scrollEnabled={!scrittureInCorso}
+        onMomentumScrollEnd={onFineScorrimento}
+        showsHorizontalScrollIndicator={false}
+        style={stili.pagine}
+        contentContainerStyle={stili.contenitorePagine}
+        {...PROPRIETA_SCORRIMENTO}
+      >
         {pagine.map((p, i) => (
           <View key={i} style={{ width: larghezza }} accessibilityElementsHidden={i !== pagina} importantForAccessibility={i === pagina ? 'auto' : 'no-hide-descendants'}>
             {p}
@@ -151,14 +190,15 @@ function TestoPagina({ indice, centrato = false }: { indice: number; centrato?: 
   );
 }
 
+/** Una pagina: colonna a riempimento; se è più alta dello schermo scorre in verticale (dentro lo scorrimento orizzontale). */
 function Pagina({ illustrazione, testo, nota, comandi }: { illustrazione: ReactNode; testo?: ReactNode; nota?: ReactNode; comandi: ReactNode }) {
   return (
-    <View style={stili.pagina}>
+    <ScrollView style={stili.pagina} contentContainerStyle={stili.contenutoPagina} showsVerticalScrollIndicator={false} {...PROPRIETA_SCORRIMENTO}>
       <View style={stili.illustrazione}>{illustrazione}</View>
       {testo}
       {nota ? <View style={stili.blocconota}>{nota}</View> : null}
       <View style={stili.comandi}>{comandi}</View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -176,7 +216,8 @@ const stili = StyleSheet.create({
   pagine: { flex: 1 },
   contenitorePagine: { flexGrow: 1 },
   // Pagina: gap 24 tra avanzamento, illustrazione, testo e comandi (586:4905: colonna con gap 24).
-  pagina: { flex: 1, paddingTop: spazio[24], gap: spazio[24] },
+  pagina: { flex: 1 },
+  contenutoPagina: { flexGrow: 1, paddingTop: spazio[24], gap: spazio[24] },
   illustrazione: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: spazio[32], gap: spazio[12] },
   testo: { alignSelf: 'stretch', paddingHorizontal: spazio[32], gap: spazio[10] },
   testoCentrato: { paddingHorizontal: spazio[32], alignItems: 'center' },

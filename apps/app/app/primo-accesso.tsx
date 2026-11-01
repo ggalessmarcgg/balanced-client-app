@@ -2,7 +2,7 @@ import { Redirect, useRouter } from 'expo-router';
 import { useCallback, useState } from 'react';
 
 import { URL_PRIVACY } from '@/core/account/account';
-import { PAGINA, riduci, type EventoCarosello } from '@/core/primoAccesso/carosello';
+import { PAGINA, riduci, vaiAPagina, type EventoCarosello } from '@/core/primoAccesso/carosello';
 import { autoreRevisione, type AutoreRevisione } from '@/core/revisioni/autore';
 import { apriPaginaWeb } from '@/servizi/account';
 import { registraConsensoAI } from '@/servizi/consenso';
@@ -69,6 +69,8 @@ function PrimoAccesso({ clientId, nutrizionista, rottaFinale }: { clientId: stri
     [pagina, clientId, fine],
   );
 
+  // Scorrimento con il dito, tacchette e "indietro" di Android: nessun effetto, solo la pagina (regola in vaiAPagina).
+  const onVai = useCallback((destinazione: number) => setPagina((attuale) => vaiAPagina(attuale, destinazione).pagina), []);
   const onInformativa = useCallback(() => void apriPaginaWeb(URL_PRIVACY), []);
   const nascondiAvviso = useCallback(() => setAvviso(null), []);
   return (
@@ -82,6 +84,7 @@ function PrimoAccesso({ clientId, nutrizionista, rottaFinale }: { clientId: stri
       onInformativa={onInformativa}
       onAttiva={() => applica('attiva')}
       onPiuTardi={() => applica('piuTardi')}
+      onVai={onVai}
       accettoInCorso={accettoInCorso}
       attivaInCorso={attivaInCorso}
       sovrapposti={avviso ? <NotificaInBasso key={avviso.chiave} tipo="errore" testo={avviso.testo} onScomparsa={nascondiAvviso} /> : null}

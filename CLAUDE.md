@@ -841,6 +841,37 @@ npx expo install --fix                   # riallinea versioni alla SDK
 - Dopo ogni modifica ad `app.json`/`app.config.js`: `npx expo prebuild -p android --clean --no-install` e controllo del manifest
   (`SYSTEM_ALERT_WINDOW` con `tools:node="remove"`, `allowBackup="false"`).
 
+## Correzioni dal primo test interno su telefono (1/11/2026, build 1.0.0 (2) da Google Play)
+
+- Esiti e confronti prima/dopo in `~/Desktop/censimenti-app/correzioni-test-interno-1/` (`report.md`, `prima/`, `dopo/`);
+  strumenti nuovi: `strumenti/apri-rotta-dispositivi.sh "<rotta>" <cartella> <nome> [android|ios|entrambi]` (riavvia Metro con
+  la rotta e fotografa emulatore e/o simulatore; con `-` al posto della rotta riusa Metro) e `strumenti/griglia-png.mjs` (provino di
+  più screenshot in una riga). La build di sviluppo su Android 17 chiede «dispositivi nelle vicinanze»: `adb shell pm grant
+  it.joinbalanced.app android.permission.ACCESS_LOCAL_NETWORK` prima degli screenshot.
+- **Carosello del primo accesso**: le pagine si scorrono con il dito, avanti e indietro, dal centro dello schermo (lo ScrollView
+  orizzontale era bloccato con `scrollEnabled={false}`: nessun conflitto con il gesto di sistema, che resta sul bordo sinistro);
+  il tasto o gesto "indietro" di Android porta alla pagina precedente e dalla prima lascia fare al sistema (`BackHandler` nella
+  schermata); le tacchette sono toccabili (area 44, `IndicatoreAvanzamento onSeleziona`) e portano alla pagina con la stessa
+  animazione. Regola pura `vaiAPagina` in `src/core/primoAccesso/carosello.ts`: indietro sempre, avanti mai oltre la pagina 4 del
+  consenso finché non la si è vista (come "Salta"), dalla 4 alla 5 come "Non ora" (nessuna scrittura); con "Accetto" o "Attiva le
+  notifiche" in corso non si scorre. Ogni pagina scorre in verticale quando è più alta dello schermo (testo di sistema ingrandito):
+  prima le anteprime finivano sopra il titolo.
+- **Pulsante, etichetta su una riga** (`src/ui/Pulsante.tsx`): `numberOfLines={1}` + `adjustsFontSizeToFit` con
+  `minimumFontScale` 0,75 (`RIDUZIONE_MINIMA_ETICHETTA`) e `flexShrink` sul testo, per tutti i livelli: come in Figma la pillola resta
+  alta 56 e il testo non va mai a capo né esce; se il testo di sistema ingrandito non ci sta, il corpo si riduce fino al 75 %,
+  oltre compaiono i puntini. Sul telefono di Alessandro "Attiva le notifiche" andava a capo e usciva dal pulsante; sull'emulatore
+  Pixel 9a (scale 1,3 e 2,0, densità 420–600) la pillola cresceva correttamente: il difetto dipende dalla geometria del telefono,
+  la regola a una riga lo esclude in ogni caso. Verificato a scala 1,0, 1,3 e 2,0 e con la visualizzazione ingrandita.
+- **Tema sempre chiaro** (decisione di Alessandro): su iOS `UIUserInterfaceStyle` Light (già da `userInterfaceStyle`); su Android
+  il plugin locale `apps/app/plugins/with-tema-chiaro.js` (in `app.json`): `MainApplication.onCreate` chiama
+  `AppCompatDelegate.setDefaultNightMode(MODE_NIGHT_NO)` prima di ogni attività (expo-system-ui lo fa solo nell'`onCreate`
+  dell'attività, quando la configurazione delle risorse è già "notte": gli avvisi di sistema di React Native restavano scuri e la
+  barra a tre tasti aveva i tasti bianchi, perché `enableEdgeToEdge` legge `uiMode` dell'attività), `AppTheme` eredita da
+  `Theme.AppCompat.Light.NoActionBar` invece di DayNight e dichiara `android:forceDarkAllowed=false` (niente scurimento automatico
+  delle app chiare); `Appearance.setColorScheme('light')` e `StatusBar style="dark"` restano in `app/_layout.tsx`, la tastiera ha
+  `keyboardAppearance="light"` (vale su iOS; su Android la tastiera è di Gboard e segue il tema del telefono: non si può forzare).
+  Dopo la modifica: `npx expo prebuild -p android --clean --no-install` e controllo di `styles.xml` e `MainApplication.kt`.
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

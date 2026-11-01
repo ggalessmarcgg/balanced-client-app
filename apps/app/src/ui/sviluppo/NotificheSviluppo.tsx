@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { PAGINA, riduci, type EventoCarosello } from '@/core/primoAccesso/carosello';
+import { PAGINA, riduci, vaiAPagina, type EventoCarosello } from '@/core/primoAccesso/carosello';
 import { autoreRevisione } from '@/core/revisioni/autore';
 import { SchermataPrimoAccesso } from '@/ui/primoAccesso/SchermataPrimoAccesso';
 
@@ -26,6 +26,7 @@ export function PrimoAccessoSviluppo({ pagina: iniziale }: { pagina: number }) {
       onInformativa={nulla}
       onAttiva={nulla}
       onPiuTardi={() => setPagina(PAGINA.ai)}
+      onVai={(destinazione) => setPagina(vaiAPagina(pagina, destinazione).pagina)}
     />
   );
 }

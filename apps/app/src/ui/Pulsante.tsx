@@ -67,7 +67,7 @@ export function Pulsante({ etichetta, livello = 'primario', stato = 'normale', o
       {caricamento && !compatto ? (
         <PuntiniCaricamento colore={testo.colore} />
       ) : (
-        <Testo stile={testo.stile} colore={testo.colore} style={stiliTesto.etichetta}>
+        <Testo stile={testo.stile} colore={testo.colore} style={stiliTesto.etichetta} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={RIDUZIONE_MINIMA_ETICHETTA}>
           {etichetta}
         </Testo>
       )}
@@ -131,8 +131,14 @@ function PuntiniCaricamento({ colore }: { colore: string }) {
 }
 
 // Padding e misure: Figma 418:62. Primario/Secondario fissi a 353 × 56 (qui: larghezza a riempimento,
-// altezza minima 56 così il testo ingrandito dal sistema non viene tagliato); Terziario altezza minima 46.
+// altezza minima 56); Terziario altezza minima 46.
 // Regola: un pulsante non cambia misura al cambiare dello stato (i puntini si sovrappongono all'etichetta).
+// Etichetta sempre su una riga, come in Figma (correzione del 1/11/2026, primo test interno su telefono: con il testo
+// di sistema ingrandito "Attiva le notifiche" andava a capo e usciva dal pulsante): se non ci sta, il corpo si riduce
+// fino a RIDUZIONE_MINIMA_ETICHETTA del corpo scalato dal sistema (adjustsFontSizeToFit, nativo su iOS e Android);
+// oltre quel limite compaiono i puntini di sospensione, mai una seconda riga. L'etichetta può restringersi
+// (flexShrink) così il riquadro del testo non supera mai il pulsante.
+const RIDUZIONE_MINIMA_ETICHETTA = 0.75;
 const PILLOLA = {
   alignSelf: 'stretch' as const,
   minHeight: 56,
@@ -161,4 +167,4 @@ const stili = StyleSheet.create({
   puntini: { position: 'absolute', top: 0, bottom: 0, left: 0, right: 0, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: spazio[4] },
   puntino: { width: spazio[8], height: spazio[8], borderRadius: raggio.pieno },
 });
-const stiliTesto = StyleSheet.create({ etichetta: { textAlign: 'center' }, nascosta: { opacity: 0 } });
+const stiliTesto = StyleSheet.create({ etichetta: { textAlign: 'center', flexShrink: 1 }, nascosta: { opacity: 0 } });
