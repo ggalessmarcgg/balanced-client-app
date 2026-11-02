@@ -88,10 +88,10 @@ export function SchermataSenzaConnessione({ onRiprova, ...struttura }: Schermata
   );
 }
 
-export type SchermataErroreCaricamentoProps = StrutturaPagina & { onRiprova: () => void; titolo?: string; descrizione?: string };
+export type SchermataErroreCaricamentoProps = StrutturaPagina & { onRiprova: () => void; titolo?: string; descrizione?: string; icona?: 'Offline' | 'Avviso' };
 
 /** Trasversali · 3 · Errore di caricamento (Figma 563:4978): titolo serif opzionale, spazio 120, blocco "Riprova". */
-export function SchermataErroreCaricamento({ onRiprova, titolo, descrizione, ...struttura }: SchermataErroreCaricamentoProps) {
+export function SchermataErroreCaricamento({ onRiprova, titolo, descrizione, icona, ...struttura }: SchermataErroreCaricamentoProps) {
   return (
     <Pagina scorrevole={false} sovrapposti={barraDi(struttura)}>
       <Struttura {...struttura} />
@@ -102,7 +102,7 @@ export function SchermataErroreCaricamento({ onRiprova, titolo, descrizione, ...
           </Testo>
         )}
         <View style={stili.spazio} />
-        <ErroreCaricamento descrizione={descrizione} onRiprova={onRiprova} />
+        <ErroreCaricamento descrizione={descrizione} onRiprova={onRiprova} icona={icona} />
       </View>
     </Pagina>
   );

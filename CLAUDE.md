@@ -891,8 +891,12 @@ npx expo install --fix                   # riallinea versioni alla SDK
   navigazione con le sole rotte senza parametri; `messaggioSicuro`: identificativi, email, indirizzi, date e token sostituiti,
   testi lunghi tra virgolette tolti, 160 caratteri). Un errore nuovo dell'app porta un **codice**, mai un contenuto, nel
   messaggio. `app/_layout.tsx`: `avviaMonitoraggio()` prima di tutto, `ErrorBoundary` esportato (schermata "Qualcosa è andato
-  storto" con "Riprova" = `SchermataErrore`, provvisoriamente la Trasversali 3 senza disegno Figma dedicato) e
+  storto" con "Riprova" = `SchermataErrore`) e
   `export default avvolgiRadice(RootLayout)`; `app/index.tsx`: `.catch` sulla lettura di avvio → stessa schermata.
+  **Schermata "Qualcosa è andato storto" = Trasversali · 3.1 · Errore imprevisto (Figma 861:8817, 2/11/2026)**: struttura
+  della Trasversali 3 con icona Avviso (istanza 24 resa a 36, `ErroreCaricamento icona="Avviso"`), testo
+  "Qualcosa è andato storto. Riprova: se succede ancora, scrivi a supporto@joinbalanced.it.", "Riprova", solo il logo in alto.
+  Pagina di sviluppo: `/sviluppo/stati?stato=errore-imprevisto`.
 - Attivo solo nelle build di rilascio (`environment: production`); in `__DEV__` spento salvo `EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1`
   nel `.env` (ambiente `sviluppo`). Variabili: `EXPO_PUBLIC_SENTRY_DSN` (pubblica, nel `.env` e negli ambienti EAS `preview` e
   `production`); `SENTRY_AUTH_TOKEN` (token di organizzazione Sentry, **segreta**, solo negli ambienti EAS, mai nel repo né nel
@@ -901,7 +905,10 @@ npx expo install --fix                   # riallinea versioni alla SDK
   (`it.joinbalanced.app@1.0.0+<versionCode>`): nessuna variabile da impostare.
 - Etichette ammesse: `stato_cliente` (codice A-L), `origine`, codici d'errore; nessun `setUser` (identificativo pseudonimo
   rimandato: decisione aperta nel censimento §C3). Pagina di sviluppo `/sviluppo/monitoraggio` (solo `__DEV__`): errore gestito,
-  messaggio, promise rifiutata, errore fuori dal render, errore di rendering (ErrorBoundary).
+  messaggio, promise rifiutata, errore fuori dal render, errore di rendering (ErrorBoundary). Nelle build di rilascio la
+  pagina esiste solo con `EXPO_PUBLIC_PAGINA_MONITORAGGIO=1`, variabile del solo ambiente EAS `preview` (mai in
+  `production`; verificato il 2/11/2026): si apre con `adb shell am start -a android.intent.action.VIEW -d
+  "balanced://sviluppo/monitoraggio"` e serve a verificare le mappe del codice di una build di rilascio su Sentry.
 
 ## Note su Xcode 27 / Device Hub
 

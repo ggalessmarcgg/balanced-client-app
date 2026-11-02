@@ -11,6 +11,7 @@ import { NotificaInBasso } from '@/ui/schermate/NotificaInBasso';
 import { SchermataAccesso, type VarianteAccesso } from '@/ui/schermate/SchermataAccesso';
 import { SchermataRecupero } from '@/ui/schermate/SchermataRecupero';
 import { SchermataAccountNonCollegato, SchermataConsulenzaNonSvolta, SchermataPercorsoConcluso, SchermataPercorsoNonAttivo } from '@/ui/schermate/SchermateStato';
+import { SchermataErrore } from '@/ui/schermate/SchermataErrore';
 import { SchermataCaricamento, SchermataErroreCaricamento, SchermataSenzaConnessione } from '@/ui/schermate/SchermateTrasversali';
 import { AccountSviluppo } from '@/ui/sviluppo/AccountSviluppo';
 import { PrimoAccessoSviluppo } from '@/ui/sviluppo/NotificheSviluppo';
@@ -147,6 +148,7 @@ export const STATI_SVILUPPO = [
   ['caricamento', "Caricamento all'avvio (senza barra di navigazione)"],
   ['senza-connessione', "Senza connessione all'avvio (senza barra)"],
   ['errore-caricamento', "Errore di caricamento all'avvio (senza barra)"],
+  ['errore-imprevisto', 'Trasversali · 3.1 · Errore imprevisto (861:8817)'],
   ['caricamento-abbonato', 'Trasversali 2 · Caricamento nell app dell abbonato (563:4751)'],
   ['senza-connessione-abbonato', 'Trasversali 1 · Senza connessione nell app dell abbonato (563:4517)'],
   ['errore-caricamento-abbonato', 'Trasversali 3 · Errore di caricamento nell app dell abbonato (563:4978)'],
@@ -534,6 +536,8 @@ export function SchermataSviluppo({ chiave }: { chiave: ChiaveStatoSviluppo }) {
       return <SchermataSenzaConnessione onRiprova={nulla} />;
     case 'errore-caricamento':
       return <SchermataErroreCaricamento onRiprova={nulla} />;
+    case 'errore-imprevisto':
+      return <SchermataErrore onRiprova={nulla} />;
     case 'caricamento-abbonato':
       return <SchermataCaricamento barraSuperiore="completa" barraNavigazione="oggi" />;
     case 'senza-connessione-abbonato':

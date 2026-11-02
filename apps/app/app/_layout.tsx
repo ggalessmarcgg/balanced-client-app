@@ -24,6 +24,10 @@ Appearance.setColorScheme('light');
  * punto per tutte: nessuna variante per pagina.
  */
 const OPZIONI_PAGINA_INTERNA = { animation: 'default' } as const;
+// Pagina di prova del monitoraggio: in sviluppo sempre; nelle build di rilascio solo con EXPO_PUBLIC_PAGINA_MONITORAGGIO=1,
+// variabile presente nel solo ambiente EAS `preview` (mai in `production`): serve a provocare errori di prova in una build
+// di rilascio e verificare su Sentry le mappe del codice. Si apre con il deep link balanced://sviluppo/monitoraggio.
+const PAGINA_MONITORAGGIO = __DEV__ || process.env.EXPO_PUBLIC_PAGINA_MONITORAGGIO === '1';
 
 /**
  * Errore di rendering in qualunque schermata (step 4): al posto della chiusura improvvisa la schermata "Qualcosa è
@@ -94,6 +98,8 @@ function RootLayout() {
           <Stack.Screen name="sviluppo/prova-accesso" />
           <Stack.Screen name="sviluppo/titoli" />
           <Stack.Screen name="sviluppo/notifiche-prova" />
+        </Stack.Protected>
+        <Stack.Protected guard={PAGINA_MONITORAGGIO}>
           <Stack.Screen name="sviluppo/monitoraggio" />
         </Stack.Protected>
       </Stack>
