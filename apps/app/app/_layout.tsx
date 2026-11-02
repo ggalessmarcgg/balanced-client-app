@@ -6,8 +6,13 @@ import { Appearance } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { avviaAscoltoNotifiche } from '@/servizi/aperturaNotifiche';
+import { avviaMonitoraggio, avvolgiErrorBoundary, avvolgiRadice } from '@/servizi/monitoraggio';
+import { SchermataErrore } from '@/ui/schermate/SchermataErrore';
 import { colori, useFontTema } from '@/ui/theme';
 
+// Monitoraggio degli errori (step 4): Sentry parte prima di tutto il resto, solo nelle build di rilascio (o in sviluppo
+// con EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1); senza DSN non fa nulla.
+avviaMonitoraggio();
 // La schermata di avvio resta visibile finché i font del tema non sono pronti.
 SplashScreen.preventAutoHideAsync();
 // Tema chiaro forzato (anche con il telefono in modalità scura); in app.json userInterfaceStyle = "light".
@@ -20,7 +25,16 @@ Appearance.setColorScheme('light');
  */
 const OPZIONI_PAGINA_INTERNA = { animation: 'default' } as const;
 
-export default function RootLayout() {
+/**
+ * Errore di rendering in qualunque schermata (step 4): al posto della chiusura improvvisa la schermata "Qualcosa è
+ * andato storto" con "Riprova" (che rimonta la rotta); l'errore arriva a Sentry con il nome della rotta, senza parametri.
+ */
+function ErrorBoundaryRadice({ retry }: { error: Error; retry: () => Promise<void> }) {
+  return <SchermataErrore onRiprova={() => void retry()} />;
+}
+export const ErrorBoundary = avvolgiErrorBoundary(ErrorBoundaryRadice);
+
+function RootLayout() {
   const [fontPronti, erroreFont] = useFontTema();
 
   useEffect(() => {
@@ -80,9 +94,12 @@ export default function RootLayout() {
           <Stack.Screen name="sviluppo/prova-accesso" />
           <Stack.Screen name="sviluppo/titoli" />
           <Stack.Screen name="sviluppo/notifiche-prova" />
+          <Stack.Screen name="sviluppo/monitoraggio" />
         </Stack.Protected>
       </Stack>
       <StatusBar style="dark" />
     </KeyboardProvider>
   );
 }
+
+export default avvolgiRadice(RootLayout);

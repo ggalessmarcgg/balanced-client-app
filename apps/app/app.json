@@ -69,6 +69,14 @@
           "enableBackgroundRemoteNotifications": false
         }
       ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "organization": "balanced-v3",
+          "project": "balanced-app",
+          "url": "https://sentry.io/"
+        }
+      ],
       "./plugins/with-tema-chiaro.js"
     ],
     "experiments": {

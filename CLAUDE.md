@@ -878,6 +878,31 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `keyboardAppearance="light"` (vale su iOS; su Android la tastiera è di Gboard e segue il tema del telefono: non si può forzare).
   Dopo la modifica: `npx expo prebuild -p android --clean --no-install` e controllo di `styles.xml` e `MainApplication.kt`.
 
+## Monitoraggio degli errori (step 4, lotto 1, 2/11/2026)
+
+- Riferimenti: `~/Desktop/censimenti-app/censimento-monitoraggio.md` (§B), decisioni di Alessandro del 2/11/2026: Sentry in UE
+  (organizzazione `balanced-v3`, progetto `balanced-app`), senza consenso (interesse legittimo), **nessun dato personale o
+  sanitario**, avvisi via email, piano gratuito. Mai attivare Session Replay, cattura degli input, screenshot, Sentry Logs,
+  tracing o profiling senza una decisione esplicita.
+- Codice: `@sentry/react-native` 8.28.0 (la versione indicata da Expo SDK 58), unico import in `src/servizi/monitoraggio.ts`
+  (`avviaMonitoraggio`, `segnalaErrore`, `impostaStatoCliente`, `avvolgiRadice`, `avvolgiErrorBoundary`); filtri puri e
+  testati in `src/core/monitoraggio/filtro.ts` (`pulisciEvento` per `beforeSend`: via richiesta, utente, nome del telefono,
+  messaggi resi sicuri; `pulisciBreadcrumb` per `beforeBreadcrumb`: niente console, chiamate di rete senza query string,
+  navigazione con le sole rotte senza parametri; `messaggioSicuro`: identificativi, email, indirizzi, date e token sostituiti,
+  testi lunghi tra virgolette tolti, 160 caratteri). Un errore nuovo dell'app porta un **codice**, mai un contenuto, nel
+  messaggio. `app/_layout.tsx`: `avviaMonitoraggio()` prima di tutto, `ErrorBoundary` esportato (schermata "Qualcosa è andato
+  storto" con "Riprova" = `SchermataErrore`, provvisoriamente la Trasversali 3 senza disegno Figma dedicato) e
+  `export default avvolgiRadice(RootLayout)`; `app/index.tsx`: `.catch` sulla lettura di avvio → stessa schermata.
+- Attivo solo nelle build di rilascio (`environment: production`); in `__DEV__` spento salvo `EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1`
+  nel `.env` (ambiente `sviluppo`). Variabili: `EXPO_PUBLIC_SENTRY_DSN` (pubblica, nel `.env` e negli ambienti EAS `preview` e
+  `production`); `SENTRY_AUTH_TOKEN` (token di organizzazione Sentry, **segreta**, solo negli ambienti EAS, mai nel repo né nel
+  `.env`): con essa la build EAS carica le mappe del codice (plugin `@sentry/react-native/expo` in `app.json`, Metro con
+  `getSentryExpoConfig` in `metro.config.js` per i Debug ID). Release e `dist` vengono dal nativo
+  (`it.joinbalanced.app@1.0.0+<versionCode>`): nessuna variabile da impostare.
+- Etichette ammesse: `stato_cliente` (codice A-L), `origine`, codici d'errore; nessun `setUser` (identificativo pseudonimo
+  rimandato: decisione aperta nel censimento §C3). Pagina di sviluppo `/sviluppo/monitoraggio` (solo `__DEV__`): errore gestito,
+  messaggio, promise rifiutata, errore fuori dal render, errore di rendering (ErrorBoundary).
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**
