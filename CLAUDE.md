@@ -897,8 +897,9 @@ npx expo install --fix                   # riallinea versioni alla SDK
   della Trasversali 3 con icona Avviso (istanza 24 resa a 36, `ErroreCaricamento icona="Avviso"`), testo
   "Qualcosa è andato storto. Riprova: se succede ancora, scrivi a supporto@joinbalanced.it.", "Riprova", solo il logo in alto.
   Pagina di sviluppo: `/sviluppo/stati?stato=errore-imprevisto`.
-- Attivo solo nelle build di rilascio (`environment: production`); in `__DEV__` spento salvo `EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1`
-  nel `.env` (ambiente `sviluppo`). Variabili: `EXPO_PUBLIC_SENTRY_DSN` (pubblica, nel `.env` e negli ambienti EAS `preview` e
+- Attivo solo nelle build di rilascio: ambiente `production`, oppure `preview` con `EXPO_PUBLIC_SENTRY_AMBIENTE=preview`
+  (variabile del solo ambiente EAS `preview`, mai in `production`: gli errori delle build di prova non si mescolano con
+  quelli veri); in `__DEV__` spento salvo `EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1` nel `.env` (ambiente `sviluppo`). Variabili: `EXPO_PUBLIC_SENTRY_DSN` (pubblica, nel `.env` e negli ambienti EAS `preview` e
   `production`); `SENTRY_AUTH_TOKEN` (token di organizzazione Sentry, **segreta**, solo negli ambienti EAS, mai nel repo né nel
   `.env`): con essa la build EAS carica le mappe del codice (plugin `@sentry/react-native/expo` in `app.json`, Metro con
   `getSentryExpoConfig` in `metro.config.js` per i Debug ID). Release e `dist` vengono dal nativo

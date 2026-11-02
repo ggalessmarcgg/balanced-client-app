@@ -3,8 +3,9 @@
 // consenso (interesse legittimo) e quindi SENZA dati personali o sanitari: `sendDefaultPii` spento, niente Session Replay,
 // niente cattura degli input né screenshot, tracing spento durante il test, filtri puri in `src/core/monitoraggio/filtro.ts`.
 //
-// Quando è attivo: nelle build di rilascio (ambiente `production`) con il DSN in EXPO_PUBLIC_SENTRY_DSN; in sviluppo
-// (__DEV__) resta spento, salvo EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1 nel .env del Mac per le prove (ambiente `sviluppo`).
+// Quando è attivo: nelle build di rilascio con il DSN in EXPO_PUBLIC_SENTRY_DSN, ambiente `production` oppure `preview`
+// (EXPO_PUBLIC_SENTRY_AMBIENTE=preview nel solo ambiente EAS `preview`: gli errori delle build di prova non si mescolano
+// con quelli veri); in sviluppo (__DEV__) resta spento, salvo EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1 nel .env del Mac (ambiente `sviluppo`).
 // Release e numero di build li prende l'SDK dal nativo (`it.joinbalanced.app@1.0.0+<versionCode>`, `dist` = versionCode),
 // gli stessi con cui la build EAS carica le mappe del codice (plugin in app.json, SENTRY_AUTH_TOKEN su EAS).
 import * as Sentry from '@sentry/react-native';
@@ -15,8 +16,8 @@ import { etichetteSicure, pulisciBreadcrumb, pulisciEvento } from '@/core/monito
 const DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
 const IN_SVILUPPO = process.env.EXPO_PUBLIC_SENTRY_IN_SVILUPPO === '1';
 
-/** Ambiente dichiarato a Sentry: `production` per le build di rilascio, `sviluppo` per le prove sul Mac. */
-export const AMBIENTE_MONITORAGGIO = __DEV__ ? 'sviluppo' : 'production';
+/** Ambiente dichiarato a Sentry: `production` per le build di rilascio, `preview` per le build di prova EAS, `sviluppo` sul Mac. */
+export const AMBIENTE_MONITORAGGIO: 'sviluppo' | 'preview' | 'production' = __DEV__ ? 'sviluppo' : process.env.EXPO_PUBLIC_SENTRY_AMBIENTE === 'preview' ? 'preview' : 'production';
 /** Vero se questa installazione manda gli errori a Sentry (DSN presente e, in sviluppo, prove abilitate). */
 export const MONITORAGGIO_ATTIVO: boolean = typeof DSN === 'string' && DSN.length > 0 && (!__DEV__ || IN_SVILUPPO);
 
