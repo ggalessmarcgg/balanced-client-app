@@ -14,7 +14,7 @@
 //
 // Quando è attiva: nelle build di rilascio con la chiave; in sviluppo (__DEV__) spenta, salvo EXPO_PUBLIC_POSTHOG_IN_SVILUPPO=1
 // nel .env del Mac (prove sull'emulatore). Senza rete gli eventi restano in coda su file (al massimo 1000) e partono dopo.
-import { PostHog } from 'posthog-react-native';
+import { PostHog, PostHogPersistedProperty } from 'posthog-react-native';
 import { AppState } from 'react-native';
 
 import { analisiAttiva, codiceErrore, fasciaAttesaLunga, filtraEventoInUscita, validaProprieta, type Funzione, type NomeEvento, type Proprieta } from '@/core/analisi/eventi';
@@ -61,6 +61,14 @@ export function avviaAnalisi(): void {
     // Ultimo controllo prima dell'invio: solo eventi e proprietà del catalogo, via il nome del telefono e le proprietà di persona.
     before_send: (evento) => filtraEventoInUscita(evento),
   });
+  // Diagnostica per la pagina di sviluppo: esito dell'ultimo invio a gruppi (riuscito con quanti eventi, oppure l'errore
+  // HTTP o di rete dell'SDK). Nessun contenuto degli eventi, solo conteggio e messaggio tecnico.
+  posthog.on('flush', (inviati: unknown) => {
+    ultimoInvio = `riuscito, ${Array.isArray(inviati) ? inviati.length : '?'} eventi (${oraLocale()})`;
+  });
+  posthog.on('error', (errore: unknown) => {
+    ultimoInvio = `fallito: ${descrizioneErrore(errore)} (${oraLocale()})`;
+  });
   misura('app_aperta', { da_sfondo: false });
   AppState.addEventListener('change', (nuovo) => {
     if (nuovo === 'active') {
@@ -104,4 +112,34 @@ export function registraChiamata(funzione: Funzione, inizioMs: number, esito: Es
 /** Per la pagina di sviluppo: il codice anonimo dell'installazione (per ritrovare i propri eventi di prova su PostHog). */
 export function codiceAnonimo(): string | null {
   return posthog?.getDistinctId() ?? null;
+}
+
+// ---- Diagnostica (solo pagina di sviluppo /sviluppo/monitoraggio, anche nelle build preview) -----------------------
+
+let ultimoInvio = 'nessuno';
+
+function oraLocale(): string {
+  return new Date().toLocaleTimeString('it-IT');
+}
+
+function descrizioneErrore(errore: unknown): string {
+  if (errore instanceof Error) return `${errore.name}: ${errore.message}`;
+  return String(errore);
+}
+
+/** Eventi ancora in coda nell'SDK (in attesa dell'invio a gruppi) ed esito dell'ultimo invio. */
+export function diagnosticaAnalisi(): { inCoda: number; ultimoInvio: string } {
+  const coda = posthog?.getPersistedProperty<unknown>(PostHogPersistedProperty.Queue);
+  return { inCoda: Array.isArray(coda) ? coda.length : 0, ultimoInvio };
+}
+
+/** Invio immediato della coda (lo stesso `flush` che l'SDK esegue ogni 10 s e al cambio di stato dell'app). */
+export async function inviaOra(): Promise<string> {
+  if (!posthog) return 'analisi spenta';
+  try {
+    await posthog.flush();
+    return diagnosticaAnalisi().ultimoInvio;
+  } catch (errore) {
+    return `fallito: ${descrizioneErrore(errore)}`;
+  }
 }

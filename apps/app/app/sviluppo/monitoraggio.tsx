@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { ANALISI_ATTIVA, codiceAnonimo, misura } from '@/servizi/analisi';
+import { ANALISI_ATTIVA, codiceAnonimo, diagnosticaAnalisi, inviaOra, misura } from '@/servizi/analisi';
 import { AMBIENTE_MONITORAGGIO, MONITORAGGIO_ATTIVO, segnalaErrore, segnalaProva } from '@/servizi/monitoraggio';
 import { Pulsante } from '@/ui/Pulsante';
 import { colori, margine, spazio, testi } from '@/ui/theme';
@@ -22,19 +22,37 @@ class ErroreDiProva extends Error {
 export default function MonitoraggioProva() {
   const [esplodi, setEsplodi] = useState(false);
   const [esito, setEsito] = useState('');
+  const [diagnostica, setDiagnostica] = useState(diagnosticaAnalisi);
   if (esplodi) throw new ErroreDiProva('errore di rendering volontario (pagina di sviluppo)');
   return (
     <SafeAreaView style={stili.pagina}>
       <ScrollView contentContainerStyle={stili.contenuto}>
         <Text style={stili.info}>{`monitoraggio: ${MONITORAGGIO_ATTIVO ? 'attivo' : 'spento'} · ambiente: ${AMBIENTE_MONITORAGGIO}`}</Text>
         <Text style={stili.info}>{`analisi (PostHog): ${ANALISI_ATTIVA ? 'attiva' : 'spenta'} · codice anonimo: ${codiceAnonimo() ?? '—'}`}</Text>
+        <Text style={stili.info}>{`PostHog · in coda: ${diagnostica.inCoda} · ultimo invio: ${diagnostica.ultimoInvio}`}</Text>
         <Pulsante
           etichetta="Evento di prova PostHog (prova_analisi)"
           livello="secondario"
           onPress={() => {
             misura('prova_analisi', {});
-            setEsito('evento prova_analisi inviato (in coda: parte entro 10 s)');
+            setDiagnostica(diagnosticaAnalisi());
+            setEsito('evento prova_analisi in coda: parte entro 10 s');
           }}
+        />
+        <Pulsante
+          etichetta="Invia ora la coda PostHog (flush)"
+          livello="secondario"
+          onPress={() => {
+            void inviaOra().then((risultato) => {
+              setDiagnostica(diagnosticaAnalisi());
+              setEsito(`invio: ${risultato}`);
+            });
+          }}
+        />
+        <Pulsante
+          etichetta="Aggiorna diagnostica PostHog"
+          livello="secondario"
+          onPress={() => setDiagnostica(diagnosticaAnalisi())}
         />
         <Pulsante
           etichetta="Errore gestito (captureException)"
