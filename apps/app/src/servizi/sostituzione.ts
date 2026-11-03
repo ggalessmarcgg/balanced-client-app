@@ -3,9 +3,11 @@
 // due fumetti (sostituzione, ricetta) ricordato nel portachiavi per account. L'app non scrive mai sul database: il server registra da sé ogni chiamata.
 import { fetch as fetchExpo } from 'expo/fetch';
 
+import { fasciaTempo } from '@/core/analisi/eventi';
 import { nuovoIdRichiesta } from '@/core/racconta/server';
 import { CARATTERI_MASSIMI_IN_CASA, corpoAlternative, erroreSostituzioneApp, inCasaPerServer, interpretaRispostaAlternative, PERCORSO_ALTERNATIVE, TEMPO_MASSIMO_SOSTITUZIONE_MS, type EsitoSostituzione } from '@/core/sostituzione/server';
 import { tokenAccesso, URL_AGENTI } from '@/servizi/agenti';
+import { misura, registraChiamata } from '@/servizi/analisi';
 import { leggi, scrivi } from '@/servizi/archivio';
 
 async function inviaRichiesta(token: string, corpo: string, richiestaId: string): Promise<EsitoSostituzione> {
@@ -43,6 +45,15 @@ const FRAZIONE_ACCORCIATA = 0.5;
  * con in_casa_troppo_lungo si accorcia il testo e si ripete una volta. Attesa massima 35 s.
  */
 export async function trovaAlternative(rigaId: string, inCasa: string): Promise<EsitoSostituzione> {
+  const inizio = Date.now();
+  const esito = await trovaAlternativeSulServer(rigaId, inCasa);
+  // Analisi anonima (step 4, lotto 2): esito e tempo a fasce, se il cliente aveva scritto qualcosa; mai la riga né il testo.
+  registraChiamata('alternative', inizio, esito);
+  misura('sostituzione_chiesta', { esito: esito.tipo === 'ok' ? esito.risposta.esito : 'errore', tempo: fasciaTempo(Date.now() - inizio), in_casa: inCasaPerServer(inCasa) !== null });
+  return esito;
+}
+
+async function trovaAlternativeSulServer(rigaId: string, inCasa: string): Promise<EsitoSostituzione> {
   const richiestaId = nuovoIdRichiesta();
   const token = await tokenAccesso();
   if (!token) return { tipo: 'errore', errore: erroreSostituzioneApp('sessione_assente', richiestaId) };

@@ -1,7 +1,8 @@
 import { Redirect, useNavigation, useRouter } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { TESTI_RICETTE_SALVATE } from '@/core/ricette/salvate';
+import { misura } from '@/servizi/analisi';
 import { segnalaRicettaMostrata, useRicettaPronta } from '@/servizi/ricette';
 import { salvaRicetta } from '@/servizi/ricetteSalvate';
 import { statoCorrente } from '@/servizi/statoCliente';
@@ -18,6 +19,13 @@ export default function RottaRicetta() {
   const navigation = useNavigation();
   const stato = statoCorrente();
   const pronta = useRicettaPronta();
+  // Analisi anonima (step 4, lotto 2): la pagina della ricetta appena preparata, una volta per apertura.
+  const apertaMisurata = useRef(false);
+  useEffect(() => {
+    if (apertaMisurata.current || !pronta) return;
+    apertaMisurata.current = true;
+    misura('ricetta_aperta', { origine: 'nuova' });
+  }, [pronta]);
   // A transizione d'ingresso completata il pannello "Ricetta" del Piano si chiude sotto questa pagina, senza animazione
   // (decisione del 29/10/2026: niente Piano visibile tra pannello e ricetta).
   useEffect(() => {
@@ -35,6 +43,7 @@ export default function RottaRicetta() {
     setStatoSalvataggio('inCorso');
     salvaRicetta(clientId, pronta).then((esito) => {
       if (esito.tipo === 'ok') {
+        misura('ricetta_salvata', {});
         setStatoSalvataggio('salvata');
         setNotifica({ chiave: Date.now(), testo: TESTI_RICETTE_SALVATE.notificaSalvata, tipo: 'conferma' });
       } else {

@@ -5,6 +5,7 @@ import { URL_PRIVACY } from '@/core/account/account';
 import { PAGINA, riduci, vaiAPagina, type EventoCarosello } from '@/core/primoAccesso/carosello';
 import { autoreRevisione, type AutoreRevisione } from '@/core/revisioni/autore';
 import { apriPaginaWeb } from '@/servizi/account';
+import { misura } from '@/servizi/analisi';
 import { registraConsensoAI } from '@/servizi/consenso';
 import { aggiornaPermessoDispositivo } from '@/servizi/dispositivo';
 import { chiediPermesso } from '@/servizi/notifichePush';
@@ -36,16 +37,21 @@ function PrimoAccesso({ clientId, nutrizionista, rottaFinale }: { clientId: stri
 
   const fine = useCallback(() => {
     segnaPrimoAccessoVisto();
+    misura('carosello_completato', {});
     router.replace(rottaFinale as never);
   }, [router, rottaFinale]);
 
   const applica = useCallback(
     (evento: EventoCarosello) => {
       const t = riduci(pagina, evento);
+      // Analisi anonima (step 4, lotto 2): le risposte negative non scrivono nulla e si misurano qui; quelle positive
+      // le misura chi scrive (registraConsensoAI) o la risposta del sistema (permesso).
+      if (evento === 'nonOra' && pagina === PAGINA.ai) misura('consenso_ai', { risposta: 'no', dove: 'carosello' });
+      if (evento === 'piuTardi' && pagina === PAGINA.notifiche) misura('notifiche_permesso', { esito: 'piu_tardi', dove: 'carosello' });
       if (t.effetti.includes('registraConsenso')) {
         // La pagina cambia solo con il consenso salvato (senza rete si resta qui con l'avviso).
         setAccettoInCorso(true);
-        registraConsensoAI(clientId, 'granted')
+        registraConsensoAI(clientId, 'granted', 'carosello')
           .then((ok) => {
             if (ok) setPagina(t.pagina);
             else setAvviso({ chiave: Date.now(), testo: TESTO_ERRORE_CONSENSO });
@@ -57,7 +63,10 @@ function PrimoAccesso({ clientId, nutrizionista, rottaFinale }: { clientId: stri
       if (t.effetti.includes('chiediPermesso')) {
         setAttivaInCorso(true);
         chiediPermesso()
-          .then(() => aggiornaPermessoDispositivo())
+          .then((s) => {
+            misura('notifiche_permesso', { esito: s.permesso === 'granted' ? 'concesso' : 'negato', dove: 'carosello' });
+            return aggiornaPermessoDispositivo();
+          })
           .finally(() => {
             setAttivaInCorso(false);
             fine();

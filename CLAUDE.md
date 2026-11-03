@@ -911,6 +911,43 @@ npx expo install --fix                   # riallinea versioni alla SDK
   `production`; verificato il 2/11/2026): si apre con `adb shell am start -a android.intent.action.VIEW -d
   "balanced://sviluppo/monitoraggio"` e serve a verificare le mappe del codice di una build di rilascio su Sentry.
 
+## Analisi dell'uso (step 4, lotto 2, 3/11/2026): PostHog in modalità anonima
+
+- Riferimenti: censimento `~/Desktop/censimenti-app/censimento-monitoraggio.md` (§C, §D), piano di traccia
+  `docs/piano-di-traccia.md` (ogni evento con proprietà e domanda di prodotto: **si aggiorna prima di aggiungere un evento**).
+  Decisioni di Alessandro del 2/11/2026: PostHog UE (`https://eu.i.posthog.com`, progetto "Balanced app", piano gratuito),
+  **modalità anonima**: codice casuale per installazione generato dall'SDK (file nella cartella documenti), **nessun
+  `identify`, nessun `reset`, nessun profilo della persona** (`personProfiles: 'never'`), nessun dato personale o sanitario,
+  nessun testo dell'utente, nessun identificativo di diari, piani, revisioni, clienti, nutrizioniste o telefoni, IP non
+  conservato (impostazione del progetto). Niente cattura automatica dei tocchi o delle schermate (si usa la classe `PostHog`,
+  mai il `PostHogProvider`), niente Session Replay, sondaggi, feature flag, configurazione remota, cattura degli errori (li fa
+  Sentry), eventi del ciclo di vita dell'SDK (l'unico è il nostro `app_aperta`: all'avvio e al ritorno in primo piano dopo
+  almeno 5 s di sfondo, perché i dialoghi di permesso del sistema mettono l'app in secondo piano per un istante). Nessun consenso nell'app (statistiche
+  anonime di prima parte, da confermare con il consulente). I numeri ufficiali restano quelli del database.
+- Codice: `posthog-react-native` 4.85.2 con `expo-application` 58.1.2 ed `expo-localization` 58.0.5 (moduli nativi: nuova
+  build; plugin `expo-localization` in `app.json`), unico import in `src/servizi/analisi.ts` (`avviaAnalisi` dal layout
+  radice subito dopo Sentry, `misura(evento, proprietà)` unico punto di invio, `registraChiamata(funzione, inizio, esito)`
+  per `errore_chiamata` e `attesa_lunga`, `codiceAnonimo` per la pagina di sviluppo). **Catalogo chiuso** in
+  `src/core/analisi/eventi.ts` (`CATALOGO`: evento → proprietà → elenco di valori, booleano o intero 0–4; tipi derivati,
+  `validaProprieta` a runtime, `filtraEventoInUscita` come `before_send` che scarta gli eventi fuori catalogo e toglie
+  `$device_name` e le proprietà di persona; fasce `fasciaTempo`, `fasciaAttesaLunga` da 10 s, `fasciaAudio`; `codiceErrore`
+  e `tipoNotifica` riconducono agli elenchi; `blocchiCompilati`). Test `eventi.test.ts`: nomi stabili, nessun testo libero,
+  nessun identificativo, disattivazione in sviluppo. Nomi degli eventi in italiano con i trattini bassi.
+- Eventi (21): `app_aperta`, `carosello_completato`, `consenso_ai`, `notifiche_permesso`, `diario_bozza_salvata`,
+  `diario_condiviso`, `diario_vocale_avviato|completato|fallito`, `piano_aperto`, `sostituzione_chiesta`, `ricette_idee`,
+  `ricetta_aperta`, `ricetta_salvata`, `revisione_aperta`, `revisione_letta`, `notifica_aperta`, `errore_chiamata`,
+  `attesa_lunga`, `prova_analisi` (solo pagina di sviluppo). `registraConsensoAI` e `useConsensoAI` hanno il parametro `dove`,
+  `condividiOggi` il parametro `modo` (scritto/vocale).
+- Attiva solo nelle build di rilascio con `EXPO_PUBLIC_POSTHOG_KEY` (chiave pubblica del progetto, negli ambienti EAS
+  `preview` e `production` e nel `.env`, mai nel repo); in `__DEV__` spenta salvo `EXPO_PUBLIC_POSTHOG_IN_SVILUPPO=1` nel
+  `.env` (prove sull'emulatore). Pagina `/sviluppo/monitoraggio`: stato dell'analisi, codice anonimo, evento di prova.
+  Mai attivare autocapture, Session Replay, sondaggi, `identify` o proprietà di persona senza una decisione esplicita.
+- Verifica del 3/11/2026 sull'emulatore con +test4 (traffico verso PostHog intercettato dal debugger di Metro sostituendo
+  `fetch`): ogni evento parte su `/batch/` con le sole proprietà del catalogo più quelle tecniche dell'SDK, senza
+  `$device_name`, `$set` o identificativi; all'avvio l'SDK fa una sola GET della configurazione pubblica del progetto
+  (`/array/<chiave>/config`, senza dati: `disableRemoteConfig` non è implementata in 4.85.2) che non può accendere nulla.
+  Esiti in `~/Desktop/censimenti-app/android-verifica/` (`c-*`, `d-*`, `r-*`, `p-*`, `v-*`, `n-*`).
+
 ## Note su Xcode 27 / Device Hub
 
 - Xcode 27 sostituisce Simulator.app con **Device Hub**

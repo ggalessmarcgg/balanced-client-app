@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
 import { azionePerPermesso, type AzionePermesso } from '@/core/notifiche/dispositivo';
+import { misura } from '@/servizi/analisi';
 import { aggiornaPermessoDispositivo } from '@/servizi/dispositivo';
 import { apriImpostazioniNotifiche, chiediPermesso, statoPermesso } from '@/servizi/notifichePush';
 
@@ -43,6 +44,7 @@ export function usePermessoNotifiche(): PermessoNotificheAccount {
     setInRichiesta(true);
     chiediPermesso()
       .then((s) => {
+        misura('notifiche_permesso', { esito: s.permesso === 'granted' ? 'concesso' : 'negato', dove: 'account' });
         setAzione(azionePerPermesso(s.permesso, s.puoChiedere));
         void aggiornaPermessoDispositivo();
       })

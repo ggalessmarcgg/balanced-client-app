@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { Appearance } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 
+import { avviaAnalisi } from '@/servizi/analisi';
 import { avviaAscoltoNotifiche } from '@/servizi/aperturaNotifiche';
 import { avviaMonitoraggio, avvolgiErrorBoundary, avvolgiRadice } from '@/servizi/monitoraggio';
 import { SchermataErrore } from '@/ui/schermate/SchermataErrore';
@@ -13,6 +14,9 @@ import { colori, useFontTema } from '@/ui/theme';
 // Monitoraggio degli errori (step 4): Sentry parte prima di tutto il resto, solo nelle build di rilascio (o in sviluppo
 // con EXPO_PUBLIC_SENTRY_IN_SVILUPPO=1); senza DSN non fa nulla.
 avviaMonitoraggio();
+// Analisi dell'uso anonima (step 4, lotto 2): PostHog parte subito dopo, solo con la chiave (in sviluppo solo con
+// EXPO_PUBLIC_POSTHOG_IN_SVILUPPO=1); emette `app_aperta` all'avvio e a ogni ritorno in primo piano.
+avviaAnalisi();
 // La schermata di avvio resta visibile finché i font del tema non sono pronti.
 SplashScreen.preventAutoHideAsync();
 // Tema chiaro forzato (anche con il telefono in modalità scura); in app.json userInterfaceStyle = "light".

@@ -69,7 +69,7 @@ export function useRiepilogo(esci: () => void): StatoRiepilogo & { azioni: Azion
   const condividi = useCallback(() => {
     if (inviando) return;
     setInviando(true);
-    condividiOggi()
+    condividiOggi('vocale')
       .then((esito) => {
         if (!montato.current) return;
         setInviando(false);

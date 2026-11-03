@@ -1,6 +1,7 @@
 import { Redirect } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 
+import { misura } from '@/servizi/analisi';
 import { leggiConsenso } from '@/servizi/consenso';
 import { impostaStatoCliente, segnalaErrore } from '@/servizi/monitoraggio';
 import { registraDispositivo } from '@/servizi/dispositivo';
@@ -46,6 +47,7 @@ export default function Avvio() {
           void leggiConsenso(clientId);
         }
         impostaStatoCliente(esito.tipo === 'ok' ? esito.stato.codice : null);
+        if (esito.tipo === 'rete' || esito.tipo === 'errore') misura('errore_chiamata', { funzione: 'avvio', codice: esito.tipo === 'rete' ? 'rete' : 'altro' });
         setAvvio({ esito, carosello: esito.tipo === 'ok' && 'profilo' in esito.stato && !visto });
       })
       .catch((errore: unknown) => {

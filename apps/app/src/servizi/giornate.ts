@@ -1,9 +1,11 @@
 // Operazioni sulle giornate condivise comuni a Oggi, storico e pannello: giornate in memoria, salvataggio delle
 // modifiche in attesa (serializzato con le altre scritture), "letto" dei commenti con nuovo tentativo silenzioso.
+import { blocchiCompilati } from '@/core/analisi/eventi';
 import { aggiornaDiario } from '@/core/diario/bozza';
 import { pianificaLetto, segnaLettoInCache } from '@/core/diario/commento';
 import { aggiornaGiornata, type GiornataLocale } from '@/core/diario/giornata';
 import { statoRiga, type RigaSettimana } from '@/core/diario/letture';
+import { misura } from '@/servizi/analisi';
 import { salvaBozza, salvaGiornata, scriviCommentoLetto, type EsitoScrittura } from '@/servizi/diario';
 import { accodaScrittura, aggiornaMemoria, memoriaDiario, persistiMemoria } from '@/servizi/memoriaDiario';
 
@@ -69,6 +71,9 @@ export function salvaBozzaInAttesa(): Promise<EsitoScrittura | null> {
     const attuale = memoriaDiario().locale;
     if (!attuale || !attuale.inAttesa) return null;
     const { locale: dopo, esito } = await salvaBozza(attuale);
+    // Analisi anonima (step 4, lotto 2): una bozza scritta davvero (riga in bozza), o l'errore con il solo codice.
+    if (esito.tipo === 'ok' && dopo.riga.tipo === 'bozza') misura('diario_bozza_salvata', { blocchi_compilati: blocchiCompilati(dopo.diario) });
+    else if (esito.tipo === 'errore') misura('errore_chiamata', { funzione: 'diario_salva', codice: esito.errore === 'rete' ? 'rete' : 'altro' });
     const corrente = memoriaDiario().locale;
     aggiornaMemoria({ locale: corrente && corrente !== attuale ? aggiornaDiario({ ...corrente, riga: dopo.riga, errore: dopo.errore }, corrente.diario) : dopo });
     persistiMemoria();

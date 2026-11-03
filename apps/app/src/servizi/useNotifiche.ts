@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppState, type AppStateStatus } from 'react-native';
 
+import { tipoNotifica } from '@/core/analisi/eventi';
 import { elencoNotifiche, nomeDiBattesimo, type ContestoNotifiche, type Destinazione, type Notifica } from '@/core/notifiche/notifiche';
 import type { Profilo } from '@/core/stato/stato';
+import { misura } from '@/servizi/analisi';
 import { leggiGiornata } from '@/servizi/diario';
 import { memoriaDiario } from '@/servizi/memoriaDiario';
 import { useMemoriaRevisioni } from '@/servizi/memoriaRevisioni';
@@ -83,6 +85,7 @@ export function useNotifiche(profilo: Profilo): StatoNotifiche {
 
   const apri = useCallback(async (notifica: Notifica): Promise<DestinazioneRisolta | null> => {
     segnaCliccataNotifica(notifica.id);
+    misura('notifica_aperta', { tipo: tipoNotifica(notifica.tipo), origine: 'campanella' });
     const d = notifica.destinazione;
     if (!d) return null;
     if (d.tipo !== 'giornata') return d;

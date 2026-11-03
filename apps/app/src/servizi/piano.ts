@@ -9,6 +9,7 @@ import { useSyncExternalStore } from 'react';
 import { classificaErrore } from '@/core/accesso/errori';
 import { nuovaCopia, pianoDallaCopia } from '@/core/piano/copia';
 import { FUNZIONE_PIANO, interpretaRisposta, parametriVersione, type PianoServer } from '@/core/piano/tipi';
+import { misura } from '@/servizi/analisi';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 import { supabase } from '@/servizi/supabase';
 
@@ -66,6 +67,7 @@ async function copiaSuFile(clientId: string): Promise<PianoServer | null> {
 }
 
 function registra(esito: EsitoChiamata, messaggio?: string, resto: Partial<MemoriaPiano> = {}): void {
+  if (esito === 'rete' || esito === 'errore') misura('errore_chiamata', { funzione: 'piano', codice: esito === 'rete' ? 'rete' : 'altro' });
   aggiorna({ ...resto, ultimaChiamata: { esito, quando: new Date().toISOString(), ...(messaggio ? { messaggio } : {}) } });
 }
 

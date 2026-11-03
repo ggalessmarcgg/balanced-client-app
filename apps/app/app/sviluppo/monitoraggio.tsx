@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ANALISI_ATTIVA, codiceAnonimo, misura } from '@/servizi/analisi';
 import { AMBIENTE_MONITORAGGIO, MONITORAGGIO_ATTIVO, segnalaErrore, segnalaProva } from '@/servizi/monitoraggio';
 import { Pulsante } from '@/ui/Pulsante';
 import { colori, margine, spazio, testi } from '@/ui/theme';
@@ -26,6 +27,15 @@ export default function MonitoraggioProva() {
     <SafeAreaView style={stili.pagina}>
       <ScrollView contentContainerStyle={stili.contenuto}>
         <Text style={stili.info}>{`monitoraggio: ${MONITORAGGIO_ATTIVO ? 'attivo' : 'spento'} · ambiente: ${AMBIENTE_MONITORAGGIO}`}</Text>
+        <Text style={stili.info}>{`analisi (PostHog): ${ANALISI_ATTIVA ? 'attiva' : 'spenta'} · codice anonimo: ${codiceAnonimo() ?? '—'}`}</Text>
+        <Pulsante
+          etichetta="Evento di prova PostHog (prova_analisi)"
+          livello="secondario"
+          onPress={() => {
+            misura('prova_analisi', {});
+            setEsito('evento prova_analisi inviato (in coda: parte entro 10 s)');
+          }}
+        />
         <Pulsante
           etichetta="Errore gestito (captureException)"
           livello="secondario"

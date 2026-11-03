@@ -2,6 +2,7 @@
 // "Accetto" → granted, interruttore spento → revoked. L'effetto che legge dipende solo dal cliente.
 import { useCallback, useEffect } from 'react';
 
+import type { LuogoConsenso } from '@/core/analisi/eventi';
 import { consensoValido } from '@/core/consenso/consenso';
 import { leggiConsenso, registraConsensoAI, useMemoriaConsenso } from '@/servizi/consenso';
 
@@ -12,13 +13,14 @@ export type ConsensoAI = {
   revoca: () => Promise<boolean>;
 };
 
-export function useConsensoAI(clientId: string): ConsensoAI {
+/** `dove` = la schermata che chiede il consenso, per l'analisi anonima (mai il cliente). */
+export function useConsensoAI(clientId: string, dove: LuogoConsenso): ConsensoAI {
   const memoria = useMemoriaConsenso();
   useEffect(() => {
     void leggiConsenso(clientId);
   }, [clientId]);
-  const accetta = useCallback(() => registraConsensoAI(clientId, 'granted'), [clientId]);
-  const revoca = useCallback(() => registraConsensoAI(clientId, 'revoked'), [clientId]);
+  const accetta = useCallback(() => registraConsensoAI(clientId, 'granted', dove), [clientId, dove]);
+  const revoca = useCallback(() => registraConsensoAI(clientId, 'revoked', dove), [clientId, dove]);
   const valido = memoria.clientId === clientId && memoria.letto ? consensoValido(memoria.ultima) : null;
   return { valido, accetta, revoca };
 }

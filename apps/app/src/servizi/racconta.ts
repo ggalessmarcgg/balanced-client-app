@@ -7,15 +7,17 @@ import { fetch as fetchExpo } from 'expo/fetch';
 import { Directory, File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
 
+import { esitoVocale, fasciaAudio } from '@/core/analisi/eventi';
 import { aggiornaDiario } from '@/core/diario/bozza';
 import { dataOggiRoma } from '@/core/diario/data';
 import type { Diario } from '@/core/diario/modello';
 import { fileDaCancellare, leggiNotaAttesa, leggiNotaTesto, notaAudioInAttesa, notaTestoInAttesa, type AudioRacconto, type TestoRacconto } from '@/core/racconta/attesa';
 import { durataDichiarata } from '@/core/racconta/audio';
 import { corpoCompilazione, erroreCompilazioneApp, interpretaRispostaCompilazione, PERCORSO_COMPILA, TEMPO_MASSIMO_COMPILAZIONE_MS, type EsitoCompilazione } from '@/core/racconta/compila';
-import { riduci, ripartiDallAvvio, STATO_INIZIALE, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
+import { raccontoVuoto, riduci, ripartiDallAvvio, STATO_INIZIALE, type EffettoRacconta, type EventoRacconta, type PermessoMicrofono, type StatoRacconta } from '@/core/racconta/flusso';
 import { erroreApp, interpretaRispostaTrascrizione, intestazioniTrascrizione, nuovoIdRichiesta, PERCORSO_TRASCRIVI, TEMPO_MASSIMO_TRASCRIZIONE_MS, type EsitoTrascrizione } from '@/core/racconta/server';
 import { tokenAccesso, URL_AGENTI } from '@/servizi/agenti';
+import { misura, registraChiamata } from '@/servizi/analisi';
 import { leggi, rimuovi, scrivi } from '@/servizi/archivio';
 import { leggiFile, rimuoviFile, scriviFile } from '@/servizi/archivioFile';
 import { salvaBozzaInAttesa } from '@/servizi/giornate';
@@ -83,8 +85,45 @@ export function collegaRegistratore(r: Registratore): () => void {
   };
 }
 
+/**
+ * Analisi anonima (step 4, lotto 2): l'imbuto del diario vocale dagli eventi della macchina a stati, prima della
+ * transizione (lo stato corrente dice in che passo si era e quanto durava l'audio). Mai il testo, mai il giorno.
+ */
+function misuraRacconta(corrente: StatoRacconta, evento: EventoRacconta): void {
+  switch (evento.tipo) {
+    case 'avviataRegistrazione':
+      misura('diario_vocale_avviato', {});
+      return;
+    case 'registrazioneNonRiuscita':
+      if (corrente.tipo === 'registrazione') misura('diario_vocale_fallito', { passo: 'registrazione', esito: 'definitivo', durata_audio: fasciaAudio(corrente.durataMs) });
+      return;
+    case 'trascritta':
+      if (raccontoVuoto(evento.testo)) misura('diario_vocale_fallito', { passo: 'trascrizione', esito: 'non_capito', durata_audio: fasciaAudio(evento.durataMs) });
+      return;
+    case 'trascrizioneFallita': {
+      // I nuovi tentativi silenziosi senza rete (ogni 15 s) non contano: si è già misurato il primo fallimento.
+      if (corrente.tipo === 'senzaConnessione' && corrente.inRiprova) return;
+      const durata = corrente.tipo === 'trascrizione' || corrente.tipo === 'senzaConnessione' ? corrente.audio.durataMs : null;
+      misura('diario_vocale_fallito', { passo: 'trascrizione', esito: esitoVocale(evento.errore.esito), durata_audio: fasciaAudio(durata) });
+      return;
+    }
+    case 'nonCapito':
+      if (corrente.tipo === 'compilazione') misura('diario_vocale_fallito', { passo: 'compilazione', esito: 'non_capito', durata_audio: fasciaAudio(corrente.racconto.durataMs) });
+      return;
+    case 'compilazioneFallita':
+      if (corrente.tipo === 'compilazione') misura('diario_vocale_fallito', { passo: 'compilazione', esito: esitoVocale(evento.errore.esito), durata_audio: fasciaAudio(corrente.racconto.durataMs) });
+      return;
+    case 'compilato':
+      if (corrente.tipo === 'compilazione') misura('diario_vocale_completato', { durata_audio: fasciaAudio(corrente.racconto.durataMs) });
+      return;
+    default:
+      return;
+  }
+}
+
 /** Applica un evento alla macchina a stati ed esegue gli effetti. */
 export function invia(evento: EventoRacconta): void {
+  misuraRacconta(stato, evento);
   const { stato: nuovo, effetti } = riduci(stato, evento);
   impostaStato(nuovo);
   for (const effetto of effetti) void esegui(effetto);
@@ -123,7 +162,9 @@ async function esegui(effetto: EffettoRacconta): Promise<void> {
       if (clienteCorrente) await salvaNotaAudio(clienteCorrente, effetto.audio);
       return;
     case 'trascrivi': {
+      const inizio = Date.now();
       const esito = await trascriviAudio(effetto.audio);
+      registraChiamata('trascrivi', inizio, esito);
       if (esito.tipo === 'ok') invia({ tipo: 'trascritta', testo: esito.testo, durataMs: esito.durataMs });
       else invia({ tipo: 'trascrizioneFallita', errore: esito.errore });
       return;
@@ -139,7 +180,9 @@ async function esegui(effetto: EffettoRacconta): Promise<void> {
       if (clienteCorrente) await rimuoviFile(chiaveTesto(clienteCorrente), DOCUMENTI);
       return;
     case 'compila': {
+      const inizio = Date.now();
       const esito = await compilaRacconto(effetto.racconto.testo, effetto.racconto.data);
+      registraChiamata('compila', inizio, esito);
       if (esito.tipo === 'nonHoCapito') invia({ tipo: 'nonCapito' });
       else if (esito.tipo === 'errore') invia({ tipo: 'compilazioneFallita', errore: esito.errore });
       else {

@@ -1,19 +1,26 @@
 // Condivisione del diario di oggi, comune alla Card diario di Oggi e al riepilogo di Racconta: una sola scrittura
 // (servizi/diario.ts, condividiDiario) in coda con le altre, poi la memoria di sessione segue lo stato condiviso senza
 // rileggere (oggi diventa un giorno condiviso della settimana) e si rilegge solo lo stato leggero delle revisioni.
+import { blocchiCompilati, type ModoDiario } from '@/core/analisi/eventi';
 import type { RigaSettimana } from '@/core/diario/letture';
+import { misura } from '@/servizi/analisi';
 import { condividiDiario, type EsitoScrittura } from '@/servizi/diario';
 import { accodaScrittura, aggiornaMemoria, memoriaDiario, persistiMemoria } from '@/servizi/memoriaDiario';
 import { aggiornaStatoRevisioni } from '@/servizi/revisioni';
 
-/** Condivide il diario di oggi in memoria. null se non c'è un diario di oggi in memoria. */
-export function condividiOggi(): Promise<EsitoScrittura | null> {
+/**
+ * Condivide il diario di oggi in memoria. null se non c'è un diario di oggi in memoria. `modo` = da dove si condivide
+ * (Card diario di Oggi o riepilogo del diario vocale), solo per l'analisi anonima (step 4, lotto 2).
+ */
+export function condividiOggi(modo: ModoDiario): Promise<EsitoScrittura | null> {
   const iniziale = memoriaDiario().locale;
   if (!iniziale) return Promise.resolve(null);
   return accodaScrittura(async () => {
     const { locale: dopo, esito } = await condividiDiario(memoriaDiario().locale ?? iniziale);
     aggiornaMemoria({ locale: dopo });
     persistiMemoria();
+    if (esito.tipo === 'ok') misura('diario_condiviso', { modo, blocchi_compilati: blocchiCompilati(dopo.diario) });
+    else if (esito.tipo === 'errore') misura('errore_chiamata', { funzione: 'diario_condividi', codice: esito.errore === 'rete' ? 'rete' : 'altro' });
     if (dopo.riga.tipo === 'condiviso') {
       // Oggi diventa un giorno condiviso della settimana (apribile nel pannello); la giornata completa si rilegge al tocco.
       const m = memoriaDiario();

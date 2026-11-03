@@ -6,7 +6,9 @@ import { useSyncExternalStore } from 'react';
 import { Platform } from 'react-native';
 
 import { classificaErrore } from '@/core/accesso/errori';
+import type { LuogoConsenso } from '@/core/analisi/eventi';
 import { consensoValido, rigaConsenso, SELEZIONE_CONSENSO, TABELLA_CONSENSI, TIPO_CONSENSO_AI, type AzioneConsenso, type RigaConsenso } from '@/core/consenso/consenso';
+import { misura } from '@/servizi/analisi';
 import { supabase } from '@/servizi/supabase';
 
 export type MemoriaConsenso = { clientId: string | null; letto: boolean; ultima: RigaConsenso | null };
@@ -75,9 +77,10 @@ export function leggiConsenso(clientId: string): Promise<EsitoLetturaConsenso> {
 
 /**
  * "Accetto" (carosello o pannello al primo uso) → granted; interruttore spento in Account → revoked; riacceso → granted.
- * La memoria si aggiorna solo con la riga restituita dal server. false se la scrittura non è andata.
+ * La memoria si aggiorna solo con la riga restituita dal server. false se la scrittura non è andata. `dove` serve solo
+ * all'analisi anonima (step 4, lotto 2): si misura la risposta e il luogo, mai il cliente.
  */
-export async function registraConsensoAI(clientId: string, action: AzioneConsenso): Promise<boolean> {
+export async function registraConsensoAI(clientId: string, action: AzioneConsenso, dove: LuogoConsenso): Promise<boolean> {
   try {
     const { data: sessione } = await supabase.auth.getSession();
     const userId = sessione.session?.user.id;
@@ -87,6 +90,7 @@ export async function registraConsensoAI(clientId: string, action: AzioneConsens
     const inserita = data?.[0];
     if (error || !inserita) return false;
     aggiorna({ clientId, letto: true, ultima: inserita });
+    misura('consenso_ai', { risposta: action === 'granted' ? 'si' : 'no', dove });
     return true;
   } catch {
     return false;

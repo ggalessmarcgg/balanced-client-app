@@ -7,6 +7,7 @@ import { URL_PRIVACY } from '@/core/account/account';
 import type { ConsensoPannello } from '@/core/consenso/consenso';
 import { NOTIFICA_PIANO_AGGIORNATO, riduci, STATO_CHIUSO, type EventoPannello, type RigaScelta, type StatoPannello } from '@/core/sostituzione/pannello';
 import { apriPaginaWeb } from '@/servizi/account';
+import { misura } from '@/servizi/analisi';
 import { consensoAIValido, registraConsensoAI } from '@/servizi/consenso';
 import { leggiPiano } from '@/servizi/piano';
 import { segnaTutorialPianoVisto, trovaAlternative, tutorialPianoVisto, type PassoTutorialPiano, type TutorialPianoVisto } from '@/servizi/sostituzione';
@@ -92,7 +93,7 @@ export function useSostituzione(clientId: string, onPianoRiletto?: () => void): 
   };
   const accetta = useCallback(() => {
     setConsensoInCorso(true);
-    registraConsensoAI(clientId, 'granted')
+    registraConsensoAI(clientId, 'granted', 'sostituzione')
       .then((ok) => {
         if (!montato.current || !ok) return;
         setConsensoRichiesto(false);
@@ -105,6 +106,7 @@ export function useSostituzione(clientId: string, onPianoRiletto?: () => void): 
       });
   }, [clientId, invia]);
   const nonOra = useCallback(() => {
+    misura('consenso_ai', { risposta: 'no', dove: 'sostituzione' });
     setConsensoRichiesto(false);
     invia({ tipo: 'chiudi' });
   }, [invia]);

@@ -60,7 +60,7 @@ function Account({ profilo, abbonato }: { profilo: Profilo; abbonato: boolean })
   const eliminazione = useEliminazioneAccount({ richiedi: richiediEliminazione, dopoRegistrata });
   // Step 6: card "Notifiche disattivate" / "Apri le impostazioni" (contratto §5) e interruttore delle funzioni AI (§8).
   const permesso = usePermessoNotifiche();
-  const consenso = useConsensoAI(profilo.clientId);
+  const consenso = useConsensoAI(profilo.clientId, 'account');
   const [consensoInScrittura, setConsensoInScrittura] = useState(false);
   const onConsensoAI = useCallback(
     (acceso: boolean) => {

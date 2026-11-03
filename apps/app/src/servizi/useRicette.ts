@@ -9,6 +9,7 @@ import type { ContestoRicetta, PastoScelto } from '@/core/ricette/contesto';
 import { NOTIFICA_PIANO_AGGIORNATO, riduci, STATO_CHIUSO, type EventoPannello, type RicettaPronta, type StatoPannello } from '@/core/ricette/pannello';
 import type { RicettaSalvata } from '@/core/ricette/salvate';
 import { apriPaginaWeb } from '@/servizi/account';
+import { misura } from '@/servizi/analisi';
 import { consensoAIValido, registraConsensoAI } from '@/servizi/consenso';
 import { leggiPiano } from '@/servizi/piano';
 import { ascoltaRicettaMostrata, impostaRicettaPronta, preparaRicetta, trovaIdee } from '@/servizi/ricette';
@@ -127,7 +128,7 @@ export function useRicette(clientId: string, onRicettaPronta: (ricetta: RicettaP
   };
   const accetta = useCallback(() => {
     setConsensoInCorso(true);
-    registraConsensoAI(clientId, 'granted')
+    registraConsensoAI(clientId, 'granted', 'ricette')
       .then((ok) => {
         if (!montato.current || !ok) return;
         setConsensoRichiesto(false);
@@ -140,6 +141,7 @@ export function useRicette(clientId: string, onRicettaPronta: (ricetta: RicettaP
       });
   }, [clientId, invia]);
   const nonOra = useCallback(() => {
+    misura('consenso_ai', { risposta: 'no', dove: 'ricette' });
     setConsensoRichiesto(false);
     invia({ tipo: 'chiudi' });
   }, [invia]);

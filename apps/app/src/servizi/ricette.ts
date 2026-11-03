@@ -4,6 +4,7 @@
 import { fetch as fetchExpo } from 'expo/fetch';
 import { useSyncExternalStore } from 'react';
 
+import { fasciaTempo } from '@/core/analisi/eventi';
 import { nuovoIdRichiesta } from '@/core/racconta/server';
 import type { RicettaPronta } from '@/core/ricette/pannello';
 import {
@@ -24,6 +25,7 @@ import {
   type Stima,
 } from '@/core/ricette/server';
 import { tokenAccesso, URL_AGENTI } from '@/servizi/agenti';
+import { misura, registraChiamata } from '@/servizi/analisi';
 
 type Interprete<T> = (status: number, corpo: unknown, richiestaId: string | null) => T;
 
@@ -75,6 +77,15 @@ function campoAccorciato(campo: string): string {
 
 /** "Trova idee": il pasto (id dal piano letto con get_my_current_nutrition_plan) e il testo del campo. Attesa massima 65 s. */
 export async function trovaIdee(pastoId: string, campo: string): Promise<EsitoIdee> {
+  const inizio = Date.now();
+  const esito = await trovaIdeeSulServer(pastoId, campo);
+  // Analisi anonima (step 4, lotto 2): esito e tempo a fasce; mai il pasto né il testo del campo.
+  registraChiamata('idee', inizio, esito);
+  misura('ricette_idee', { esito: esito.tipo === 'ok' ? esito.risposta.esito : 'errore', tempo: fasciaTempo(Date.now() - inizio) });
+  return esito;
+}
+
+async function trovaIdeeSulServer(pastoId: string, campo: string): Promise<EsitoIdee> {
   const richiestaId = nuovoIdRichiesta();
   const invia = (token: string, testo: string) => inviaRichiesta(PERCORSO_IDEE, TEMPO_MASSIMO_IDEE_MS, interpretaRispostaIdee, token, JSON.stringify(corpoIdee(pastoId, testo)), richiestaId);
   let esito = await conRinnovoToken((token) => invia(token, campo), richiestaId);
@@ -84,6 +95,13 @@ export async function trovaIdee(pastoId: string, campo: string): Promise<EsitoId
 
 /** "Vedi la ricetta": identificativo, stima e idea rimandati tali e quali alla seconda chiamata. Attesa massima 95 s. */
 export async function preparaRicetta(pastoId: string, richiestaIdServer: string, stima: Stima, idea: Idea, campo: string): Promise<EsitoRicetta> {
+  const inizio = Date.now();
+  const esito = await preparaRicettaSulServer(pastoId, richiestaIdServer, stima, idea, campo);
+  registraChiamata('ricetta', inizio, esito);
+  return esito;
+}
+
+async function preparaRicettaSulServer(pastoId: string, richiestaIdServer: string, stima: Stima, idea: Idea, campo: string): Promise<EsitoRicetta> {
   const richiestaId = nuovoIdRichiesta();
   const invia = (token: string, testo: string) => inviaRichiesta(PERCORSO_RICETTA, TEMPO_MASSIMO_RICETTA_MS, interpretaRispostaRicetta, token, JSON.stringify(corpoRicetta(pastoId, richiestaIdServer, stima, idea, testo)), richiestaId);
   let esito = await conRinnovoToken((token) => invia(token, campo), richiestaId);

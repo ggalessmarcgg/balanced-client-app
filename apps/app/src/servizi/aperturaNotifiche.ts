@@ -6,6 +6,8 @@ import { router } from 'expo-router';
 import { PERCORSO_PER_VOCE } from '@/core/navigazione/voci';
 import { contaMontaggio, gruppoMontato } from '@/core/notifiche/montaggio';
 import { destinazioneDaDati, leggiDatiPush, rottaDestinazione, type DestinazionePush } from '@/core/notifiche/push';
+import { tipoNotifica } from '@/core/analisi/eventi';
+import { misura } from '@/servizi/analisi';
 import { leggiGiornata } from '@/servizi/diario';
 import { memoriaDiario } from '@/servizi/memoriaDiario';
 import { aggiornaNotifiche, memoriaNotifiche, segnaVisteContenuto } from '@/servizi/notifiche';
@@ -86,6 +88,8 @@ function gestisciRisposta(r: RispostaNotifica): void {
   const d = destinazioneDaDati(dati);
   annota(`risposta ${id}: tipo ${dati.tipo ?? '-'}, destinazione ${dati.destinazione ?? '-'}, riferimento ${dati.riferimento ?? '-'} → ${d ? d.tipo : 'nessuna destinazione'}; layout dell'abbonato montati ${layoutMontati}, stato ${statoCorrente()?.codice ?? '-'}`);
   if (!d) return;
+  // Analisi anonima (step 4, lotto 2): il tipo della notifica toccata (mai il riferimento).
+  misura('notifica_aperta', { tipo: tipoNotifica(dati.tipo), origine: 'sistema' });
   if (abbonatoMontato() && statoCorrente()?.codice === 'J') void apriDestinazione(d, dati.notificaId);
   else inAttesa = { destinazione: d, notificaId: dati.notificaId };
 }

@@ -252,7 +252,7 @@ export function useDiario(clientId: string, nutrizionista: NutrizionistaCliente 
   const condividi = useCallback(() => {
     if (!memoriaDiario().locale || inviando) return;
     setInviando(true);
-    condividiOggi()
+    condividiOggi('scritto')
       .then((esito) => {
         if (!montato.current) return;
         setInviando(false);

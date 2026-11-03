@@ -1,8 +1,9 @@
 import { Redirect, useLocalSearchParams, useRouter } from 'expo-router';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 
 import { TESTI_RICETTE_SALVATE } from '@/core/ricette/salvate';
+import { misura } from '@/servizi/analisi';
 import { eliminaRicetta } from '@/servizi/ricetteSalvate';
 import { statoCorrente } from '@/servizi/statoCliente';
 import { useRicetteSalvate } from '@/servizi/useRicette';
@@ -25,6 +26,10 @@ export default function RottaRicettaSalvata() {
 function Dettaglio({ clientId, id }: { clientId: string; id: string }) {
   const router = useRouter();
   const { fase, ricette, ricarica } = useRicetteSalvate(clientId);
+  // Analisi anonima (step 4, lotto 2): una ricetta salvata riaperta da "Le tue ricette" (mai quale).
+  useEffect(() => {
+    misura('ricetta_aperta', { origine: 'salvata' });
+  }, []);
   const [inCorso, setInCorso] = useState(false);
   const [notifica, setNotifica] = useState<NotificaPiano | null>(null);
   const onIndietro = useCallback(() => (router.canGoBack() ? router.back() : router.replace('/ricette')), [router]);

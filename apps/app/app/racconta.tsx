@@ -5,6 +5,7 @@ import { URL_PRIVACY } from '@/core/account/account';
 import { gestoIndietroDisattivato } from '@/core/racconta/flusso';
 import { apriPaginaWeb } from '@/servizi/account';
 import { statoCorrente } from '@/servizi/statoCliente';
+import { misura } from '@/servizi/analisi';
 import { useConsensoAI } from '@/servizi/useConsensoAI';
 import { useRacconta } from '@/servizi/useRacconta';
 import { PannelloConsensoAI } from '@/ui/consenso/ConsensoAI';
@@ -27,8 +28,13 @@ export default function RottaRacconta() {
 function Racconta({ clientId }: { clientId: string }) {
   const router = useRouter();
   const { stato, tutorial, azioni } = useRacconta(clientId);
-  const consenso = useConsensoAI(clientId);
+  const consenso = useConsensoAI(clientId, 'racconta');
   const onIndietro = useCallback(() => router.back(), [router]);
+  // "Non ora" sul pannello del consenso: torna a Oggi; per l'analisi anonima è una risposta negativa (nessuna scrittura).
+  const onNonOra = useCallback(() => {
+    misura('consenso_ai', { risposta: 'no', dove: 'racconta' });
+    router.back();
+  }, [router]);
 
   // Diario compilato e già nella bozza: il riepilogo prende il posto di Racconta, così "Chiudi" e la freccia tornano a Oggi.
   const compilato = stato.tipo === 'compilato';
@@ -58,7 +64,7 @@ function Racconta({ clientId }: { clientId: string }) {
         onIndietro={onIndietro}
         onScrivi={onIndietro}
         onCreaDiario={azioni.creaDiario}
-        sovrapposti={<PannelloConsensoAI aperto={consensoRichiesto} funzione="racconta" titolo={TITOLO_CONSENSO} onAccetto={onAccetto} onNonOra={onIndietro} onInformativa={onInformativa} />}
+        sovrapposti={<PannelloConsensoAI aperto={consensoRichiesto} funzione="racconta" titolo={TITOLO_CONSENSO} onAccetto={onAccetto} onNonOra={onNonOra} onInformativa={onInformativa} />}
       />
     </>
   );

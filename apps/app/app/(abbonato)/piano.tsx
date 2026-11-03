@@ -1,7 +1,8 @@
 import { Redirect, useRouter } from 'expo-router';
-import { useCallback } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import type { Profilo } from '@/core/stato/stato';
+import { misura } from '@/servizi/analisi';
 import { useNuovaRevisione } from '@/servizi/memoriaRevisioni';
 import { useNotificheNuove } from '@/servizi/notifiche';
 import { statoCorrente } from '@/servizi/statoCliente';
@@ -22,6 +23,13 @@ function Piano({ profilo }: { profilo: Profilo }) {
   const notificheNuove = useNotificheNuove();
   const revisioneNuova = useNuovaRevisione();
   const { fase, dati, ricarica } = usePiano(profilo.clientId);
+  // Analisi anonima (step 4, lotto 2): la scheda aperta con il tipo di piano mostrato, una volta per apertura.
+  const pianoMisurato = useRef(false);
+  useEffect(() => {
+    if (pianoMisurato.current || fase.tipo !== 'pronto' || !dati) return;
+    pianoMisurato.current = true;
+    misura('piano_aperto', { tipo: dati.piano?.tipo ?? 'nessuno' });
+  }, [fase.tipo, dati]);
   // Sostituzione e ricette (step 9): pannelli dalla riga toccata e da "Ricetta"; dopo riga_non_disponibile o
   // pasto_non_disponibile il piano riletto si mostra subito. La ricetta pronta apre la sua pagina.
   const sostituzione = useSostituzione(profilo.clientId, ricarica);

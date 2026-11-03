@@ -7,6 +7,7 @@ import { autoreRevisione, type AutoreRevisione } from '@/core/revisioni/autore';
 import { leggibile } from '@/core/revisioni/lettura';
 import { dataRoma } from '@/core/revisioni/stato';
 import type { TestoRevisione } from '@/core/revisioni/testo';
+import { misura } from '@/servizi/analisi';
 import { leggiAutore } from '@/servizi/diario';
 import { fotoInCache } from '@/servizi/foto';
 import { memoriaRevisioni, useMemoriaRevisioni } from '@/servizi/memoriaRevisioni';
@@ -77,6 +78,7 @@ export function useLetturaRevisione(id: string, clientId: string, nutrizionista:
         if (!memoriaRevisioni().testi[id]) return setEsitoNegativo(esito.tipo === 'rete' ? 'rete' : 'errore');
       }
       segnaAperta(id);
+      misura('revisione_aperta', {});
       // Notifiche con questa revisione come riferimento: viste (step 6), da qualunque percorso si arrivi qui.
       void segnaVisteContenuto(id);
       prontaPerIlFondo.current = true;
@@ -111,6 +113,7 @@ export function useLetturaRevisione(id: string, clientId: string, nutrizionista:
     if (!prontaPerIlFondo.current || fondoSegnalato.current) return;
     fondoSegnalato.current = true;
     segnaLetta(id);
+    misura('revisione_letta', {});
   }, [id]);
 
   const riprova = useCallback(() => {
